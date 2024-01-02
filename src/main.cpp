@@ -5,7 +5,7 @@ void update();
 void render(RenderState *rs);
 
 ProgramState pState;
-RenderState rState;
+RenderState renderState;
 
 struct Pos {};
 
@@ -33,10 +33,10 @@ void render(RenderState *rs) {
 }
 
 int main(int argc, char *args[]) {
-    ProgramState pState = {
+    ProgramState programState = {
         .running = true,
-        .screen_width = 640,
-        .screen_height = 640,
+        .screen_width = 1280,
+        .screen_height = 720,
         .window = NULL,
         .context = NULL,
 
@@ -44,13 +44,7 @@ int main(int argc, char *args[]) {
         .transientStorage = new BumpAllocator(MB(10)),
     };
 
-    size_t fsize;
-    char *filecontents =
-        pState.permanentStorage->readFile("./src/.clangd", &fsize);
-
-    printf("%s", filecontents);
-
-    if (!initSDLandGL(&pState, &rState)) {
+    if (!initSDLandGL(&programState, &renderState)) {
         printf("ERROR: Failed to initialize SDL or OpenGL!\n");
         return -1;
     }
@@ -58,10 +52,10 @@ int main(int argc, char *args[]) {
     SDL_Event event;
     SDL_StartTextInput();
 
-    while (pState.running) {
+    while (programState.running) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
-                pState.running = false;
+                programState.running = false;
             } else if (event.type == SDL_TEXTINPUT) {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
@@ -71,11 +65,11 @@ int main(int argc, char *args[]) {
             }
         }
 
-        render(&rState);
-        SDL_GL_SwapWindow(pState.window);
+        render(&renderState);
+        SDL_GL_SwapWindow(programState.window);
     }
 
     SDL_StopTextInput();
-    close(&pState, &rState);
+    close(&programState, &renderState);
     return 0;
 }

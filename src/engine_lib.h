@@ -34,74 +34,71 @@ struct BumpAllocator {
     size_t used;
     u8 *memory;
 
-    BumpAllocator(size_t size);
-    u8 *alloc(size_t size);
-    void freeBumpAlloc();
+    BumpAllocator(size_t len) {
+        size = len;
+        used = 0;
+        memory = (u8 *)malloc(len);
 
-    char *readFile(const char *fileName, size_t *fileSize);
-};
+        if (!memory) {
+            SDL_Log("ERROR: Failed to allocate memory for the bumpAllocator!");
+            size = 0;
+            return;
+        }
 
-BumpAllocator::BumpAllocator(size_t len) {
-    size = len;
-    used = 0;
-    memory = (u8 *)malloc(len);
-
-    if (!memory) {
-        SDL_Log("ERROR: Failed to allocate memory for the bumpAllocator!");
-        size = 0;
-        return;
+        memset(memory, 0, size);
     }
 
-    memset(memory, 0, size);
-}
+    u8 *alloc(size_t len) {
+        u8 *result = nullptr;
 
-void BumpAllocator::freeBumpAlloc() {
-    free(memory);
-    size = 0;
-    used = 0;
-}
+        // ( l+7 ) & ~7 -> First 3 bits are empty, i.e., it is a multiple of 8.
+        size_t allignedSize = (len + 7) & ~7;
 
-u8 *BumpAllocator::alloc(size_t len) {
-    u8 *result = nullptr;
+        if (used + allignedSize > size) {
+            SDL_Log("ERROR: Not enough space in BumpAllocator");
+            return result;
+        }
 
-    // ( l+7 ) & ~7 -> First 3 bits are empty, i.e., it is a multiple of 8.
-    size_t allignedSize = (len + 7) & ~7;
+        size += allignedSize;
+        result = memory + used;
+        used += allignedSize;
 
-    if (used + allignedSize > size) {
-        SDL_Log("ERROR: Not enough space in BumpAllocator");
         return result;
     }
 
-    size += allignedSize;
-    result = memory + used;
-    used += allignedSize;
+    char *readFile(const char *fileName, size_t *fileSize) {
+        int fd = open(fileName, O_RDONLY);
 
-    return result;
-}
+        if (fd == -1) {
+            SDL_Log("Failed to open file descriptor for %s", fileName);
+            return nullptr;
+        }
 
-char *BumpAllocator::readFile(const char *fileName, size_t *fileSize) {
-    int fd = open(fileName, O_RDONLY);
+        struct stat filestat;
+        fstat(fd, &filestat);
 
-    if (fd == -1) {
-        SDL_Log("Failed to open file descriptor for %s", fileName);
-        return nullptr;
+        size_t fSize = filestat.st_size;
+        u8 *memory = alloc(fSize); // request fSize (alligned) bytes of memory
+
+        size_t bytesRead = read(fd, memory, fSize);
+        close(fd);
+
+        if (bytesRead != fSize) {
+            SDL_Log("bytesRead does not match filesize for %s", fileName);
+            return nullptr;
+        }
+
+        *fileSize = fSize;
+        return (char *)memory;
     }
 
-    struct stat filestat;
-    fstat(fd, &filestat);
+    // The trick is that the used attrib is used to calculate the offset.
+    // An offset of 0 means just rewriting everything.
+    void freeAllocatorMemory() { used = 0; }
 
-    size_t fSize = filestat.st_size;
-    u8 *memory = alloc(fSize);
-
-    size_t bytesRead = read(fd, memory, fSize);
-
-    close(fd);
-
-    if (bytesRead != fSize) {
-        SDL_Log("bytesRead does not match filesize for %s", fileName);
-        return nullptr;
+    void destroy() {
+        free(memory);
+        size = 0;
+        used = 0;
     }
-
-    *fileSize = fSize;
-    return (char *)memory;
-}
+};
