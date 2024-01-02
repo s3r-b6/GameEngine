@@ -108,8 +108,9 @@ bool initGL(RenderState *rs, BumpAllocator *transientStorage) {
     size_t fsize;
     char *vertexShaderSource =
         transientStorage->readFile(SHADER_SRC("vert.hlsl"), &fsize);
-
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+
+    // Compile vertex source
     glCompileShader(vertexShader);
 
     // Check vertex shader for errors

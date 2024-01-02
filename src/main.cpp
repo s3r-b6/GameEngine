@@ -7,10 +7,6 @@ void render(RenderState *rs);
 ProgramState pState;
 RenderState renderState;
 
-struct Pos {};
-
-void update() {}
-
 void render(RenderState *rs) {
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(rs->programID);
@@ -49,6 +45,9 @@ int main(int argc, char *args[]) {
         printf("ERROR: Failed to initialize SDL or OpenGL!");
         return -1;
     }
+
+    // Free the memory used for initialization
+    programState.transientStorage->freeAllocatorMemory();
 
     SDL_Event event;
     SDL_StartTextInput();
