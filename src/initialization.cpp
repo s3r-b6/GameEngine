@@ -2,62 +2,66 @@
 #include "engine_lib.h"
 
 // Append to the shaders location the file
-#define SHADER_SRC(termination) "./assets/shaders/" termination
+#define SHADER_SRC(termination) "../assets/shaders/" termination
 
 // TODO: Make logs different based on severity...
 
-bool initSDLandGL(ProgramState *ps, RenderState *rs,
+bool initSDLandGL(ProgramState *ps, GLContext *rs,
                   BumpAllocator *transientStorage) {
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        SDL_Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
-        return false;
+
+    { // Initialize SDL
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+            SDL_Log("SDL could not initialize! SDL Error: %s\n",
+                    SDL_GetError());
+            return false;
+        }
+
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_CORE);
+
+        // Create window
+        ps->sdl_window = SDL_CreateWindow(
+            "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            ps->width, ps->height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+        if (ps->sdl_window == NULL) {
+            SDL_Log("Window could not be created! SDL Error: %s\n",
+                    SDL_GetError());
+            return false;
+        }
+
+        // Create context
+        ps->sdl_context = SDL_GL_CreateContext(ps->sdl_window);
+        if (ps->sdl_context == NULL) {
+            SDL_Log("OpenGL context could not be created! SDL Error: %s\n",
+                    SDL_GetError());
+            return false;
+        }
     }
 
-    // Use OpenGL 3.1 core
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_CORE);
+    { // Initialize glew, set VSync, OpenGL
+        glewExperimental = GL_TRUE;
+        GLenum glewError = glewInit();
+        if (glewError != GLEW_OK) {
+            SDL_Log("Error initializing GLEW! %s\n",
+                    glewGetErrorString(glewError));
+            return false;
+        }
 
-    // Create window
-    ps->window = SDL_CreateWindow("Engine", SDL_WINDOWPOS_UNDEFINED,
-                                  SDL_WINDOWPOS_UNDEFINED, ps->screen_width,
-                                  ps->screen_height,
-                                  SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+        // Use Vsync
+        // if (SDL_GL_SetSwapInterval(1) < 0) {
+        //    SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
+        //            SDL_GetError());
+        //    return false;
+        //}
 
-    if (ps->window == NULL) {
-        SDL_Log("Window could not be created! SDL Error: %s\n", SDL_GetError());
-        return false;
-    }
-
-    // Create context
-    ps->context = SDL_GL_CreateContext(ps->window);
-    if (ps->context == NULL) {
-        SDL_Log("OpenGL context could not be created! SDL Error: %s\n",
-                SDL_GetError());
-        return false;
-    }
-
-    // Initialize GLEW
-    glewExperimental = GL_TRUE;
-    GLenum glewError = glewInit();
-    if (glewError != GLEW_OK) {
-        SDL_Log("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
-        return false;
-    }
-
-    // Use Vsync
-    if (SDL_GL_SetSwapInterval(1) < 0) {
-        SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
-                SDL_GetError());
-        return false;
-    }
-
-    // Initialize OpenGL
-    if (!initGL(rs, transientStorage)) {
-        SDL_Log("Unable to initialize OpenGL!");
-        return false;
+        // Initialize OpenGL
+        if (!initGL(rs, transientStorage)) {
+            SDL_Log("Unable to initialize OpenGL!");
+            return false;
+        }
     }
 
     return true;
@@ -99,100 +103,81 @@ void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
     if (infoLogLength > 0) { SDL_Log("%s", infoLog); }
 }
 
-bool initGL(RenderState *rs, BumpAllocator *transientStorage) {
-    rs->programID = glCreateProgram();
+bool initGL(GLContext *glContext, BumpAllocator *tStorage) {
+    glContext->programID = glCreateProgram();
 
-    // Create vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    size_t vertSourceSize = 0, fragSourceSize = 0;
+    char *vertSource =
+        tStorage->readFile(SHADER_SRC("vert.hlsl"), &vertSourceSize);
+    char *fragSource =
+        tStorage->readFile(SHADER_SRC("frag.hlsl"), &fragSourceSize);
 
-    size_t fsize;
-    char *vertexShaderSource =
-        transientStorage->readFile(SHADER_SRC("vert.hlsl"), &fsize);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    if (!vertSource) { SDL_Log("Failed to read vertex shader sources"); }
+    if (!fragSource) { SDL_Log("Failed to read fragment shader sources"); }
+    if (!vertSource || !fragSource) return false;
 
-    // Compile vertex source
-    glCompileShader(vertexShader);
+    GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
-    // Check vertex shader for errors
+    glShaderSource(vertexShaderID, 1, &vertSource, NULL);
+    glShaderSource(fragmentShaderID, 1, &fragSource, NULL);
+
+    glCompileShader(vertexShaderID);
+    glCompileShader(fragmentShaderID);
+
+    // Check shader compilation for errors
     GLint vShaderCompiled = GL_FALSE;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vShaderCompiled);
+    GLint fShaderCompiled = GL_FALSE;
+
+    glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &vShaderCompiled);
+    glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &fShaderCompiled);
 
     if (vShaderCompiled != GL_TRUE) {
-        SDL_Log("Unable to compile vertex shader %d!\n", vertexShader);
-        printShaderLog(vertexShader, transientStorage);
-        return false;
+        SDL_Log("Unable to compile vertex shader %d!\n", vertexShaderID);
+        printShaderLog(vertexShaderID, tStorage);
     }
 
-    // Attach vertex shader to program
-    glAttachShader(rs->programID, vertexShader);
-
-    // Create fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    fsize = 0;
-    GLchar *fragmentShaderSource =
-        (GLchar *)transientStorage->readFile(SHADER_SRC("frag.hlsl"), &fsize);
-
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    GLint fShaderCompiled = GL_FALSE;
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fShaderCompiled);
     if (fShaderCompiled != GL_TRUE) {
-        SDL_Log("Unable to compile fragment shader %d!\n", fragmentShader);
-        printShaderLog(fragmentShader, transientStorage);
-        return false;
+        SDL_Log("Unable to compile fragment shader %d!\n", fragmentShaderID);
+        printShaderLog(fragmentShaderID, tStorage);
     }
 
-    // Attach fragment shader to program
-    glAttachShader(rs->programID, fragmentShader);
+    if (fShaderCompiled != GL_TRUE || vShaderCompiled != GL_TRUE) return false;
 
-    // Link program
-    glLinkProgram(rs->programID);
+    glAttachShader(glContext->programID, vertexShaderID);
+    glAttachShader(glContext->programID, fragmentShaderID);
 
-    // Check for errors
+    glLinkProgram(glContext->programID);
+
     GLint programSuccess = GL_TRUE;
-    glGetProgramiv(rs->programID, GL_LINK_STATUS, &programSuccess);
+    glGetProgramiv(glContext->programID, GL_LINK_STATUS, &programSuccess);
     if (programSuccess != GL_TRUE) {
-        SDL_Log("Error linking program %d!\n", rs->programID);
-        printProgramLog(rs->programID, transientStorage);
+        SDL_Log("Error linking program %d!\n", glContext->programID);
+        printProgramLog(glContext->programID, tStorage);
         return false;
     }
 
-    // Get vertex attribute location
-    rs->vertexPos2DLocation =
-        glGetAttribLocation(rs->programID, "LVertexPos2D");
-    if (rs->vertexPos2DLocation == -1) {
-        SDL_Log("LVertexPos2D is not a valid glsl program variable!\n");
-        return false;
-    }
+    glDetachShader(glContext->programID, vertexShaderID);
+    glDetachShader(glContext->programID, fragmentShaderID);
+    glDeleteShader(vertexShaderID);
+    glDeleteShader(fragmentShaderID);
 
-    // Initialize clear color
-    glClearColor(0.f, 0.f, 0.f, 1.f);
+    // This seems necessary
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
 
-    // VBO data
-    GLfloat vertexData[] = {-0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f};
-    // IBO data
-    GLuint indexData[] = {0, 1, 2, 3};
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_GREATER);
 
-    // Create VBO
-    glGenBuffers(1, &rs->VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, rs->VBO);
-    glBufferData(GL_ARRAY_BUFFER, 2 * 4 * sizeof(GLfloat), vertexData,
-                 GL_STATIC_DRAW);
-
-    // Create IBO
-    glGenBuffers(1, &rs->IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rs->IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), indexData,
-                 GL_STATIC_DRAW);
+    glUseProgram(glContext->programID);
 
     return true;
 }
 
-void close(ProgramState *ps, RenderState *rs) {
-    glDeleteProgram(rs->programID);
-    SDL_DestroyWindow(ps->window);
-    ps->window = NULL;
+void close(ProgramState *ps, GLContext *gc) {
+    glDeleteProgram(gc->programID);
+    SDL_DestroyWindow(ps->sdl_window);
+    ps->sdl_window = NULL;
     SDL_Quit();
 }

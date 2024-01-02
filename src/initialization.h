@@ -19,28 +19,25 @@
 //                                      until it is compiled
 struct ProgramState {
     bool running = true;
-    int screen_width;
-    int screen_height;
-    SDL_Window *window;
-    SDL_GLContext context;
+    int width;
+    int height;
+    SDL_Window *sdl_window;
+    SDL_GLContext sdl_context;
 
     BumpAllocator *permanentStorage;
     BumpAllocator *transientStorage;
 };
 
 // Struct that holds all data relevant to the renderer
-struct RenderState {
+struct GLContext {
     GLuint programID = 0;
-    GLint vertexPos2DLocation = -1;
-    GLuint VBO = 0;
-    GLuint IBO = 0;
 };
 
 // bumpAlloc to store logs and read shader sources
-bool initSDLandGL(ProgramState *ps, RenderState *rs,
+bool initSDLandGL(ProgramState *ps, GLContext *rs,
                   BumpAllocator *transientStorage);
-bool initGL(RenderState *rs, BumpAllocator *transientStorage);
-void close(ProgramState *ps, RenderState *rs);
+bool initGL(GLContext *rs, BumpAllocator *transientStorage);
+void close(ProgramState *ps, GLContext *rs);
 
 void printProgramLog(GLuint program, BumpAllocator *transientStorage);
 void printShaderLog(GLuint shader, BumpAllocator *transientStorage);

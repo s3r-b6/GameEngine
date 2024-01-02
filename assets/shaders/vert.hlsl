@@ -1,6 +1,17 @@
-#version 140
-in vec2 LVertexPos2D; 
+#version 430 core
 
 void main() {
-    gl_Position = vec4(LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); 
+    // The frameBuffer coordinates look like ( 1920, 1080 ); since they represent a pos in a window
+    // The OpenGL coordinates look like ( 1, 1 ), since they are normalized.
+    // In OpenGL, top left is ( -1, 1 ); in Vulkan, for example, it is ( -1, -1 )
+    vec2 vertices[3] = {
+        // Top left
+        vec2(-0.5, 0.5),
+        // Bottom left
+        vec2(-0.5, -0.5),
+        // Top right
+        vec2(0.5, 0.5),
+    };
+
+    gl_Position = vec4(vertices[gl_VertexID], 1, 1);
 };

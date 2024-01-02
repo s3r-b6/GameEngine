@@ -78,10 +78,13 @@ struct BumpAllocator {
         fstat(fd, &filestat);
 
         size_t fSize = filestat.st_size;
-        u8 *memory = alloc(fSize); // request fSize (alligned) bytes of memory
+        u8 *memory =
+            alloc(fSize + 1); // request fSize (alligned) bytes of memory
 
         size_t bytesRead = read(fd, memory, fSize);
         close(fd);
+
+        memory[bytesRead] = 0; // null-terminate
 
         if (bytesRead != fSize) {
             SDL_Log("bytesRead does not match filesize for %s", fileName);
@@ -94,7 +97,7 @@ struct BumpAllocator {
 
     // The trick is that the used attrib is used to calculate the offset.
     // An offset of 0 means just rewriting everything.
-    void freeAllocatorMemory() { used = 0; }
+    void freeMemory() { used = 0; }
 
     void destroy() {
         free(memory);

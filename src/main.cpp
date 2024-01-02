@@ -1,40 +1,26 @@
 #include "engine_lib.h"
 #include "initialization.h"
 
-void update();
-void render(RenderState *rs);
-
 ProgramState pState;
-RenderState renderState;
+GLContext renderState;
 
-void render(RenderState *rs) {
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(rs->programID);
+void render(GLContext *glContext) {
+    glClearColor(119.f / 255.f, 33.f / 255.f, 111.f / 255.f, 1.f);
+    glClearDepth(0.f);
 
-    // Enable vertex position
-    glEnableVertexAttribArray(rs->vertexPos2DLocation);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Set vertex data
-    glBindBuffer(GL_ARRAY_BUFFER, rs->VBO);
-    glVertexAttribPointer(rs->vertexPos2DLocation, 2, GL_FLOAT, GL_FALSE,
-                          2 * sizeof(GLfloat), NULL);
-
-    // Set index data and render
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, rs->IBO);
-    glDrawElements(GL_TRIANGLE_FAN, 4, GL_UNSIGNED_INT, NULL);
-
-    // Disable vertex position
-    glDisableVertexAttribArray(rs->vertexPos2DLocation);
-    glUseProgram(NULL);
+    glViewport(0, 0, pState.width, pState.height);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 int main(int argc, char *args[]) {
     ProgramState programState = {
         .running = true,
-        .screen_width = 1280,
-        .screen_height = 720,
-        .window = NULL,
-        .context = NULL,
+        .width = 1280,
+        .height = 720,
+        .sdl_window = NULL,
+        .sdl_context = NULL,
 
         .permanentStorage = new BumpAllocator(MB(10)),
         .transientStorage = new BumpAllocator(MB(10)),
@@ -47,26 +33,44 @@ int main(int argc, char *args[]) {
     }
 
     // Free the memory used for initialization
-    programState.transientStorage->freeAllocatorMemory();
+    programState.transientStorage->freeMemory();
 
     SDL_Event event;
     SDL_StartTextInput();
 
     while (programState.running) {
         while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT) {
+            switch (event.type) {
+            case SDL_QUIT: {
                 programState.running = false;
-            } else if (event.type == SDL_TEXTINPUT) {
+                break;
+            }
+
+            case SDL_WINDOWEVENT: {
+                if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    SDL_GetWindowSize(programState.sdl_window,
+                                      &programState.width,
+                                      &programState.height);
+
+                    // SDL_Log("New screen size: (%d, %d)", programState.width,
+                    // programState.height);
+                }
+                break;
+            }
+
+            case SDL_TEXTINPUT: {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
 
                 char key = event.text.text[0];
-                SDL_Log("Pressed %c", key);
+                SDL_Log("Pressed '%c'", key);
+                break;
+            }
             }
         }
 
         render(&renderState);
-        SDL_GL_SwapWindow(programState.window);
+        SDL_GL_SwapWindow(programState.sdl_window);
     }
 
     SDL_StopTextInput();
