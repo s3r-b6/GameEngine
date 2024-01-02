@@ -1,59 +1,62 @@
 #include "engine_lib.h"
 #include "initialization.h"
 
-ProgramState pState;
-GLContext renderState;
+ProgramState g_pState = {0};
+GLContext g_glContext = {0};
 
-void render(GLContext *glContext) {
+void render(GLContext *glContext, ProgramState *pState) {
     glClearColor(119.f / 255.f, 33.f / 255.f, 111.f / 255.f, 1.f);
     glClearDepth(0.f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, pState.width, pState.height);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glViewport(0, 0, pState->width, pState->height);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 int main(int argc, char *args[]) {
-    ProgramState programState = {
+    g_pState = {
         .running = true,
         .width = 1280,
         .height = 720,
-        .sdl_window = NULL,
-        .sdl_context = NULL,
-
         .permanentStorage = new BumpAllocator(MB(10)),
         .transientStorage = new BumpAllocator(MB(10)),
     };
 
-    if (!initSDLandGL(&programState, &renderState,
-                      programState.transientStorage)) {
-        printf("ERROR: Failed to initialize SDL or OpenGL!");
+    if (!initSDLandGL(&g_pState, &g_glContext, g_pState.transientStorage)) {
+        SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
         return -1;
     }
 
     // Free the memory used for initialization
-    programState.transientStorage->freeMemory();
+    g_pState.transientStorage->freeMemory();
+
+    // Get initial window size
+    int width, height;
+    SDL_GL_GetDrawableSize(g_pState.sdl_window, &width, &height);
+    g_pState.width = width;
+    g_pState.height = height;
+
+    SDL_Log("Initial screen size: %dx%d", g_pState.width, g_pState.height);
 
     SDL_Event event;
     SDL_StartTextInput();
 
-    while (programState.running) {
+    while (g_pState.running) {
         while (SDL_PollEvent(&event) != 0) {
             switch (event.type) {
             case SDL_QUIT: {
-                programState.running = false;
+                g_pState.running = false;
                 break;
             }
 
             case SDL_WINDOWEVENT: {
                 if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                    SDL_GetWindowSize(programState.sdl_window,
-                                      &programState.width,
-                                      &programState.height);
-
-                    // SDL_Log("New screen size: (%d, %d)", programState.width,
-                    // programState.height);
+                    int width, height;
+                    SDL_GL_GetDrawableSize(g_pState.sdl_window, &width,
+                                           &height);
+                    g_pState.width = width;
+                    g_pState.height = height;
                 }
                 break;
             }
@@ -69,11 +72,11 @@ int main(int argc, char *args[]) {
             }
         }
 
-        render(&renderState);
-        SDL_GL_SwapWindow(programState.sdl_window);
+        render(&g_glContext, &g_pState);
+        SDL_GL_SwapWindow(g_pState.sdl_window);
     }
 
     SDL_StopTextInput();
-    close(&programState, &renderState);
+    close(&g_pState, &g_glContext);
     return 0;
 }

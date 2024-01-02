@@ -23,6 +23,7 @@ struct ProgramState {
     int height;
     SDL_Window *sdl_window;
     SDL_GLContext sdl_context;
+    SDL_Renderer *sdl_renderer;
 
     BumpAllocator *permanentStorage;
     BumpAllocator *transientStorage;

@@ -21,24 +21,26 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs,
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                             SDL_GL_CONTEXT_PROFILE_CORE);
 
-        // Create window
-        ps->sdl_window = SDL_CreateWindow(
+        // Create window and context
+        SDL_Window *window = SDL_CreateWindow(
             "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
             ps->width, ps->height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
-        if (ps->sdl_window == NULL) {
+        if (!window) {
             SDL_Log("Window could not be created! SDL Error: %s\n",
                     SDL_GetError());
             return false;
         }
 
-        // Create context
-        ps->sdl_context = SDL_GL_CreateContext(ps->sdl_window);
-        if (ps->sdl_context == NULL) {
+        SDL_GLContext context = SDL_GL_CreateContext(window);
+        if (!context) {
             SDL_Log("OpenGL context could not be created! SDL Error: %s\n",
                     SDL_GetError());
             return false;
         }
+
+        ps->sdl_context = context;
+        ps->sdl_window = window;
     }
 
     { // Initialize glew, set VSync, OpenGL
@@ -51,11 +53,11 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs,
         }
 
         // Use Vsync
-        // if (SDL_GL_SetSwapInterval(1) < 0) {
-        //    SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
-        //            SDL_GetError());
-        //    return false;
-        //}
+        if (SDL_GL_SetSwapInterval(1) < 0) {
+            SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
+                    SDL_GetError());
+            return false;
+        }
 
         // Initialize OpenGL
         if (!initGL(rs, transientStorage)) {
