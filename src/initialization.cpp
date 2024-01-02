@@ -39,8 +39,8 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs,
             return false;
         }
 
-        ps->sdl_context = context;
-        ps->sdl_window = window;
+        ps->glContext = context;
+        ps->window = window;
     }
 
     { // Initialize glew, set VSync, OpenGL
@@ -179,7 +179,7 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage) {
 
 void close(ProgramState *ps, GLContext *gc) {
     glDeleteProgram(gc->programID);
-    SDL_DestroyWindow(ps->sdl_window);
-    ps->sdl_window = NULL;
+    SDL_DestroyWindow(ps->window);
+    ps->window = NULL;
     SDL_Quit();
 }

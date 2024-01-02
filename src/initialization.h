@@ -8,6 +8,7 @@
 //  \int screen_height -> Current screen height
 //  \SDL_Window *window -> Pointer to the SDL_Window being used
 //  \SDL_GLContext context -> The context of SDL
+//  \SDL_Renderer *sdl_renderer -> The SDL renderer. Used to get screen size
 //  \BumpAllocator *permanentStorage; -> A *BumpAllocator that should *not* get
 //                                      freed. For example, this should hold the
 //                                      GameState, and so on.
@@ -21,9 +22,8 @@ struct ProgramState {
     bool running = true;
     int width;
     int height;
-    SDL_Window *sdl_window;
-    SDL_GLContext sdl_context;
-    SDL_Renderer *sdl_renderer;
+    SDL_Window *window;
+    SDL_GLContext glContext;
 
     BumpAllocator *permanentStorage;
     BumpAllocator *transientStorage;
