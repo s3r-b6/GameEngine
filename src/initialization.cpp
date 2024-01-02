@@ -1,6 +1,13 @@
 #include "initialization.h"
+#include "engine_lib.h"
 
-bool initSDLandGL(ProgramState *ps, RenderState *rs) {
+// Append to the shaders location the file
+#define SHADER_SRC(termination) "./assets/shaders/" termination
+
+// TODO: Make logs different based on severity...
+
+bool initSDLandGL(ProgramState *ps, RenderState *rs,
+                  BumpAllocator *transientStorage) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -48,79 +55,61 @@ bool initSDLandGL(ProgramState *ps, RenderState *rs) {
     }
 
     // Initialize OpenGL
-    if (!initGL(rs)) {
-        SDL_Log("Unable to initialize OpenGL!\n");
+    if (!initGL(rs, transientStorage)) {
+        SDL_Log("Unable to initialize OpenGL!");
         return false;
     }
 
     return true;
 }
 
-void printProgramLog(GLuint program) {
+void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
     // Make sure name is shader
     if (!glIsProgram(program)) {
-        SDL_Log("Name %d is not a program\n", program);
+        SDL_Log("Name %d is not a program", program);
         return;
     }
 
-    // Program log length
     int infoLogLength = 0;
-    int maxLength = infoLogLength;
+    int maxLength = 0;
 
     // Get info string length
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-    // Allocate string
-    char *infoLog = new char[maxLength];
-
-    // Get info log
+    char *infoLog = (char *)transientStorage->alloc(maxLength);
     glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) SDL_Log("%s\n", infoLog);
-
-    // Deallocate string
-    delete[] infoLog;
+    if (infoLogLength > 0) SDL_Log("%s", infoLog);
 }
 
-void printShaderLog(GLuint shader) {
+void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
     // Make sure name is shader
     if (!glIsShader(shader)) {
-        SDL_Log("Name %d is not a shader\n", shader);
+        SDL_Log("Name %d is not a shader", shader);
         return;
     }
 
     // Shader log length
     int infoLogLength = 0;
-    int maxLength = infoLogLength;
+    int maxLength = 0;
 
-    // Get info string length
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+    char *infoLog = (char *)transientStorage->alloc(maxLength);
 
-    // Allocate string
-    char *infoLog = new char[maxLength];
-
-    // Get info log
     glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) { SDL_Log("%s\n", infoLog); }
-
-    // Deallocate string
-    delete[] infoLog;
+    if (infoLogLength > 0) { SDL_Log("%s", infoLog); }
 }
 
-bool initGL(RenderState *rs) {
+bool initGL(RenderState *rs, BumpAllocator *transientStorage) {
     rs->programID = glCreateProgram();
 
     // Create vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-    // Get vertex source
-    const GLchar *vertexShaderSource[] = {
-        "#version 140\nin vec2 LVertexPos2D; void main() { gl_Position = vec4( "
-        "LVertexPos2D.x, LVertexPos2D.y, 0, 1 ); }"};
+    size_t fsize;
+    char *vertexShaderSource =
+        transientStorage->readFile(SHADER_SRC("vert.hlsl"), &fsize);
 
-    // Set vertex source
-    glShaderSource(vertexShader, 1, vertexShaderSource, NULL);
-
-    // Compile vertex source
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
     // Check vertex shader for errors
@@ -129,7 +118,7 @@ bool initGL(RenderState *rs) {
 
     if (vShaderCompiled != GL_TRUE) {
         SDL_Log("Unable to compile vertex shader %d!\n", vertexShader);
-        printShaderLog(vertexShader);
+        printShaderLog(vertexShader, transientStorage);
         return false;
     }
 
@@ -139,23 +128,18 @@ bool initGL(RenderState *rs) {
     // Create fragment shader
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    // Get fragment source
-    const GLchar *fragmentShaderSource[] = {
-        "#version 140\nout vec4 LFragment; void main() { LFragment = vec4( "
-        "1.0, 1.0, 1.0, 1.0 ); }"};
+    fsize = 0;
+    GLchar *fragmentShaderSource =
+        (GLchar *)transientStorage->readFile(SHADER_SRC("frag.hlsl"), &fsize);
 
-    // Set fragment source
-    glShaderSource(fragmentShader, 1, fragmentShaderSource, NULL);
-
-    // Compile fragment source
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // Check fragment shader for errors
     GLint fShaderCompiled = GL_FALSE;
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fShaderCompiled);
     if (fShaderCompiled != GL_TRUE) {
         SDL_Log("Unable to compile fragment shader %d!\n", fragmentShader);
-        printShaderLog(fragmentShader);
+        printShaderLog(fragmentShader, transientStorage);
         return false;
     }
 
@@ -170,7 +154,7 @@ bool initGL(RenderState *rs) {
     glGetProgramiv(rs->programID, GL_LINK_STATUS, &programSuccess);
     if (programSuccess != GL_TRUE) {
         SDL_Log("Error linking program %d!\n", rs->programID);
-        printProgramLog(rs->programID);
+        printProgramLog(rs->programID, transientStorage);
         return false;
     }
 

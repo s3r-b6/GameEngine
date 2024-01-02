@@ -20,9 +20,12 @@ struct RenderState {
     GLuint IBO = 0;
 };
 
-bool initSDLandGL(ProgramState *ps, RenderState *rs);
-bool initGL(RenderState *rs);
+// bumpAlloc to store logs and read shader sources
+bool initSDLandGL(ProgramState *ps, RenderState *rs,
+                  BumpAllocator *transientStorage);
+bool initGL(RenderState *rs, BumpAllocator *transientStorage);
+
 void close(ProgramState *ps, RenderState *rs);
 
-void printProgramLog(GLuint program);
-void printShaderLog(GLuint shader);
+void printProgramLog(GLuint program, BumpAllocator *transientStorage);
+void printShaderLog(GLuint shader, BumpAllocator *transientStorage);

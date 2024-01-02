@@ -44,8 +44,9 @@ int main(int argc, char *args[]) {
         .transientStorage = new BumpAllocator(MB(10)),
     };
 
-    if (!initSDLandGL(&programState, &renderState)) {
-        printf("ERROR: Failed to initialize SDL or OpenGL!\n");
+    if (!initSDLandGL(&programState, &renderState,
+                      programState.transientStorage)) {
+        printf("ERROR: Failed to initialize SDL or OpenGL!");
         return -1;
     }
 
