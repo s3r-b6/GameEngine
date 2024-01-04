@@ -148,7 +148,7 @@ void reloadGame(BumpAllocator *transientStorage) {
 
         while (
             !transientStorage->plat_copyFile("./game.so", "./game_load.so")) {
-            if (gAppState->running) sleep(1);
+            if (gAppState->running) platform_sleep(10);
         }
 
         SDL_Log("Copied game.so to game_load.so");

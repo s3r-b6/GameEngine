@@ -9,7 +9,7 @@ struct Transform {
     glm::vec2 pos;
     glm::vec2 size;
 
-    uint atlasIdx;
+    u8 atlasIdx;
 };
 
 constexpr int MAX_TRANSFORMS = 1000;

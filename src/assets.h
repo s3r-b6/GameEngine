@@ -6,7 +6,7 @@ struct Sprite {
     glm::ivec2 atlasOffset;
     glm::ivec2 spriteSize;
 
-    uint atlasIdx;
+    u8 atlasIdx;
 };
 
 enum SpriteID { Player, Chest };
