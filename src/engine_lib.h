@@ -34,3 +34,9 @@ struct ProgramState {
 };
 
 global ProgramState *gAppState;
+
+inline void crash(char *errorMsg) {
+    SDL_Log("ERROR: %s", errorMsg);
+    int *ptr = NULL;
+    *ptr = 42;
+}

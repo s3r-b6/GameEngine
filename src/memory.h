@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SDL2/SDL.h>
 
 #include "types.h"
@@ -7,9 +9,9 @@
 #include <string.h>
 
 // Files
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <fcntl.h>    // TODO: This is linux specific
+#include <sys/stat.h> // TODO: This is linux specific
+#include <unistd.h>   // TODO: This is linux specific
 
 struct BumpAllocator {
     u32 size;
@@ -48,6 +50,7 @@ struct BumpAllocator {
         return result;
     }
 
+    // TODO: This is linux specific
     char *readFile(const char *fileName, size_t *fileSize) {
         int fd = open(fileName, O_RDONLY);
 
@@ -77,6 +80,29 @@ struct BumpAllocator {
         return (char *)memory;
     }
 
+    // TODO: This is linux specific
+    bool copyFile(char *const fileName, char *const newFileName) {
+        size_t fSize;
+        char *f1_ptr = readFile(fileName, &fSize);
+
+        int fd2 = open(newFileName, O_RDWR | O_CREAT | O_TRUNC, 0666);
+        if (fd2 == -1) {
+            SDL_Log("Failed to open file descriptor for %s", newFileName);
+            return false;
+        }
+
+        int written = write(fd2, f1_ptr, fSize);
+
+        if (written != fSize) {
+            SDL_Log("Failed to copy %s to %s", fileName, newFileName);
+            return false;
+        }
+
+        close(fd2);
+
+        return true;
+    }
+
     // The trick is that the used attrib is used to calculate the offset.
     // An offset of 0 means just rewriting everything.
     void freeMemory() { used = 0; }
@@ -87,3 +113,20 @@ struct BumpAllocator {
         used = 0;
     }
 };
+
+// TODO: This is linux specific
+inline u64 getFileTimestamp(char const *fileName) {
+    int fd = open(fileName, O_RDONLY);
+
+    if (fd == -1) {
+        SDL_Log("Failed to open file descriptor for %s", fileName);
+        return 0;
+    }
+
+    struct stat filestat;
+    fstat(fd, &filestat);
+
+    close(fd);
+
+    return filestat.st_mtime;
+}

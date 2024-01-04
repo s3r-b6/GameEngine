@@ -3,10 +3,21 @@
 #include "engine_lib.h"
 #include "renderer.h"
 
-#include "game.cpp"
+#include "platform.h"
+
+// TODO: This should be load as a shared object in linux and as a dll in win32
+#include "game.h"
+
+// Game shared object stub
+typedef decltype(updateGame) update_game_type;
+static update_game_type *updateGame_ptr;
+
+void updateGame(RenderData *renderDataIn);
+void reloadGame(BumpAllocator *transientStorage);
 
 // I don't think inlining is strictly necessary, but this functions are only
-// called here and I mainly extracted them to make this file more manageable.
+// called here and I mainly extracted them to make this file more
+// manageable.
 //
 // TODO: Test this for performance when I am actually rendering something
 // complex
@@ -18,7 +29,7 @@ inline void render() {
 
     glViewport(0, 0, gAppState->width, gAppState->height);
 
-    glm::vec2 screenSize = {(float)gAppState->height, (float)gAppState->width};
+    glm::vec2 screenSize = {(float)gAppState->width, (float)gAppState->height};
     glUniform2fv(gGlContext.screenSizeID, 1, &screenSize.x);
 
     {
@@ -84,8 +95,8 @@ int main(int argc, char *args[]) {
 
     // Free the memory used for initialization
 
-    // Get initial window size. It should have been initialized to defaults, but
-    // who knows
+    // Get initial window size. It should have been initialized to defaults,
+    // but who knows
     SDL_GL_GetDrawableSize(gAppState->window, &gAppState->width,
                            &gAppState->height);
 
@@ -97,18 +108,62 @@ int main(int argc, char *args[]) {
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", &gGlContext,
                      GL_TEXTURE1);
 
+    reloadGame(transientStorage);
     while (gAppState->running) {
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
         }
 
-        update_game();
+        updateGame(gRenderData);
         render();
         SDL_GL_SwapWindow(gAppState->window);
         transientStorage->freeMemory();
+
+        reloadGame(transientStorage);
     }
 
     SDL_StopTextInput();
     close(gAppState, &gGlContext);
     return 0;
+}
+
+void updateGame(RenderData *renderDataIn) { updateGame_ptr(renderDataIn); }
+
+void reloadGame(BumpAllocator *transientStorage) {
+    local_persist void *gameSO;
+    local_persist u64 lastModTimestamp;
+
+    u64 currentTimestamp = getFileTimestamp("./game.so");
+
+    if (currentTimestamp > lastModTimestamp) {
+        SDL_Log("Current sharedObject is newer");
+        if (gameSO) {
+            bool freeResult = plat_free_dynamic_lib(gameSO);
+
+            if (!freeResult) crash("Failed to free game.so");
+
+            gameSO = nullptr;
+            SDL_Log("Freed gameSO");
+        }
+
+        while (!transientStorage->copyFile("./game.so", "./game_load.so")) {
+            if (gAppState->running) sleep(1);
+            else { crash("Failed to copy"); }
+        }
+
+        SDL_Log("Copied game.so to game_load.so");
+
+        gameSO = plat_load_dynamic_lib("./game_load.so");
+        if (!gameSO) crash("Failed to load game_load.so");
+
+        SDL_Log("Loaded dynamic library game_load.so");
+
+        updateGame_ptr =
+            (update_game_type *)plat_load_dynamic_fun(gameSO, "updateGame");
+        if (!updateGame_ptr) crash("Failed to load updateGame function");
+
+        SDL_Log("Loaded dynamic function updateGame");
+
+        lastModTimestamp = currentTimestamp;
+    }
 }
