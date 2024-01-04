@@ -1,24 +1,40 @@
 #include "engine_lib.h"
+
 #include "initialization.h"
 
-#include "renderer.cpp"
+#include "renderer.h"
+
+#include "game.h"
 
 ProgramState g_appState = {0};
 GLContext g_glContext = {0};
+RenderData g_renderData = {};
 
 // I don't think inlining is strictly necessary, but this functions are only
 // called here and I mainly extracted them to make this file more manageable.
 //
 // TODO: Test this for performance when I am actually rendering something
 // complex
-inline void render(GLContext *glContext, ProgramState *pState) {
+inline void render() {
     glClearColor(119.f / 255.f, 33.f / 255.f, 111.f / 255.f, 1.f);
     glClearDepth(0.f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, pState->width, pState->height);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glViewport(0, 0, g_appState.width, g_appState.height);
+
+    glm::vec2 screenSize = {(float)g_appState.height, (float)g_appState.width};
+    glUniform2fv(g_glContext.screenSizeID, 1, &screenSize.x);
+
+    {
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+                        sizeof(Transform) * g_renderData.transformCount,
+                        g_renderData.transforms);
+
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g_renderData.transformCount);
+
+        g_renderData.transformCount = 0;
+    }
 }
 
 inline void handleSDLevents(SDL_Event *event) {
@@ -57,7 +73,8 @@ int main(int argc, char *args[]) {
         .transientStorage = new BumpAllocator(MB(10)),
     };
 
-    if (!initSDLandGL(&g_appState, &g_glContext, g_appState.transientStorage)) {
+    if (!initSDLandGL(&g_appState, &g_glContext, &g_renderData,
+                      g_appState.transientStorage)) {
         SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
         return -1;
     }
@@ -83,7 +100,8 @@ int main(int argc, char *args[]) {
             handleSDLevents(&event);
         }
 
-        render(&g_glContext, &g_appState);
+        update_game(&g_renderData);
+        render();
         SDL_GL_SwapWindow(g_appState.window);
     }
 

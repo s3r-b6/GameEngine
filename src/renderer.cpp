@@ -1,11 +1,9 @@
-#include "initialization.h"
+#include "renderer.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #endif
-
-// 1, 6 16x16
 
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
                       GLenum glTextureIdx) {
@@ -35,4 +33,21 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
     glContext->usedTextures++;
 
     return true;
+}
+
+void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::ivec2 pos,
+                 glm::ivec2 size) {
+
+    Sprite sp = get_sprite(spriteID);
+
+    Transform t = {
+        .atlasOffset = sp.atlasOffset,
+        .spriteSize = sp.spriteSize,
+        .pos = pos,
+        .size = size,
+
+        .atlasIdx = sp.atlasIdx,
+    };
+
+    renderData->transforms[renderData->transformCount++] = t;
 }

@@ -1,107 +1,42 @@
 #pragma once
 
 #include <GL/glew.h>
-#include <GL/glu.h>
+// #include <GL/glu.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+// Math
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "memory.h"
+#include "types.h"
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+// Struct that holds all the data relevant to program execution.
+//  \bool running -> Marks if the program should continue to run the main loop
+//  \int screen_width -> Current screen width
+//  \int screen_height -> Current screen height
+//  \SDL_Window *window -> Pointer to the SDL_Window being used
+//  \SDL_GLContext context -> The context of SDL
+//  \SDL_Renderer *sdl_renderer -> The SDL renderer. Used to get screen size
+//  \BumpAllocator *permanentStorage; -> A *BumpAllocator that should *not* get
+//                                      freed. For example, this should hold the
+//                                      GameState, and so on.
+//
+//  \BumpAllocator *transientStorage; -> A *BumpAllocator that is expected to
+//                                      get freed, since the data it holds is
+//                                      temporal. For example, reading a shader
+//                                      source file: that data is only useful
+//                                      until it is compiled
+struct ProgramState {
+    bool running = true;
+    int width;
+    int height;
+    SDL_Window *window;
+    SDL_GLContext glContext;
 
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-
-#define KB(x) 1024 * x
-#define MB(x) KB(x) * 1024
-#define GB(x) MB(x) * 1024
-
-struct BumpAllocator {
-    size_t size;
-    size_t used;
-    u8 *memory;
-
-    BumpAllocator(size_t len) {
-        size = len;
-        used = 0;
-        memory = (u8 *)malloc(len);
-
-        if (!memory) {
-            SDL_Log("ERROR: Failed to allocate memory for the bumpAllocator!");
-            size = 0;
-            return;
-        }
-
-        memset(memory, 0, size);
-    }
-
-    u8 *alloc(size_t len) {
-        u8 *result = nullptr;
-
-        // ( l+7 ) & ~7 -> First 3 bits are empty, i.e., it is a multiple of 8.
-        size_t allignedSize = (len + 7) & ~7;
-
-        if (used + allignedSize > size) {
-            SDL_Log("ERROR: Not enough space in BumpAllocator");
-            return result;
-        }
-
-        size += allignedSize;
-        result = memory + used;
-        used += allignedSize;
-
-        return result;
-    }
-
-    char *readFile(const char *fileName, size_t *fileSize) {
-        int fd = open(fileName, O_RDONLY);
-
-        if (fd == -1) {
-            SDL_Log("Failed to open file descriptor for %s", fileName);
-            return nullptr;
-        }
-
-        struct stat filestat;
-        fstat(fd, &filestat);
-
-        size_t fSize = filestat.st_size;
-        u8 *memory =
-            alloc(fSize + 1); // request fSize (alligned) bytes of memory
-
-        size_t bytesRead = read(fd, memory, fSize);
-        close(fd);
-
-        memory[bytesRead] = 0; // null-terminate
-
-        if (bytesRead != fSize) {
-            SDL_Log("bytesRead does not match filesize for %s", fileName);
-            return nullptr;
-        }
-
-        *fileSize = fSize;
-        return (char *)memory;
-    }
-
-    // The trick is that the used attrib is used to calculate the offset.
-    // An offset of 0 means just rewriting everything.
-    void freeMemory() { used = 0; }
-
-    void destroy() {
-        free(memory);
-        size = 0;
-        used = 0;
-    }
+    BumpAllocator *permanentStorage;
+    BumpAllocator *transientStorage;
 };

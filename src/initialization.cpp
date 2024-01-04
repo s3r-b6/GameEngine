@@ -1,12 +1,13 @@
 #include "initialization.h"
-#include "engine_lib.h"
+
+#include "renderer.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
 
 // TODO: Make logs different based on severity...
 
-bool initSDLandGL(ProgramState *ps, GLContext *rs,
+bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
                   BumpAllocator *transientStorage) {
 
     { // Initialize SDL
@@ -60,7 +61,7 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs,
         }
 
         // Initialize OpenGL
-        if (!initGL(rs, transientStorage)) {
+        if (!initGL(rs, transientStorage, renderData)) {
             SDL_Log("Unable to initialize OpenGL!");
             return false;
         }
@@ -69,7 +70,8 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs,
     return true;
 }
 
-bool initGL(GLContext *glContext, BumpAllocator *tStorage) {
+bool initGL(GLContext *glContext, BumpAllocator *tStorage,
+            RenderData *renderData) {
     glContext->programID = glCreateProgram();
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
@@ -133,13 +135,23 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    glGenTextures(MAX_TEXTURES, glContext->textureIDs);
+    glGenTextures(MAX_TEXTURES,
+                  glContext->textureIDs); // This is for the textureAtlases
+
+    // This creates a buffer for the transforms
+    glGenBuffers(1, &glContext->transformSBOID);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glContext->transformSBOID);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Transform) * MAX_TRANSFORMS,
+                 renderData->transforms, GL_DYNAMIC_DRAW);
 
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_MULTISAMPLE);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
+
+    glContext->screenSizeID =
+        glGetUniformLocation(glContext->programID, "screenSize");
 
     glUseProgram(glContext->programID);
 
