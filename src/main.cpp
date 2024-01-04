@@ -133,12 +133,12 @@ void reloadGame(BumpAllocator *transientStorage) {
     local_persist void *gameSO;
     local_persist u64 lastModTimestamp;
 
-    u64 currentTimestamp = getFileTimestamp("./game.so");
+    u64 currentTimestamp = plat_getFileTimestamp("./game.so");
 
     if (currentTimestamp > lastModTimestamp) {
         SDL_Log("Current sharedObject is newer");
         if (gameSO) {
-            bool freeResult = plat_free_dynamic_lib(gameSO);
+            bool freeResult = plat_freeDynamicLib(gameSO);
 
             if (!freeResult) crash("Failed to free game.so");
 
@@ -146,20 +146,20 @@ void reloadGame(BumpAllocator *transientStorage) {
             SDL_Log("Freed gameSO");
         }
 
-        while (!transientStorage->copyFile("./game.so", "./game_load.so")) {
+        while (
+            !transientStorage->plat_copyFile("./game.so", "./game_load.so")) {
             if (gAppState->running) sleep(1);
-            else { crash("Failed to copy"); }
         }
 
         SDL_Log("Copied game.so to game_load.so");
 
-        gameSO = plat_load_dynamic_lib("./game_load.so");
+        gameSO = plat_loadDynamicLib("./game_load.so");
         if (!gameSO) crash("Failed to load game_load.so");
 
         SDL_Log("Loaded dynamic library game_load.so");
 
         updateGame_ptr =
-            (update_game_type *)plat_load_dynamic_fun(gameSO, "updateGame");
+            (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
         if (!updateGame_ptr) crash("Failed to load updateGame function");
 
         SDL_Log("Loaded dynamic function updateGame");

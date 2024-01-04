@@ -76,9 +76,9 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
     char *vertSource =
-        tStorage->readFile(SHADER_SRC("vert.glsl"), &vertSourceSize);
+        tStorage->plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize);
     char *fragSource =
-        tStorage->readFile(SHADER_SRC("frag.glsl"), &fragSourceSize);
+        tStorage->plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize);
 
     if (!vertSource) { SDL_Log("Failed to read vertex shader sources"); }
     if (!fragSource) { SDL_Log("Failed to read fragment shader sources"); }
