@@ -7,7 +7,8 @@
 
 // 1, 6 16x16
 
-bool loadTexture(char const *texturePath, GLContext *glContext) {
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
+                      GLenum glTextureIdx) {
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
 
@@ -16,9 +17,9 @@ bool loadTexture(char const *texturePath, GLContext *glContext) {
         return false;
     }
 
-    glGenTextures(1, &glContext->textureID);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, glContext->textureID);
+    glActiveTexture(glTextureIdx);
+    glBindTexture(GL_TEXTURE_2D,
+                  glContext->textureIDs[glContext->usedTextures]);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -30,6 +31,8 @@ bool loadTexture(char const *texturePath, GLContext *glContext) {
                  GL_UNSIGNED_BYTE, data);
 
     stbi_image_free(data);
+
+    glContext->usedTextures++;
 
     return true;
 }

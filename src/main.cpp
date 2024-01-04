@@ -73,7 +73,10 @@ int main(int argc, char *args[]) {
     SDL_Event event;
     SDL_StartTextInput();
 
-    loadTexture("../assets/textures/zelda-like/character.png", &g_glContext);
+    loadTextureAtlas("../assets/textures/zelda-like/character.png",
+                     &g_glContext, GL_TEXTURE0);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", &g_glContext,
+                     GL_TEXTURE1);
 
     while (g_appState.running) {
         while (SDL_PollEvent(&event) != 0) {

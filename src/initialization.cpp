@@ -133,6 +133,11 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    glGenTextures(MAX_TEXTURES, glContext->textureIDs);
+
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_MULTISAMPLE);
+
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
 

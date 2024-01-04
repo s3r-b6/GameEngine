@@ -29,10 +29,15 @@ struct ProgramState {
     BumpAllocator *transientStorage;
 };
 
+constexpr GLsizei MAX_TEXTURES = 8;
+
 // Struct that holds all data relevant to the renderer
+// TODO: align this
 struct GLContext {
     GLuint programID = 0;
-    GLuint textureID = 0;
+    GLuint textureIDs[MAX_TEXTURES];
+
+    u16 usedTextures = 0;
 };
 
 // bumpAlloc to store logs and read shader sources
