@@ -1,15 +1,10 @@
 #pragma once
 
 #include <GL/glew.h>
-// #include <GL/glu.h>
+#include <GL/glu.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-
-// Math
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 
 #include "memory.h"
 #include "types.h"
@@ -36,7 +31,6 @@ struct ProgramState {
     int height;
     SDL_Window *window;
     SDL_GLContext glContext;
-
-    BumpAllocator *permanentStorage;
-    BumpAllocator *transientStorage;
 };
+
+global ProgramState *gAppState;

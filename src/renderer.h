@@ -9,13 +9,13 @@ struct Transform {
     glm::vec2 pos;
     glm::vec2 size;
 
-    GLuint atlasIdx;
+    uint atlasIdx;
 };
 
 constexpr int MAX_TRANSFORMS = 1000;
 
 struct RenderData {
-    Transform transforms[MAX_TRANSFORMS];
+    Transform transforms[MAX_TRANSFORMS] = {};
     int transformCount = 0;
 };
 
@@ -37,3 +37,6 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
 
 void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::ivec2 pos,
                  glm::ivec2 size);
+
+global RenderData *gRenderData;
+global GLContext gGlContext;

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "engine_lib.h"
+#include "types.h"
 
 struct Sprite {
     glm::ivec2 atlasOffset;
     glm::ivec2 spriteSize;
 
-    GLuint atlasIdx;
+    uint atlasIdx;
 };
 
 enum SpriteID { Player, Chest };

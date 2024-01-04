@@ -1,14 +1,9 @@
-#include "engine_lib.h"
-
 #include "initialization.h"
 
+#include "engine_lib.h"
 #include "renderer.h"
 
-#include "game.h"
-
-ProgramState g_appState = {0};
-GLContext g_glContext = {0};
-RenderData g_renderData = {};
+#include "game.cpp"
 
 // I don't think inlining is strictly necessary, but this functions are only
 // called here and I mainly extracted them to make this file more manageable.
@@ -21,33 +16,33 @@ inline void render() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, g_appState.width, g_appState.height);
+    glViewport(0, 0, gAppState->width, gAppState->height);
 
-    glm::vec2 screenSize = {(float)g_appState.height, (float)g_appState.width};
-    glUniform2fv(g_glContext.screenSizeID, 1, &screenSize.x);
+    glm::vec2 screenSize = {(float)gAppState->height, (float)gAppState->width};
+    glUniform2fv(gGlContext.screenSizeID, 1, &screenSize.x);
 
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-                        sizeof(Transform) * g_renderData.transformCount,
-                        g_renderData.transforms);
+                        sizeof(Transform) * gRenderData->transformCount,
+                        gRenderData->transforms);
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g_renderData.transformCount);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gRenderData->transformCount);
 
-        g_renderData.transformCount = 0;
+        gRenderData->transformCount = 0;
     }
 }
 
 inline void handleSDLevents(SDL_Event *event) {
     switch (event->type) {
     case SDL_QUIT: {
-        g_appState.running = false;
+        gAppState->running = false;
         break;
     }
 
     case SDL_WINDOWEVENT: {
         if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            SDL_GL_GetDrawableSize(g_appState.window, &g_appState.width,
-                                   &g_appState.height);
+            SDL_GL_GetDrawableSize(gAppState->window, &gAppState->width,
+                                   &gAppState->height);
         }
 
         break;
@@ -65,47 +60,55 @@ inline void handleSDLevents(SDL_Event *event) {
 }
 
 int main(int argc, char *args[]) {
-    g_appState = {
-        .running = true,
-        .width = 1280,
-        .height = 720,
-        .permanentStorage = new BumpAllocator(MB(10)),
-        .transientStorage = new BumpAllocator(MB(10)),
-    };
+    BumpAllocator *permanentStorage = new BumpAllocator(MB(10));
+    BumpAllocator *transientStorage = new BumpAllocator(MB(10));
 
-    if (!initSDLandGL(&g_appState, &g_glContext, &g_renderData,
-                      g_appState.transientStorage)) {
+    gAppState = (ProgramState *)permanentStorage->alloc(sizeof(ProgramState));
+    gRenderData = (RenderData *)permanentStorage->alloc(sizeof(RenderData));
+
+    gAppState->running = true;
+    gAppState->width = 1280;
+    gAppState->height = 720;
+    gAppState->window = NULL;
+    gAppState->glContext = NULL;
+
+    if (!gAppState || !gRenderData) {
+        SDL_Log("ERROR: Failed to alloc ProgramState* or RenderData*");
+        return -1;
+    }
+
+    if (!initSDLandGL(gAppState, &gGlContext, gRenderData, transientStorage)) {
         SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
         return -1;
     }
 
     // Free the memory used for initialization
-    g_appState.transientStorage->freeMemory();
 
     // Get initial window size. It should have been initialized to defaults, but
     // who knows
-    SDL_GL_GetDrawableSize(g_appState.window, &g_appState.width,
-                           &g_appState.height);
+    SDL_GL_GetDrawableSize(gAppState->window, &gAppState->width,
+                           &gAppState->height);
 
     SDL_Event event;
     SDL_StartTextInput();
 
-    loadTextureAtlas("../assets/textures/zelda-like/character.png",
-                     &g_glContext, GL_TEXTURE0);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", &g_glContext,
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", &gGlContext,
+                     GL_TEXTURE0);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", &gGlContext,
                      GL_TEXTURE1);
 
-    while (g_appState.running) {
+    while (gAppState->running) {
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
         }
 
-        update_game(&g_renderData);
+        update_game();
         render();
-        SDL_GL_SwapWindow(g_appState.window);
+        SDL_GL_SwapWindow(gAppState->window);
+        transientStorage->freeMemory();
     }
 
     SDL_StopTextInput();
-    close(&g_appState, &g_glContext);
+    close(gAppState, &gGlContext);
     return 0;
 }
