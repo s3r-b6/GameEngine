@@ -1,6 +1,8 @@
 #include "engine_lib.h"
 #include "initialization.h"
 
+#include "renderer.cpp"
+
 ProgramState g_appState = {0};
 GLContext g_glContext = {0};
 
@@ -70,6 +72,8 @@ int main(int argc, char *args[]) {
 
     SDL_Event event;
     SDL_StartTextInput();
+
+    loadTexture("../assets/textures/zelda-like/character.png", &g_glContext);
 
     while (g_appState.running) {
         while (SDL_PollEvent(&event) != 0) {

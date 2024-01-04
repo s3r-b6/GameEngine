@@ -69,50 +69,14 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs,
     return true;
 }
 
-void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
-    // Make sure name is shader
-    if (!glIsProgram(program)) {
-        SDL_Log("Name %d is not a program", program);
-        return;
-    }
-
-    int infoLogLength = 0;
-    int maxLength = 0;
-
-    // Get info string length
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
-    char *infoLog = (char *)transientStorage->alloc(maxLength);
-    glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) SDL_Log("%s", infoLog);
-}
-
-void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
-    // Make sure name is shader
-    if (!glIsShader(shader)) {
-        SDL_Log("Name %d is not a shader", shader);
-        return;
-    }
-
-    // Shader log length
-    int infoLogLength = 0;
-    int maxLength = 0;
-
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-    char *infoLog = (char *)transientStorage->alloc(maxLength);
-
-    glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) { SDL_Log("%s", infoLog); }
-}
-
 bool initGL(GLContext *glContext, BumpAllocator *tStorage) {
     glContext->programID = glCreateProgram();
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
     char *vertSource =
-        tStorage->readFile(SHADER_SRC("vert.hlsl"), &vertSourceSize);
+        tStorage->readFile(SHADER_SRC("vert.glsl"), &vertSourceSize);
     char *fragSource =
-        tStorage->readFile(SHADER_SRC("frag.hlsl"), &fragSourceSize);
+        tStorage->readFile(SHADER_SRC("frag.glsl"), &fragSourceSize);
 
     if (!vertSource) { SDL_Log("Failed to read vertex shader sources"); }
     if (!fragSource) { SDL_Log("Failed to read fragment shader sources"); }
@@ -182,4 +146,40 @@ void close(ProgramState *ps, GLContext *gc) {
     SDL_DestroyWindow(ps->window);
     ps->window = NULL;
     SDL_Quit();
+}
+
+void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
+    // Make sure name is shader
+    if (!glIsProgram(program)) {
+        SDL_Log("Name %d is not a program", program);
+        return;
+    }
+
+    int infoLogLength = 0;
+    int maxLength = 0;
+
+    // Get info string length
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+    char *infoLog = (char *)transientStorage->alloc(maxLength);
+    glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
+    if (infoLogLength > 0) SDL_Log("%s", infoLog);
+}
+
+void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
+    // Make sure name is shader
+    if (!glIsShader(shader)) {
+        SDL_Log("Name %d is not a shader", shader);
+        return;
+    }
+
+    // Shader log length
+    int infoLogLength = 0;
+    int maxLength = 0;
+
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+    char *infoLog = (char *)transientStorage->alloc(maxLength);
+
+    glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
+    if (infoLogLength > 0) { SDL_Log("%s", infoLog); }
 }

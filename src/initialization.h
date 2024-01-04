@@ -32,6 +32,7 @@ struct ProgramState {
 // Struct that holds all data relevant to the renderer
 struct GLContext {
     GLuint programID = 0;
+    GLuint textureID = 0;
 };
 
 // bumpAlloc to store logs and read shader sources
