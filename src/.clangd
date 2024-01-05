@@ -1,3 +1,11 @@
 CompileFlags:
-  Add: [-I/usr/include/, -I../src/headers, -I../deps/, -L../lib/, -lSDL2, -Wno-misc-definitions-in-headers, -Wno-write-strings]
-  Compiler: g++
+  Add:
+    - "-I../deps/"
+    - "-I../src/headers"
+    - "-L../lib/"
+    - "-lSDL2"
+    - "-lGLEW"
+    - "-lGL"
+    - "-Wno-misc-definitions-in-headers"
+    - "-Wno-write-strings"
+  Compiler: "g++"

@@ -8,7 +8,9 @@
 
 #include <dlfcn.h>
 
-inline void *plat_loadDynamicLib(const char *dlName) {
+#include "SDL2/SDL_log.h"
+
+void *plat_loadDynamicLib(char *dlName) {
     void *sharedObject = dlopen(dlName, RTLD_NOW);
     if (!sharedObject) {
         SDL_Log("Failed to load dynamic library: %s", dlerror());
@@ -17,7 +19,7 @@ inline void *plat_loadDynamicLib(const char *dlName) {
     return sharedObject;
 }
 
-inline bool plat_freeDynamicLib(void *sharedObject) {
+bool plat_freeDynamicLib(void *sharedObject) {
     int res = dlclose(sharedObject);
     if (res != 0) {
         SDL_Log("Failed to free dynamic library: %s", dlerror());
@@ -26,7 +28,7 @@ inline bool plat_freeDynamicLib(void *sharedObject) {
     return true;
 }
 
-inline void *plat_loadDynamicFun(void *sharedObject, const char *funName) {
+void *plat_loadDynamicFun(void *sharedObject, char *funName) {
     void *function = dlsym(sharedObject, funName);
     if (!function) {
         SDL_Log("Failed to load dynamic function: %s", dlerror());
@@ -35,7 +37,7 @@ inline void *plat_loadDynamicFun(void *sharedObject, const char *funName) {
     return function;
 }
 
-inline u64 plat_getFileTimestamp(char const *fileName) {
+u64 plat_getFileTimestamp(char *fileName) {
     int fd = open(fileName, O_RDONLY);
 
     if (fd == -1) {
@@ -51,7 +53,7 @@ inline u64 plat_getFileTimestamp(char const *fileName) {
     return filestat.st_mtime;
 }
 
-char *plat_readFile(const char *fileName, size_t *fileSize,
+char *plat_readFile(char *fileName, size_t *fileSize,
                     BumpAllocator *allocator) {
     int fd = open(fileName, O_RDONLY);
 
@@ -81,7 +83,7 @@ char *plat_readFile(const char *fileName, size_t *fileSize,
     return (char *)memory;
 }
 
-bool plat_copyFile(char *const fileName, char *const newFileName,
+bool plat_copyFile(char *fileName, char *newFileName,
                    BumpAllocator *allocator) {
     size_t fSize;
     char *f1_ptr = plat_readFile(fileName, &fSize, allocator);

@@ -33,3 +33,6 @@
 
 
 !/lib/*
+build/game.exp
+build/game.ilk
+build/game.pdb

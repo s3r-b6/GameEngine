@@ -22,7 +22,7 @@ bool plat_freeDynamicLib(void *dll) {
     return (bool)freeResult;
 }
 
-u64 plat_getFileTimestamp(const char *fileName) {
+u64 plat_getFileTimestamp(char *fileName) {
     HANDLE hFile;
     FILETIME ftLastWriteTime;
     ULARGE_INTEGER ull;
@@ -53,7 +53,7 @@ u64 plat_getFileTimestamp(const char *fileName) {
     return ull.QuadPart;
 }
 
-char *plat_readFile(char const *fileName, size_t *fileSize,
+char *plat_readFile(char *fileName, size_t *fileSize,
                     BumpAllocator *allocator) {
     HANDLE hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -88,7 +88,7 @@ char *plat_readFile(char const *fileName, size_t *fileSize,
     return memory;
 }
 
-bool plat_copyFile(char *const fileName, char *const newFileName,
+bool plat_copyFile(char *fileName, char *newFileName,
                    BumpAllocator *allocator) {
     size_t fileSize;
     char *fileContent = plat_readFile(fileName, &fileSize, allocator);
