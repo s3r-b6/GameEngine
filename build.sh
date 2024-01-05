@@ -15,11 +15,14 @@ sources_main=(
 	../src/initialization.cpp 
 	../src/assets.cpp 
 	../src/renderer.cpp 
+	../src/linux_platform.cpp
+    ../deps/glad/glad.c
 )
 
 sources_game=(
 	../src/assets.cpp 
 	../src/renderer.cpp 
+    ../deps/glad/glad.c
 )
 
 flags=( -Wno-write-strings )

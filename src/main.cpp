@@ -1,19 +1,14 @@
-#include "initialization.h"
+#include "main.h"
 
-#include "engine_lib.h"
-#include "renderer.h"
+#include <cstdio>
 
-#include "platform.h"
-
-// TODO: This should be load as a shared object in linux and as a dll in win32
-#include "game.h"
-
-// Game shared object stub
-typedef decltype(updateGame) update_game_type;
-static update_game_type *updateGame_ptr;
-
-void updateGame(RenderData *renderDataIn);
-void reloadGame(BumpAllocator *transientStorage);
+#ifdef _WIN32
+#define gameSharedObject "./game.dll"
+#define loadedgameSharedObject "./game_load.dll"
+#elif __linux__
+#define gameSharedObject "./game.so"
+#define loadedgameSharedObject "./game_load.so"
+#endif
 
 // I don't think inlining is strictly necessary, but this functions are only
 // called here and I mainly extracted them to make this file more
@@ -70,7 +65,54 @@ inline void handleSDLevents(SDL_Event *event) {
     }
 }
 
-int main(int argc, char *args[]) {
+void updateGame(RenderData *renderDataIn) { updateGame_ptr(renderDataIn); }
+
+void reloadGameLib(BumpAllocator *transientStorage) {
+    local_persist void *gameSO;
+    local_persist u64 lastModTimestamp;
+
+    u64 currentTimestamp = plat_getFileTimestamp(gameSharedObject);
+
+    if (currentTimestamp > lastModTimestamp) {
+        SDL_Log("Current sharedObject is newer");
+        if (gameSO) {
+            bool freeResult = plat_freeDynamicLib(gameSO);
+
+            if (!freeResult) crash("Failed to free game.so");
+
+            gameSO = nullptr;
+            SDL_Log("Freed gameSO");
+        }
+
+        while (!plat_copyFile(gameSharedObject, loadedgameSharedObject,
+                              transientStorage)) {
+            if (gAppState->running) platform_sleep(10);
+        }
+
+        SDL_Log("Copied game.so to game_load.so");
+
+        gameSO = plat_loadDynamicLib(loadedgameSharedObject);
+        if (!gameSO) crash("Failed to load game_load.so");
+
+        SDL_Log("Loaded dynamic library game_load.so");
+
+        updateGame_ptr =
+            (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
+        if (!updateGame_ptr) crash("Failed to load updateGame function");
+
+        SDL_Log("Loaded dynamic function updateGame");
+
+        lastModTimestamp = currentTimestamp;
+    }
+}
+
+#ifdef _WIN32
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                      LPSTR lpCmdLine, int nCmdShow)
+#elif __linux__
+int main(int argc, char *args[])
+#endif
+{
     BumpAllocator *permanentStorage = new BumpAllocator(MB(10));
     BumpAllocator *transientStorage = new BumpAllocator(MB(10));
 
@@ -108,7 +150,7 @@ int main(int argc, char *args[]) {
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", &gGlContext,
                      GL_TEXTURE1);
 
-    reloadGame(transientStorage);
+    reloadGameLib(transientStorage);
     while (gAppState->running) {
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
@@ -119,51 +161,11 @@ int main(int argc, char *args[]) {
         SDL_GL_SwapWindow(gAppState->window);
         transientStorage->freeMemory();
 
-        reloadGame(transientStorage);
+        reloadGameLib(transientStorage);
     }
 
     SDL_StopTextInput();
     close(gAppState, &gGlContext);
+
     return 0;
-}
-
-void updateGame(RenderData *renderDataIn) { updateGame_ptr(renderDataIn); }
-
-void reloadGame(BumpAllocator *transientStorage) {
-    local_persist void *gameSO;
-    local_persist u64 lastModTimestamp;
-
-    u64 currentTimestamp = plat_getFileTimestamp("./game.so");
-
-    if (currentTimestamp > lastModTimestamp) {
-        SDL_Log("Current sharedObject is newer");
-        if (gameSO) {
-            bool freeResult = plat_freeDynamicLib(gameSO);
-
-            if (!freeResult) crash("Failed to free game.so");
-
-            gameSO = nullptr;
-            SDL_Log("Freed gameSO");
-        }
-
-        while (
-            !transientStorage->plat_copyFile("./game.so", "./game_load.so")) {
-            if (gAppState->running) platform_sleep(10);
-        }
-
-        SDL_Log("Copied game.so to game_load.so");
-
-        gameSO = plat_loadDynamicLib("./game_load.so");
-        if (!gameSO) crash("Failed to load game_load.so");
-
-        SDL_Log("Loaded dynamic library game_load.so");
-
-        updateGame_ptr =
-            (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
-        if (!updateGame_ptr) crash("Failed to load updateGame function");
-
-        SDL_Log("Loaded dynamic function updateGame");
-
-        lastModTimestamp = currentTimestamp;
-    }
 }

@@ -18,7 +18,7 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
         }
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                             SDL_GL_CONTEXT_PROFILE_CORE);
 
@@ -45,11 +45,8 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
     }
 
     { // Initialize glew, set VSync, OpenGL
-        glewExperimental = GL_TRUE;
-        GLenum glewError = glewInit();
-        if (glewError != GLEW_OK) {
-            SDL_Log("Error initializing GLEW! %s\n",
-                    glewGetErrorString(glewError));
+        if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+            SDL_Log("Error initializing glad!\n");
             return false;
         }
 
@@ -76,9 +73,9 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
     char *vertSource =
-        tStorage->plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize);
+        plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize, tStorage);
     char *fragSource =
-        tStorage->plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize);
+        plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize, tStorage);
 
     if (!vertSource) { SDL_Log("Failed to read vertex shader sources"); }
     if (!fragSource) { SDL_Log("Failed to read fragment shader sources"); }
