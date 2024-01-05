@@ -4,8 +4,12 @@
 EXPORT_FN void updateGame(RenderData *renderDataIn) {
     gRenderData = renderDataIn;
 
-    glm::ivec2 pos = {10.f, 10.f};
-
-    draw_sprite(gRenderData, Chest, {100.f, 0.f}, {100.f, 100.f});
-    draw_sprite(gRenderData, Player, {300.f, 000.f}, {100.f, 100.f});
+    for (int x = 0; x < 10; x++) {
+        for (int y = 0; y < 10; y++) {
+            draw_sprite(gRenderData, Player, {100.f * x, 200.f * y},
+                        {100.f, 100.f});
+            draw_sprite(gRenderData, Chest, {150.f * x, 100.f * y},
+                        {100.f, 100.f});
+        }
+    }
 }

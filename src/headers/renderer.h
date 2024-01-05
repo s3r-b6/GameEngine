@@ -10,10 +10,12 @@ struct Transform {
     glm::vec2 pos;
     glm::vec2 size;
 
-    u8 atlasIdx;
+    GLuint atlasIdx;
+
+    GLuint padding[3];
 };
 
-constexpr int MAX_TRANSFORMS = 1000;
+constexpr int MAX_TRANSFORMS = 256;
 
 struct RenderData {
     Transform transforms[MAX_TRANSFORMS] = {};

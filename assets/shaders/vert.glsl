@@ -7,16 +7,17 @@ struct Transform {
     vec2 pos;
     vec2 size;
 
-    int atlasIdx;
+    uint atlasIdx;
+    uint padding[3];
 };
 
-layout(std430, binding=0) buffer TransformSBO {
+layout(std430, binding = 0) buffer TransformSBO {
     Transform transforms[];
 };
 
 uniform vec2 screenSize;
 
-layout(location = 0) flat out int textureAtlasIdxOut;
+layout(location = 0) flat out uint textureAtlasIdxOut;
 layout(location = 1) out vec2 textureCoordsOut;
 
 void main() {
@@ -30,21 +31,21 @@ void main() {
         t.pos + vec2(t.size.x, 0.f),
         t.pos + vec2(0.f, t.size.y),
         t.pos + t.size,
-    };
+        };
 
-    float top    = t.atlasOffset.y;
-    float left   = t.atlasOffset.x;
+    float top = t.atlasOffset.y;
+    float left = t.atlasOffset.x;
     float bottom = t.atlasOffset.y + t.spriteSize.y;
-    float right  = t.atlasOffset.x + t.spriteSize.x;
+    float right = t.atlasOffset.x + t.spriteSize.x;
 
     vec2 textureCoords[6] = {
-        vec2(left,  top),
-        vec2(left,  bottom),
+        vec2(left, top),
+        vec2(left, bottom),
         vec2(right, top),
         vec2(right, top),
-        vec2(left,  bottom),
+        vec2(left, bottom),
         vec2(right, bottom),
-    };
+        };
 
     { // Invert the Y (openGL) and normalize
         vec2 vertexPos = vertices[gl_VertexID];
