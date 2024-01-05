@@ -1,33 +1,28 @@
 # This should run from inside ./build
 
-include=(
-		-I/user/include/ 
-		-I../deps/
-)
+include=( -I../deps/ )
 
 libs=(
-		-L/lib 
-		-lSDL2 
-		-lGLEW 
-		-lGL 
-		-lGLU
+	-L/lib 
+	-lSDL2 
+	-lGLEW 
+	-lGL 
+	# -lGLU
 )
 
 sources_main=(
-		../src/main.cpp 
-		../src/initialization.cpp 
-		../src/assets.cpp 
-		../src/renderer.cpp 
+	../src/main.cpp 
+	../src/initialization.cpp 
+	../src/assets.cpp 
+	../src/renderer.cpp 
 )
 
 sources_game=(
-		../src/assets.cpp 
-		../src/renderer.cpp 
+	../src/assets.cpp 
+	../src/renderer.cpp 
 )
 
-flags=(
-	-Wno-write-strings
-)
+flags=( -Wno-write-strings )
 
 timestamp=$(date '+%s')
 
