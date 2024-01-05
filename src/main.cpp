@@ -74,7 +74,6 @@ void reloadGameLib(BumpAllocator *transientStorage) {
     u64 currentTimestamp = plat_getFileTimestamp(gameSharedObject);
 
     if (currentTimestamp > lastModTimestamp) {
-        SDL_Log("Current sharedObject is newer");
         if (gameSO) {
             bool freeResult = plat_freeDynamicLib(gameSO);
 

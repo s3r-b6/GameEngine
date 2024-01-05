@@ -28,7 +28,8 @@ $flags = (
 
 $current_directory = Get-Location
 
-if ($current_directory -notlike "*\build") {
+if ($current_directory -notlike "*\build")
+{
     Write-Host "Running from wrong directory $current_directory"
     Write-Host "Should be running from .\build..."
     exit 1
@@ -38,17 +39,18 @@ $timestamp = Get-Date -Format "yyyyMMddHHmmss"
 
 $running = Get-Process -Name "game" -ErrorAction SilentlyContinue
 
-if ($running) {
+if ($running)
+{
     Write-Output 'Game is running'
-    Remove-Item build\game_* -ErrorAction SilentlyContinue
+    Remove-Item .\game* -ErrorAction SilentlyContinue
     Write-Output "Start compiling build\game_$timestamp.dll..."
     g++ $libs $include $sources_game -g ..\src\game.cpp -shared -o .\game_$timestamp.dll $flags # This is win32 specific
-    Remove-Item -ErrorAction SilentlyContinue build\game.dll
-    Move-Item -ErrorAction SilentlyContinue .\build\game_$timestamp.dll .\game.dll
-}
-else {
+    Remove-Item -ErrorAction SilentlyContinue .\game.dll
+    Move-Item -ErrorAction SilentlyContinue .\game_$timestamp.dll .\game.dll
+} else
+{
     Write-Output "Could not find game through Get-Process 'game'. Assuming it is not running."
-    Remove-Item build\game* -ErrorAction SilentlyContinue
+    Remove-Item .\game* -ErrorAction SilentlyContinue
     Write-Output "Start compiling build\game.dll..."
     g++ $libs $include $sources_game -g ..\src\game.cpp -shared -o .\game.dll $flags # This is win32 specific &
     Write-Output "Compiling game.exe"
