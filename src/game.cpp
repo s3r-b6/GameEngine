@@ -1,8 +1,8 @@
 #include "game.h"
+#include "input.h"
 #include "renderer.h"
 
-constexpr glm::ivec2 WORLD_SIZE = {320, 180};
-constexpr int TILESIZE = 16;
+#include "game_input.h"
 
 EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
                           Input *inputIn) {
@@ -20,13 +20,18 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
             .dimensions = {(float)WORLD_SIZE.x, (float)WORLD_SIZE.y},
         };
 
+        gameRegisterKey(MOVE_UP, 'w');
+        gameRegisterKey(MOVE_RIGHT, 'a');
+        gameRegisterKey(MOVE_DOWN, 's');
+        gameRegisterKey(MOVE_LEFT, 'd');
+
         gGameState->initialized = true;
     }
 
-    draw_sprite(gRenderData, Player, {160.f, -90.f}, {16.f, 16.f});
+    draw_sprite(gRenderData, Player, gGameState->playerPos, {16.f, 16.f});
 
-    draw_sprite(gRenderData, Player, {0.f, 0.f}, {16.f, 16.f});
-
-    draw_sprite(gRenderData, Player, {80.f, 45.f}, {16.f, 16.f});
-    draw_sprite(gRenderData, Player, {300.f, 90.f}, {16.f, 16.f});
+    if (actionDown(MOVE_UP)) { gGameState->playerPos.y -= 1; }
+    if (actionDown(MOVE_DOWN)) { gGameState->playerPos.y += 1; }
+    if (actionDown(MOVE_RIGHT)) { gGameState->playerPos.x -= 1; }
+    if (actionDown(MOVE_LEFT)) { gGameState->playerPos.x += 1; }
 }

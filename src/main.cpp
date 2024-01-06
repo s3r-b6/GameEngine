@@ -1,4 +1,5 @@
 #include "main.h"
+#include "input.h"
 #include "renderer.h"
 
 #ifdef _WIN32
@@ -71,8 +72,8 @@ inline void handleSDLevents(SDL_Event *event) {
     case SDL_MOUSEMOTION: {
         if (gInput->mouseInWindow) {
             SDL_GetMouseState(&gInput->mousePos.x, &gInput->mousePos.y);
-            SDL_Log("New mousePos: %d %d", gInput->mousePos.x,
-                    gInput->mousePos.y);
+            // SDL_Log("New mousePos: %d %d", gInput->mousePos.x,
+            // gInput->mousePos.y);
         }
 
         break;
@@ -91,10 +92,21 @@ inline void handleSDLevents(SDL_Event *event) {
 
     case SDL_KEYUP:
     case SDL_KEYDOWN: {
-        char const *pressed = event->type == SDL_KEYUP ? "Key down" : "Key up";
-        int keyCode = event->key.keysym.sym;
-        char const *keyName = SDL_GetKeyName(keyCode);
-        SDL_Log("%s '%s'", pressed, keyName);
+        bool pressed = event->type == SDL_KEYDOWN;
+        SDL_Keycode keyCode = event->key.keysym.sym;
+
+        // char const *keyName = SDL_GetKeyName(keyCode);
+        // SDL_Log("%s '%s'", pressed, keyName);
+        //
+        // TODO: Right now, the idea is just to update the keys that are
+        // relevant (bound) to the game. In the future, I'd like to add states.
+        // For example:
+        //
+        // Text mode: Only update ASCII keycodes.
+        // UI mode:   Only update UI keycodes
+        updateKeyState(keyCode, pressed);
+        gInput->lastPressed = keyCode;
+
         break;
     }
     }
@@ -167,6 +179,7 @@ int main(int argc, char *args[])
 
     gInput->mouseInWindow = true;
     gInput->showCursor = true;
+    gInput->usedKeys = std::map<SDL_Keycode, KeyState>();
 
     gAppState->running = true;
     gAppState->width = 1280;
@@ -201,6 +214,21 @@ int main(int argc, char *args[])
         }
 
         SDL_ShowCursor(gInput->showCursor);
+
+        // This is my current idea for user remaps. The idea is to just
+        // store the last pressed key and use that; this way, I don't have
+        // to check for anything
+        //
+        // if (gInput->lastPressed) {
+        //     registerKey(gInput->lastPressed);
+        //
+        //    KeyState ks = {};
+        //    if (getKeyState(gInput->lastPressed, &ks)) {
+        //        SDL_Log("Key %s state: id:%d jp:%d jr:%d wd:%d",
+        //                SDL_GetKeyName(gInput->lastPressed), ks.isDown,
+        //                ks.justPressed, ks.justReleased, ks.wasDown);
+        //    }
+        //}
 
         updateGame(gGameState, gRenderData, gInput);
         render();

@@ -4,6 +4,9 @@
 #include "platform.h"
 #include "renderer.h"
 
+constexpr glm::ivec2 WORLD_SIZE = {320, 180};
+constexpr int TILESIZE = 16;
+
 struct GameState {
     glm::ivec2 playerPos;
     bool initialized;
