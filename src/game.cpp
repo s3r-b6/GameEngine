@@ -1,4 +1,5 @@
 #include "game.h"
+#include "renderer.h"
 
 constexpr glm::ivec2 WORLD_SIZE = {320, 180};
 constexpr int TILESIZE = 16;
@@ -13,20 +14,19 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
     }
 
     if (!gGameState->initialized) {
-        gGameState->playerPos = {0, 0};
+        gGameState->playerPos = {0, 0}; // Top left is 0, 0
         gRenderData->gameCamera = {
-            .pos = {0, 0},
-            .dimensions = {WORLD_SIZE.x, WORLD_SIZE.y},
+            .pos = {160.f, 90.f},
+            .dimensions = {(float)WORLD_SIZE.x, (float)WORLD_SIZE.y},
         };
 
         gGameState->initialized = true;
     }
 
-    for (int x = 0; x < 10; x++) {
-        for (int y = 0; y < 10; y++) {
-            draw_sprite(gRenderData, Chest, {64.f * x, 64.f * y}, {16.f, 16.f});
-            draw_sprite(gRenderData, Player, {32.f * x, 32.f * y},
-                        {16.f, 16.f});
-        }
-    }
+    draw_sprite(gRenderData, Player, {160.f, -90.f}, {16.f, 16.f});
+
+    draw_sprite(gRenderData, Player, {0.f, 0.f}, {16.f, 16.f});
+
+    draw_sprite(gRenderData, Player, {80.f, 45.f}, {16.f, 16.f});
+    draw_sprite(gRenderData, Player, {300.f, 90.f}, {16.f, 16.f});
 }

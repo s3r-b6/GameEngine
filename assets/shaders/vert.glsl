@@ -15,10 +15,12 @@ layout(std430, binding = 0) buffer TransformSBO {
     Transform transforms[];
 };
 
-uniform vec2 screenSize;
-
 layout(location = 0) flat out uint textureAtlasIdxOut;
 layout(location = 1) out vec2 textureCoordsOut;
+
+uniform vec2 screenSize;
+uniform mat4 orthoProjection;
+
 
 void main() {
     Transform t = transforms[gl_InstanceID];
@@ -47,11 +49,9 @@ void main() {
         vec2(right, bottom),
         };
 
-    { // Invert the Y (openGL) and normalize
+    { 
         vec2 vertexPos = vertices[gl_VertexID];
-        vertexPos.y = -vertexPos.y + screenSize.y;
-        vertexPos = 2.f * (vertexPos / screenSize) - 1.f;
-        gl_Position = vec4(vertexPos, 0.f, 1.f);
+        gl_Position = orthoProjection * vec4(vertexPos, 0.0, 1.0);
     }
 
     textureAtlasIdxOut = t.atlasIdx;

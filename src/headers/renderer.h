@@ -23,24 +23,13 @@ struct OrthographicCamera {
     vec2 dimensions;
 
     mat4x4 getProjectionMatrix() {
-        float left = pos.x - dimensions.x / 2.;
-        float right = pos.x + dimensions.x / 2.;
+        float left = pos.x - dimensions.x / 2.0;
+        float right = pos.x + dimensions.x / 2.0;
 
-        float top = pos.y - dimensions.y / 2.;
-        float bottom = pos.y + dimensions.y / 2.;
+        float top = pos.y - dimensions.y / 2.0;
+        float bottom = pos.y + dimensions.y / 2.0;
 
-        float near = 0.;
-        float far = 1.;
-
-        // clang-format off
-        mat4x4 mat = mat4(
-            2/(right-left), 0,              0,             -(right+left)/(right-left),
-            0,              2/(top-bottom), 0,             -(top+bottom)/(top-bottom),
-            0,              0,              -2/(far-near), -(far+near)/(far-near),
-            0,              0,              0,             1);
-        // clang-format on
-
-        return mat;
+        return glm::ortho(left, right, bottom, top);
     };
 };
 
@@ -68,8 +57,8 @@ struct GLContext {
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
                       GLenum glTextureIdx);
 
-void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::ivec2 pos,
-                 glm::ivec2 size);
+void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
+                 glm::vec2 size);
 
 global RenderData *gRenderData;
 global GLContext gGlContext;

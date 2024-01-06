@@ -127,6 +127,12 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
 
+    glContext->screenSizeID =
+        glGetUniformLocation(glContext->programID, "screenSize");
+
+    glContext->screenSizeID =
+        glGetUniformLocation(glContext->orthoProjectionID, "orthoProjection");
+
     // This seems necessary
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
@@ -146,12 +152,6 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
-
-    glContext->screenSizeID =
-        glGetUniformLocation(glContext->programID, "screenSize");
-
-    glContext->screenSizeID =
-        glGetUniformLocation(glContext->orthoProjectionID, "orthoProjection");
 
     glUseProgram(glContext->programID);
 
