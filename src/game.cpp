@@ -2,8 +2,6 @@
 #include "input.h"
 #include "renderer.h"
 
-#include "game_input.h"
-
 EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
                           Input *inputIn) {
     // Since this is compiled as a separate dll, it holds its own static data
@@ -20,6 +18,10 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
             .dimensions = {(float)WORLD_SIZE.x, (float)WORLD_SIZE.y},
         };
 
+        // Last keycode pressed is stored in gInput->lastPressed. To allow for
+        // rebinds the idea right now is that we would check which GameAction is
+        // being requested to remap, and, move it to the new (last pressed)
+        // keycode
         gameRegisterKey(MOVE_UP, 'w');
         gameRegisterKey(MOVE_RIGHT, 'a');
         gameRegisterKey(MOVE_DOWN, 's');
