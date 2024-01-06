@@ -58,12 +58,43 @@ inline void handleSDLevents(SDL_Event *event) {
         break;
     }
 
-    case SDL_TEXTINPUT: {
-        int x = 0, y = 0;
-        SDL_GetMouseState(&x, &y);
+    case SDL_WINDOWEVENT_ENTER: {
+        gInput->mouseInWindow = true;
+        break;
+    }
 
-        char key = event->text.text[0];
-        SDL_Log("Pressed '%c'", key);
+    case SDL_WINDOWEVENT_LEAVE: {
+        gInput->mouseInWindow = false;
+        break;
+    }
+
+    case SDL_MOUSEMOTION: {
+        if (gInput->mouseInWindow) {
+            SDL_GetMouseState(&gInput->mousePos.x, &gInput->mousePos.y);
+            SDL_Log("New mousePos: %d %d", gInput->mousePos.x,
+                    gInput->mousePos.y);
+        }
+
+        break;
+    }
+
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP: {
+        char const *state = event->type == SDL_MOUSEBUTTONDOWN ? "down" : "up";
+
+        char const *key = event->button.button == SDL_BUTTON_LEFT ? "M1" : "M2";
+
+        SDL_Log("%s %s", key, state);
+
+        break;
+    }
+
+    case SDL_KEYUP:
+    case SDL_KEYDOWN: {
+        char const *pressed = event->type == SDL_KEYUP ? "Key down" : "Key up";
+        int keyCode = event->key.keysym.sym;
+        char const *keyName = SDL_GetKeyName(keyCode);
+        SDL_Log("%s '%s'", pressed, keyName);
         break;
     }
     }
@@ -134,6 +165,9 @@ int main(int argc, char *args[])
         return -1;
     }
 
+    gInput->mouseInWindow = true;
+    gInput->showCursor = true;
+
     gAppState->running = true;
     gAppState->width = 1280;
     gAppState->height = 720;
@@ -165,6 +199,8 @@ int main(int argc, char *args[])
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
         }
+
+        SDL_ShowCursor(gInput->showCursor);
 
         updateGame(gGameState, gRenderData, gInput);
         render();

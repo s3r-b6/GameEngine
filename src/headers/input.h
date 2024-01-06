@@ -2,6 +2,10 @@
 
 #include "types.h"
 
-struct Input {};
+struct Input {
+    glm::ivec2 mousePos;
+    bool mouseInWindow;
+    bool showCursor;
+};
 
 global Input *gInput;
