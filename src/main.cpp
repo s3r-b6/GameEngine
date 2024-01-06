@@ -1,6 +1,5 @@
 #include "main.h"
-
-#include <cstdio>
+#include "renderer.h"
 
 #ifdef _WIN32
 #define gameSharedObject "./game.dll"
@@ -26,6 +25,11 @@ inline void render() {
 
     glm::vec2 screenSize = {(float)gAppState->width, (float)gAppState->height};
     glUniform2fv(gGlContext.screenSizeID, 1, &screenSize.x);
+
+    glm::mat4x4 mat = gRenderData->gameCamera.getProjectionMatrix();
+
+    glUniformMatrix4fv(gGlContext.orthoProjectionID, 1, GL_FALSE,
+                       glm::value_ptr(mat));
 
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
@@ -65,7 +69,11 @@ inline void handleSDLevents(SDL_Event *event) {
     }
 }
 
-void updateGame(RenderData *renderDataIn) { updateGame_ptr(renderDataIn); }
+void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
+                Input *inputIn) {
+
+    updateGame_ptr(gameStateIn, renderDataIn, inputIn);
+}
 
 void reloadGameLib(BumpAllocator *transientStorage) {
     local_persist void *gameSO;
@@ -116,18 +124,21 @@ int main(int argc, char *args[])
     BumpAllocator *transientStorage = new BumpAllocator(MB(10));
 
     gAppState = (ProgramState *)permanentStorage->alloc(sizeof(ProgramState));
+    gGameState = (GameState *)permanentStorage->alloc(sizeof(ProgramState));
     gRenderData = (RenderData *)permanentStorage->alloc(sizeof(RenderData));
+    gInput = (Input *)permanentStorage->alloc(sizeof(Input));
+
+    if (!gAppState || !gRenderData || !gGameState || !gInput) {
+        SDL_Log("ERROR: Failed to alloc ProgramState*, RenderData*, GameState* "
+                "or Input*");
+        return -1;
+    }
 
     gAppState->running = true;
     gAppState->width = 1280;
     gAppState->height = 720;
     gAppState->window = NULL;
     gAppState->glContext = NULL;
-
-    if (!gAppState || !gRenderData) {
-        SDL_Log("ERROR: Failed to alloc ProgramState* or RenderData*");
-        return -1;
-    }
 
     if (!initSDLandGL(gAppState, &gGlContext, gRenderData, transientStorage)) {
         SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
@@ -155,7 +166,7 @@ int main(int argc, char *args[])
             handleSDLevents(&event);
         }
 
-        updateGame(gRenderData);
+        updateGame(gGameState, gRenderData, gInput);
         render();
         SDL_GL_SwapWindow(gAppState->window);
         transientStorage->freeMemory();

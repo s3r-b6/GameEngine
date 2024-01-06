@@ -1,10 +1,14 @@
 #include "renderer.h"
 
+#include <glm/matrix.hpp>
+
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #endif
 
+// TODO: This should use a map or something similar, so one texture can be freed
+// and then I can ask which slot is free and occupy it again and so on
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
                       GLenum glTextureIdx) {
     int height, width, channels;

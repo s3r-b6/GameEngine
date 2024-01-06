@@ -20,6 +20,7 @@ typedef int32_t i32;
 typedef int64_t i64;
 
 // Math
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

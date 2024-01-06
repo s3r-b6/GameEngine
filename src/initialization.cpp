@@ -150,6 +150,9 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
     glContext->screenSizeID =
         glGetUniformLocation(glContext->programID, "screenSize");
 
+    glContext->screenSizeID =
+        glGetUniformLocation(glContext->orthoProjectionID, "orthoProjection");
+
     glUseProgram(glContext->programID);
 
     return true;
