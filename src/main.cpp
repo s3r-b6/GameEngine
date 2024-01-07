@@ -39,8 +39,16 @@ inline void render() {
 
     glm::mat4x4 mat = gRenderData->gameCamera.getProjectionMatrix();
 
-    glUniformMatrix4fv(gGlContext.orthoProjectionID, 1, GL_FALSE,
-                       glm::value_ptr(mat));
+    SDL_Log("");
+
+    SDL_Log("v1: %f %f %f", mat[0].x, mat[0].y, mat[0].z, mat[0].w);
+    SDL_Log("v2: %f %f %f", mat[1].x, mat[1].y, mat[1].z, mat[1].w);
+    SDL_Log("v3: %f %f %f", mat[2].x, mat[2].y, mat[2].z, mat[2].w);
+    SDL_Log("v4: %f %f %f", mat[3].x, mat[3].y, mat[3].z, mat[3].w);
+
+    SDL_Log("");
+
+    glUniformMatrix4fv(gGlContext.orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
