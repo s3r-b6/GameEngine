@@ -13,7 +13,9 @@ struct KeyState {
 };
 
 struct Input {
+    glm::ivec2 mouseWorldPos;
     glm::ivec2 mousePos;
+
     bool mouseInWindow;
     bool showCursor;
 

@@ -23,8 +23,10 @@ struct OrthographicCamera {
     vec2 dimensions;
 
     mat4x4 getProjectionMatrix() {
-        float left = pos.x - dimensions.x / 2.0;
-        float right = pos.x + dimensions.x / 2.0;
+        float aspectRatio = (float)gAppState->width / (float)gAppState->height;
+
+        float left = pos.x - (dimensions.x * aspectRatio) / 2.0;
+        float right = pos.x + (dimensions.x * aspectRatio) / 2.0;
 
         float top = pos.y - dimensions.y / 2.0;
         float bottom = pos.y + dimensions.y / 2.0;

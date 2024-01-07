@@ -4,7 +4,12 @@
 #include "platform.h"
 #include "renderer.h"
 
+constexpr glm::ivec2 WORLD_SIZE = {320, 180};
+constexpr int TILESIZE = 16;
+
 enum GameAction {
+    UNKNOWN,
+
     MOVE_UP,
     MOVE_DOWN,
     MOVE_LEFT,
@@ -14,19 +19,16 @@ enum GameAction {
     GAME_ACTION_COUNT,
 };
 
-constexpr glm::ivec2 WORLD_SIZE = {320, 180};
-constexpr int TILESIZE = 16;
-
 struct GameState {
-    glm::ivec2 playerPos;
     bool initialized;
-
+    double updateTimer;
+    glm::ivec2 playerPos;
     SDL_Keycode gameBinds[GAME_ACTION_COUNT] = {0};
 };
 
 global GameState *gGameState;
 
-bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
+inline bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
     gGameState->gameBinds[action] = kc;
     if (registerKey(kc)) {
         SDL_Log("Succesfuly bound %c to game action: %d", kc, action);
@@ -37,7 +39,7 @@ bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
     }
 }
 
-bool actionDown(GameAction action) {
+inline bool actionDown(GameAction action) {
     if (!gGameState->gameBinds[action]) return false;
 
     KeyState ks = {};
@@ -46,7 +48,7 @@ bool actionDown(GameAction action) {
     return ks.isDown;
 }
 
-bool actionUp(GameAction action) {
+inline bool actionUp(GameAction action) {
     if (!gGameState->gameBinds[action]) return false;
 
     KeyState ks = {};
@@ -58,5 +60,5 @@ bool actionUp(GameAction action) {
 // TODO: In win32 we need __declspec(dllexport)
 extern "C" {
 EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                          Input *inputIn);
+                          Input *inputIn, double dt);
 }

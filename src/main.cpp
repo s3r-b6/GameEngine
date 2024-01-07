@@ -113,9 +113,9 @@ inline void handleSDLevents(SDL_Event *event) {
 }
 
 void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                Input *inputIn) {
+                Input *inputIn, double dt) {
 
-    updateGame_ptr(gameStateIn, renderDataIn, inputIn);
+    updateGame_ptr(gameStateIn, renderDataIn, inputIn, dt);
 }
 
 void reloadGameLib(BumpAllocator *transientStorage) {
@@ -167,7 +167,7 @@ int main(int argc, char *args[])
     BumpAllocator *transientStorage = new BumpAllocator(MB(10));
 
     gAppState = (ProgramState *)permanentStorage->alloc(sizeof(ProgramState));
-    gGameState = (GameState *)permanentStorage->alloc(sizeof(ProgramState));
+    gGameState = (GameState *)permanentStorage->alloc(sizeof(GameState));
     gRenderData = (RenderData *)permanentStorage->alloc(sizeof(RenderData));
     gInput = (Input *)permanentStorage->alloc(sizeof(Input));
 
@@ -176,6 +176,8 @@ int main(int argc, char *args[])
                 "or Input*");
         return -1;
     }
+
+    gGameState->initialized = false;
 
     gInput->mouseInWindow = true;
     gInput->showCursor = true;
@@ -207,8 +209,17 @@ int main(int argc, char *args[])
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", &gGlContext,
                      GL_TEXTURE1);
 
+    u64 now = SDL_GetPerformanceCounter();
+    u64 last = 0;
+    double dt = 0;
+
     reloadGameLib(transientStorage);
     while (gAppState->running) {
+        last = now;
+        now = SDL_GetPerformanceCounter();
+
+        dt = (double)((now - last) / (double)SDL_GetPerformanceFrequency());
+
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
         }
@@ -230,7 +241,7 @@ int main(int argc, char *args[])
         //    }
         //}
 
-        updateGame(gGameState, gRenderData, gInput);
+        updateGame(gGameState, gRenderData, gInput, dt);
         render();
         SDL_GL_SwapWindow(gAppState->window);
         transientStorage->freeMemory();
