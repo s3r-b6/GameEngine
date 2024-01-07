@@ -3,6 +3,10 @@
 #include "./engine_lib.h"
 #include "./renderer.h"
 
+#include "../deps/imgui/backends/imgui_impl_opengl3.h"
+#include "../deps/imgui/backends/imgui_impl_sdl2.h"
+#include "../deps/imgui/imgui.h"
+
 // bumpAlloc to store logs and read shader sources
 bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
                   BumpAllocator *transientStorage);

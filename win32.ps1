@@ -1,5 +1,7 @@
+# TODO: check if this still works...
+
 # This script should be run from inside the .\build directory
-$include = ( "-I..\deps\", "-I..\src\headers\" ) 
+$include = ( "-I..\deps\",  "-I..\deps\win32\", "-I..\src\headers\" ) 
 
 $libs = (
     "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2"
@@ -10,13 +12,27 @@ $sources_main = (
     "..\src\assets.cpp",
     "..\src\renderer.cpp",
     "..\src\win32_platform.cpp", # This is win32 specific
-    "..\src\initialization.cpp"
+    "..\src\initialization.cpp",
+
+    "..\deps\imgui\imgui.cpp" ,
+    "..\deps\imgui\imgui_draw.cpp",
+    "..\deps\imgui\imgui_tables.cpp" ,
+    "..\deps\imgui\imgui_widgets.cpp",
+    "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
+    "..\deps\imgui\backends\imgui_impl_opengl3.cpp",
 )
 
 $sources_game = (
     "..\deps\glad\glad.c",
     "..\src\assets.cpp",
-    "..\src\renderer.cpp"
+    "..\src\renderer.cpp",
+
+    "..\deps\imgui\imgui.cpp" ,
+    "..\deps\imgui\imgui_draw.cpp",
+    "..\deps\imgui\imgui_tables.cpp" ,
+    "..\deps\imgui\imgui_widgets.cpp",
+    "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
+    "..\deps\imgui\backends\imgui_impl_opengl3.cpp",
 )
 
 $flags = (
