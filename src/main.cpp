@@ -1,6 +1,6 @@
-#include "main.h"
-#include "input.h"
-#include "renderer.h"
+#include "./headers/main.h"
+#include "./headers/input.h"
+#include "./headers/renderer.h"
 
 #ifdef _WIN32
 #define gameSharedObject "./game.dll"
@@ -24,7 +24,10 @@ inline void render() {
 
     glViewport(0, 0, gAppState->width, gAppState->height);
 
-    glm::vec2 screenSize = {(float)gAppState->width, (float)gAppState->height};
+    glm::vec2 screenSize = {
+        static_cast<float>(gAppState->width),
+        static_cast<float>(gAppState->height),
+    };
     glUniform2fv(gGlContext.screenSizeID, 1, &screenSize.x);
 
     glm::mat4x4 mat = gRenderData->gameCamera.getProjectionMatrix();
@@ -114,7 +117,6 @@ inline void handleSDLevents(SDL_Event *event) {
 
 void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
                 Input *inputIn, double dt) {
-
     updateGame_ptr(gameStateIn, renderDataIn, inputIn, dt);
 }
 
@@ -146,8 +148,9 @@ void reloadGameLib(BumpAllocator *transientStorage) {
 
         SDL_Log("Loaded dynamic library game_load.so");
 
-        updateGame_ptr =
-            (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
+        updateGame_ptr = reinterpret_cast<update_game_type *>(
+            plat_loadDynamicFun(gameSO, "updateGame"));
+
         if (!updateGame_ptr) crash("Failed to load updateGame function");
 
         SDL_Log("Loaded dynamic function updateGame");
@@ -166,10 +169,13 @@ int main(int argc, char *args[])
     BumpAllocator *permanentStorage = new BumpAllocator(MB(10));
     BumpAllocator *transientStorage = new BumpAllocator(MB(10));
 
-    gAppState = (ProgramState *)permanentStorage->alloc(sizeof(ProgramState));
-    gGameState = (GameState *)permanentStorage->alloc(sizeof(GameState));
-    gRenderData = (RenderData *)permanentStorage->alloc(sizeof(RenderData));
-    gInput = (Input *)permanentStorage->alloc(sizeof(Input));
+    gAppState = reinterpret_cast<ProgramState *>(
+        permanentStorage->alloc(sizeof(ProgramState)));
+    gGameState = reinterpret_cast<GameState *>(
+        permanentStorage->alloc(sizeof(GameState)));
+    gRenderData = reinterpret_cast<RenderData *>(
+        permanentStorage->alloc(sizeof(RenderData)));
+    gInput = reinterpret_cast<Input *>(permanentStorage->alloc(sizeof(Input)));
 
     if (!gAppState || !gRenderData || !gGameState || !gInput) {
         SDL_Log("ERROR: Failed to alloc ProgramState*, RenderData*, GameState* "
@@ -218,28 +224,14 @@ int main(int argc, char *args[])
         last = now;
         now = SDL_GetPerformanceCounter();
 
-        dt = (double)((now - last) / (double)SDL_GetPerformanceFrequency());
+        dt = static_cast<double>(now - last) /
+             static_cast<double>(SDL_GetPerformanceFrequency());
 
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
         }
 
         SDL_ShowCursor(gInput->showCursor);
-
-        // This is my current idea for user remaps. The idea is to just
-        // store the last pressed key and use that; this way, I don't have
-        // to check for anything
-        //
-        // if (gInput->lastPressed) {
-        //     registerKey(gInput->lastPressed);
-        //
-        //    KeyState ks = {};
-        //    if (getKeyState(gInput->lastPressed, &ks)) {
-        //        SDL_Log("Key %s state: id:%d jp:%d jr:%d wd:%d",
-        //                SDL_GetKeyName(gInput->lastPressed), ks.isDown,
-        //                ks.justPressed, ks.justReleased, ks.wasDown);
-        //    }
-        //}
 
         updateGame(gGameState, gRenderData, gInput, dt);
         render();

@@ -1,6 +1,5 @@
-#include "initialization.h"
-
-#include "renderer.h"
+#include "./headers/initialization.h"
+#include "./headers/renderer.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
@@ -9,8 +8,8 @@
 
 bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
                   BumpAllocator *transientStorage) {
-
-    { // Initialize SDL
+    // Initialize SDL
+    {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             SDL_Log("SDL could not initialize! SDL Error: %s\n",
                     SDL_GetError());
@@ -44,13 +43,14 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
         ps->window = window;
     }
 
-    { // Initialize glew, set VSync, OpenGL
+    // Initialize glew, set VSync, OpenGL
+    {
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
             SDL_Log("Error initializing glad!\n");
             return false;
         }
 
-        // Use Vsync
+        // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
         if (SDL_GL_SetSwapInterval(-1) < 0) {
             SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
                     SDL_GetError());
@@ -138,8 +138,8 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    glGenTextures(MAX_TEXTURES,
-                  glContext->textureIDs); // This is for the textureAtlases
+    // This is for the textureAtlases
+    glGenTextures(MAX_TEXTURES, glContext->textureIDs);
 
     // This creates a buffer for the transforms
     glGenBuffers(1, &glContext->transformSBOID);
@@ -178,7 +178,9 @@ void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
     // Get info string length
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-    char *infoLog = (char *)transientStorage->alloc(maxLength);
+    char *infoLog =
+        reinterpret_cast<char *>(transientStorage->alloc(maxLength));
+
     glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
     if (infoLogLength > 0) SDL_Log("%s", infoLog);
 }
@@ -195,7 +197,8 @@ void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
     int maxLength = 0;
 
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-    char *infoLog = (char *)transientStorage->alloc(maxLength);
+    char *infoLog =
+        reinterpret_cast<char *>(transientStorage->alloc(maxLength));
 
     glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
     if (infoLogLength > 0) { SDL_Log("%s", infoLog); }

@@ -1,8 +1,8 @@
 #include "SDL2/SDL_log.h"
 #include <windows.h>
 
-#include "memory.h"
-#include "types.h"
+#include "./headers/memory.h"
+#include "./headers/types.h"
 
 void *plat_loadDynamicLib(char *dll) {
     HMODULE result = LoadLibraryA(dll);

@@ -1,21 +1,22 @@
 #pragma once
 
-#include "SDL2/SDL_log.h"
-#include "types.h"
-
 // Memory
 #include <stdlib.h>
 #include <string.h>
+
+#include "SDL2/SDL_log.h"
+
+#include "./types.h"
 
 struct BumpAllocator {
     u32 size;
     u32 used;
     u8 *memory;
 
-    BumpAllocator(u32 len) {
+    explicit BumpAllocator(u32 len) {
         size = len;
         used = 0;
-        memory = (u8 *)malloc(len);
+        memory = reinterpret_cast<u8 *>(malloc(len));
 
         if (!memory) {
             SDL_Log("ERROR: Failed to allocate memory for the bumpAllocator!");

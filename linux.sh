@@ -5,27 +5,27 @@ if [[ $(pwd) != *"build" ]]; then
 	exit 1
 fi
 
-include=( -I../deps/ -I../src/headers)
+include=(-I../deps/)
+include+=(-I../src/headers)
 
-libs=( -L/lib -lSDL2 -lGLEW -lGL )
+libs=(-L/lib)
+libs+=(-lSDL2)
+libs+=(-lGLEW)
+libs+=(-lGL)
 
-sources_main=(
-	../src/main.cpp 
-	../src/linux_platform.cpp
-	../src/initialization.cpp 
-	../src/assets.cpp 
-	../src/renderer.cpp 
-	../deps/glad/glad.c
-)
+sources_main=(../src/main.cpp)
+sources_main+=(../src/linux_platform.cpp)
+sources_main+=(../src/initialization.cpp)
+sources_main+=(../src/assets.cpp)
+sources_main+=(../src/renderer.cpp)
+sources_main+=(../deps/glad/glad.c)
 
-sources_game=(
-	../src/assets.cpp 
-	../src/renderer.cpp 
-	../deps/glad/glad.c
-	../src/linux_platform.cpp
-)
+sources_game=(../src/assets.cpp)
+sources_game+=(../src/renderer.cpp)
+sources_game+=(../deps/glad/glad.c)
+sources_game+=(../src/linux_platform.cpp)
 
-flags=( -Wno-write-strings )
+flags=(-Wno-write-strings)
 
 timestamp=$(date '+%s')
 

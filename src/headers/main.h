@@ -1,12 +1,9 @@
 #pragma once
 
-#include "engine_lib.h"
-
-#include "initialization.h"
-
-#include "renderer.h"
-
-#include "game.h"
+#include "./engine_lib.h"
+#include "./game.h"
+#include "./initialization.h"
+#include "./renderer.h"
 
 // Game shared object stub
 typedef decltype(updateGame) update_game_type;

@@ -1,12 +1,10 @@
-#include "memory.h"
-#include "types.h"
-#include <unistd.h>
-
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <dlfcn.h>
+#include "./headers/memory.h"
+#include "./headers/types.h"
 
 #include "SDL2/SDL_log.h"
 
@@ -66,13 +64,15 @@ char *plat_readFile(char *fileName, size_t *fileSize,
     fstat(fd, &filestat);
 
     size_t fSize = filestat.st_size;
-    u8 *memory =
-        allocator->alloc(fSize + 1); // request fSize (alligned) bytes of memory
+
+    // request alligned fSize bytes of memory
+    u8 *memory = allocator->alloc(fSize + 1);
 
     size_t bytesRead = read(fd, memory, fSize);
     close(fd);
 
-    memory[bytesRead] = 0; // null-terminate
+    // null-terminate
+    memory[bytesRead] = 0;
 
     if (bytesRead != fSize) {
         SDL_Log("bytesRead does not match filesize for %s", fileName);
@@ -80,7 +80,7 @@ char *plat_readFile(char *fileName, size_t *fileSize,
     }
 
     *fileSize = fSize;
-    return (char *)memory;
+    return reinterpret_cast<char *>(memory);
 }
 
 bool plat_copyFile(char *fileName, char *newFileName,

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "input.h"
-#include "platform.h"
-#include "renderer.h"
+#include "./input.h"
+#include "./platform.h"
+#include "./renderer.h"
 
 constexpr glm::ivec2 WORLD_SIZE = {320, 180};
 constexpr int TILESIZE = 16;

@@ -1,8 +1,8 @@
-#include "renderer.h"
+#include "./headers/renderer.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../deps/stb_image.h"
 #endif
 
 // TODO: This should use a map or something similar, so one texture can be freed
@@ -39,7 +39,6 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
 
 void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
                  glm::vec2 size) {
-
     Sprite sp = get_sprite(spriteID);
 
     Transform t = {

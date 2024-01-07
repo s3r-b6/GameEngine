@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine_lib.h"
-#include "renderer.h"
+#include "./engine_lib.h"
+#include "./renderer.h"
 
 // bumpAlloc to store logs and read shader sources
 bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,

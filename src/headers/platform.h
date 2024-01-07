@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "./types.h"
 
 #ifdef __linux__
 #define EXPORT_FN
@@ -13,7 +13,7 @@
 #include <windows.h>
 #endif
 
-#include "memory.h"
+#include "./memory.h"
 
 void *plat_loadDynamicLib(char *dll);
 void *plat_loadDynamicFun(void *dll, char *funName);

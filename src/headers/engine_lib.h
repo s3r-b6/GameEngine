@@ -5,9 +5,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "platform.h"
-
-#include "types.h"
+#include "./platform.h"
+#include "./types.h"
 
 // Struct that holds all the data relevant to program execution.
 //  \bool running -> Marks if the program should continue to run the main loop
@@ -40,5 +39,3 @@ inline void crash(char *errorMsg) {
     int *ptr = NULL;
     *ptr = 42;
 }
-
-#include "platform.h"

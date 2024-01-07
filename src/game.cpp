@@ -1,14 +1,19 @@
-#include "game.h"
-#include "input.h"
-#include "renderer.h"
+#include "./headers/game.h"
+#include "./headers/input.h"
+#include "./headers/renderer.h"
 
+// This constant is the target simulations of the world per second
 constexpr double UPDATE_DELAY = 1. / 60.;
 
 inline void initializeGameState() {
-    gGameState->playerPos = {0, 0}; // Top left is 0, 0
+    gGameState->updateTimer = 0;
+    // Top left is 0, 0
+    gGameState->playerPos = {0, 0};
+
     gRenderData->gameCamera = {
         .pos = {160.f, 90.f},
-        .dimensions = {(float)WORLD_SIZE.x, (float)WORLD_SIZE.y},
+        .dimensions = {static_cast<float>(WORLD_SIZE.x),
+                       static_cast<float>(WORLD_SIZE.y)},
     };
 
     // Last keycode pressed is stored in gInput->lastPressed. To allow for
@@ -48,8 +53,8 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
         gInput->mouseWorldPos = gInput->mousePos / (WORLD_SIZE / TILESIZE);
     }
 
-    SDL_Log("FPS: %d, deltaTime: %f, updateDelay: %f", (int)(1 / dt), dt,
-            UPDATE_DELAY);
+    // SDL_Log("FPS: %d, deltaTime: %f, updateDelay: %f", (int)(1 / dt), dt,
+    //         UPDATE_DELAY);
 
     draw_sprite(gRenderData, Player, gGameState->playerPos, {16.f, 16.f});
 }

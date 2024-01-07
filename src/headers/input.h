@@ -1,9 +1,10 @@
 #pragma once
 
+#include <map>
+
+#include "./types.h"
 #include "SDL2/SDL_keycode.h"
 #include "SDL2/SDL_log.h"
-#include "types.h"
-#include <map>
 
 struct KeyState {
     bool isDown;
@@ -26,7 +27,7 @@ struct Input {
 
 global Input *gInput;
 
-bool unregisterKey(SDL_Keycode kc) {
+inline bool unregisterKey(SDL_Keycode kc) {
     auto keyPair = gInput->usedKeys.find(kc);
     if (keyPair != gInput->usedKeys.end()) {
         // SDL_Log("Keycode %d already found in the keys map", kc);
@@ -37,7 +38,7 @@ bool unregisterKey(SDL_Keycode kc) {
     return true;
 }
 
-bool registerKey(SDL_Keycode kc) {
+inline bool registerKey(SDL_Keycode kc) {
     auto keyPair = gInput->usedKeys.find(kc);
 
     if (keyPair != gInput->usedKeys.end()) {
@@ -51,7 +52,7 @@ bool registerKey(SDL_Keycode kc) {
     return true;
 }
 
-bool updateKeyState(SDL_Keycode kc, bool pressed) {
+inline bool updateKeyState(SDL_Keycode kc, bool pressed) {
     auto keyPair = gInput->usedKeys.find(kc);
 
     // If it does not find the key, it returns the post end iterator
@@ -70,7 +71,7 @@ bool updateKeyState(SDL_Keycode kc, bool pressed) {
     }
 }
 
-bool getKeyState(SDL_Keycode kc, KeyState *state) {
+inline bool getKeyState(SDL_Keycode kc, KeyState *state) {
     auto keyPair = gInput->usedKeys.find(kc);
 
     if (keyPair == gInput->usedKeys.end()) {

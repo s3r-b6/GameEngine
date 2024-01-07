@@ -1,8 +1,7 @@
 #pragma once
 
-#include "engine_lib.h"
-
-#include "assets.h"
+#include "./assets.h"
+#include "./engine_lib.h"
 
 using glm::vec2, glm::ivec2, glm::mat4x4, glm::mat4;
 
@@ -23,7 +22,8 @@ struct OrthographicCamera {
     vec2 dimensions;
 
     mat4x4 getProjectionMatrix() {
-        float aspectRatio = (float)gAppState->width / (float)gAppState->height;
+        float aspectRatio = static_cast<float>(gAppState->width) /
+                            static_cast<float>(gAppState->height);
 
         float left = pos.x - (dimensions.x * aspectRatio) / 2.0;
         float right = pos.x + (dimensions.x * aspectRatio) / 2.0;
@@ -32,7 +32,7 @@ struct OrthographicCamera {
         float bottom = pos.y + dimensions.y / 2.0;
 
         return glm::ortho(left, right, bottom, top);
-    };
+    }
 };
 
 struct RenderData {

@@ -1,4 +1,4 @@
-#include "assets.h"
+#include "./headers/assets.h"
 
 Sprite get_sprite(SpriteID spriteID) {
     Sprite sprite = {};
