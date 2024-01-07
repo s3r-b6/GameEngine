@@ -3,7 +3,10 @@
 #include "./assets.h"
 #include "./engine_lib.h"
 
-using glm::vec2, glm::ivec2, glm::mat4x4, glm::mat4;
+using glm::ivec2;
+using glm::mat4;
+using glm::mat4x4;
+using glm::vec2;
 
 struct Transform {
     ivec2 atlasOffset;

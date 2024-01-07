@@ -1,7 +1,12 @@
 # TODO: check if this still works...
 
 # This script should be run from inside the .\build directory
-$include = ( "-I..\deps\",  "-I..\deps\win32\", "-I..\src\headers\" ) 
+$include = ( "-I..\deps\",  
+    "-I..\deps\imgui\",
+    "-I..\deps\win32\",
+    "-I..\deps\win32\SDL2\",
+    "-I..\src\headers\" 
+) 
 
 $libs = (
     "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2"
@@ -19,7 +24,7 @@ $sources_main = (
     "..\deps\imgui\imgui_tables.cpp" ,
     "..\deps\imgui\imgui_widgets.cpp",
     "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
-    "..\deps\imgui\backends\imgui_impl_opengl3.cpp",
+    "..\deps\imgui\backends\imgui_impl_opengl3.cpp"
 )
 
 $sources_game = (
@@ -32,13 +37,13 @@ $sources_game = (
     "..\deps\imgui\imgui_tables.cpp" ,
     "..\deps\imgui\imgui_widgets.cpp",
     "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
-    "..\deps\imgui\backends\imgui_impl_opengl3.cpp",
+    "..\deps\imgui\backends\imgui_impl_opengl3.cpp"
 )
 
 $flags = (
     "-Wno-write-strings",
     "-Wno-deprecated",
-    "-DGLEW_STATIC"
+    "-static-libstdc++"
 )
 
 
