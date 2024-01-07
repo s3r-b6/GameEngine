@@ -38,9 +38,7 @@ inline void render() {
     glUniform2fv(gGlContext.screenSizeID, 1, &screenSize.x);
 
     glm::mat4x4 mat = gRenderData->gameCamera.getProjectionMatrix();
-
-    glUniformMatrix4fv(gGlContext.orthoProjectionID, 1, GL_FALSE,
-                       glm::value_ptr(mat));
+    glUniformMatrix4fv(gGlContext.orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
