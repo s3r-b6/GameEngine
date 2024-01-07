@@ -12,5 +12,5 @@ static update_game_type *updateGame_ptr;
 void render();
 void handleSDLevents(SDL_Event *event);
 void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                Input *inputIn);
+                Input *inputIn, ImguiState *gImgui, float dt);
 void reloadGameLib(BumpAllocator *transientStorage);

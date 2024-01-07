@@ -8,8 +8,8 @@ fi
 # TODO: This would benefit of a bit of cleaning...
 include=(-I../deps/)
 
-# SDL creates a config file with flags specific to each 
-# OS, so this is the 'simplest' way to include statically
+# SDL creates a config file with flags specific to each OS
+# This is dumb, but for now it will stay like this
 include+=(-I../deps/linux/) 
 include+=(-I../deps/linux/SDL2)
 include+=(-I../deps/imgui/)

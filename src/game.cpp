@@ -4,6 +4,8 @@
 #include "./headers/game.h"
 #include "./headers/input.h"
 #include "./headers/renderer.h"
+#include "headers/engine_lib.h"
+#include "imgui.h"
 
 // This constant is the target simulations of the world per second
 constexpr double UPDATE_DELAY = 1. / 60.;
@@ -28,19 +30,47 @@ inline void initializeGameState() {
     gameRegisterKey(MOVE_DOWN, 's');
     gameRegisterKey(MOVE_LEFT, 'd');
 
+    ImGui::SetCurrentContext(gImgui->ctxt);
+    ImGui::SetAllocatorFunctions(gImgui->p_alloc_func, gImgui->p_free_func);
+
     gGameState->initialized = true;
 }
 
 EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                          Input *inputIn, double dt) {
+                          Input *inputIn, ImguiState *imguiIn, float dt) {
     // Since this is compiled as a separate dll, it holds its own static data
     if (gRenderData != renderDataIn) {
         gRenderData = renderDataIn;
         gGameState = gameStateIn;
         gInput = inputIn;
+        gImgui = imguiIn;
     }
 
     if (!gGameState->initialized) initializeGameState();
+
+    {
+        static float f = 0.0f;
+        static int counter = 0;
+
+        // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Hello, world!");
+        // Display some text (you can use a format strings too)
+        ImGui::Text("This is some useful text.");
+        // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+        // Edit 3 floats representing a color
+        ImGui::ColorEdit3("clear color",
+                          reinterpret_cast<float *>(gRenderData->clearColor));
+
+        // Buttons return true when clicked (most widgets return true when
+        // edited/activated)
+        if (ImGui::Button("Button")) counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", counter);
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
+        ImGui::End();
+    }
 
     gGameState->updateTimer += dt;
 

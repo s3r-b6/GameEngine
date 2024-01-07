@@ -60,5 +60,5 @@ inline bool actionUp(GameAction action) {
 // TODO: In win32 we need __declspec(dllexport)
 extern "C" {
 EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                          Input *inputIn, double dt);
+                          Input *inputIn, ImguiState *gImgui, float dt);
 }

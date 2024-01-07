@@ -39,6 +39,8 @@ struct RenderData {
     Transform transforms[MAX_TRANSFORMS] = {};
     int transformCount = 0;
 
+    float clearColor[3];
+
     OrthographicCamera gameCamera;
 };
 

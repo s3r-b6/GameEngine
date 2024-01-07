@@ -9,6 +9,25 @@
 
 // TODO: Make logs different based on severity...
 
+bool initImgui(ImguiState *imgui, ProgramState *pState) {
+    IMGUI_CHECKVERSION();
+    imgui->ctxt = ImGui::CreateContext();
+
+    ImGuiIO &io = ImGui::GetIO();
+    // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    // Enable Gamepad Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImGui_ImplSDL2_InitForOpenGL(pState->window, pState->glContext);
+    ImGui_ImplOpenGL3_Init();
+
+    ImGui::GetAllocatorFunctions(&imgui->p_alloc_func, &imgui->p_free_func,
+                                 &imgui->p_user_data);
+
+    return true;
+}
+
 bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
                   BumpAllocator *transientStorage) {
     // Initialize SDL
@@ -162,6 +181,10 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
 }
 
 void close(ProgramState *ps, GLContext *gc) {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
     glDeleteProgram(gc->programID);
     SDL_DestroyWindow(ps->window);
     ps->window = NULL;

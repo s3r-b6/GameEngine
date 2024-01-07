@@ -5,6 +5,9 @@
 #include "./headers/input.h"
 #include "./headers/renderer.h"
 
+#include "../deps/imgui/imgui.h"
+#include "headers/engine_lib.h"
+
 #ifdef _WIN32
 #define gameSharedObject "./game.dll"
 #define loadedgameSharedObject "./game_load.dll"
@@ -20,7 +23,8 @@
 // TODO: Test this for performance when I am actually rendering something
 // complex
 inline void render() {
-    glClearColor(119.f / 255.f, 33.f / 255.f, 111.f / 255.f, 1.f);
+    auto color = gRenderData->clearColor;
+    glClearColor(color[0], color[1], color[2], 1.f);
     glClearDepth(0.f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,8 +123,8 @@ inline void handleSDLevents(SDL_Event *event) {
 }
 
 void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                Input *inputIn, double dt) {
-    updateGame_ptr(gameStateIn, renderDataIn, inputIn, dt);
+                Input *inputIn, ImguiState *imguiIn, double dt) {
+    updateGame_ptr(gameStateIn, renderDataIn, inputIn, imguiIn, dt);
 }
 
 void reloadGameLib(BumpAllocator *transientStorage) {
@@ -179,6 +183,8 @@ int main(int argc, char *args[])
     gRenderData = reinterpret_cast<RenderData *>(
         permanentStorage->alloc(sizeof(RenderData)));
     gInput = reinterpret_cast<Input *>(permanentStorage->alloc(sizeof(Input)));
+    gImgui = reinterpret_cast<ImguiState *>(
+        permanentStorage->alloc(sizeof(ImguiState)));
 
     if (!gAppState || !gRenderData || !gGameState || !gInput) {
         SDL_Log("ERROR: Failed to alloc ProgramState*, RenderData*, GameState* "
@@ -198,8 +204,17 @@ int main(int argc, char *args[])
     gAppState->window = NULL;
     gAppState->glContext = NULL;
 
+    gRenderData->clearColor[0] = 119.f / 255.f;
+    gRenderData->clearColor[1] = 33.f / 255.f;
+    gRenderData->clearColor[2] = 111.f / 255.f;
+
     if (!initSDLandGL(gAppState, &gGlContext, gRenderData, transientStorage)) {
         SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
+        return -1;
+    }
+
+    if (!initImgui(gImgui, gAppState)) {
+        SDL_Log("ERROR: Failed to initialize ImGui");
         return -1;
     }
 
@@ -232,12 +247,21 @@ int main(int argc, char *args[])
 
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
+            ImGui_ImplSDL2_ProcessEvent(&event);
         }
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
 
         SDL_ShowCursor(gInput->showCursor);
 
-        updateGame(gGameState, gRenderData, gInput, dt);
+        updateGame(gGameState, gRenderData, gInput, gImgui, dt);
         render();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         SDL_GL_SwapWindow(gAppState->window);
         transientStorage->freeMemory();
 

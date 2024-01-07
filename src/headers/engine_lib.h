@@ -7,6 +7,7 @@
 
 #include "./platform.h"
 #include "./types.h"
+#include "imgui.h"
 
 // Struct that holds all the data relevant to program execution.
 //  \bool running -> Marks if the program should continue to run the main loop
@@ -32,6 +33,14 @@ struct ProgramState {
     SDL_GLContext glContext;
 };
 
+struct ImguiState {
+    ImGuiContext *ctxt;
+    ImGuiMemAllocFunc p_alloc_func;
+    ImGuiMemFreeFunc p_free_func;
+    void *p_user_data;
+};
+
+global ImguiState *gImgui;
 global ProgramState *gAppState;
 
 inline void crash(char *errorMsg) {

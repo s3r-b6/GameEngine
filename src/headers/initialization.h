@@ -10,6 +10,9 @@
 // bumpAlloc to store logs and read shader sources
 bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
                   BumpAllocator *transientStorage);
+
+bool initImgui(ImguiState *imgui, ProgramState *pState);
+
 bool initGL(GLContext *rs, BumpAllocator *transientStorage,
             RenderData *renderData);
 void close(ProgramState *ps, GLContext *rs);
