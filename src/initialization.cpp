@@ -151,9 +151,8 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
 
     glContext->screenSizeID =
         glGetUniformLocation(glContext->programID, "screenSize");
-
-    glContext->screenSizeID =
-        glGetUniformLocation(glContext->orthoProjectionID, "orthoProjection");
+    glContext->orthoProjectionID =
+        glGetUniformLocation(glContext->programID, "orthoProjection");
 
     // This seems necessary
     GLuint VAO;
