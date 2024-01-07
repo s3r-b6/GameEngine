@@ -1,3 +1,6 @@
+// Copyright (c) 2024 <Sergio Bermejo de las Heras>
+// This code is subject to the MIT license.
+
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/stat.h>

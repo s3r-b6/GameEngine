@@ -1,3 +1,6 @@
+// Copyright (c) 2024 <Sergio Bermejo de las Heras>
+// This code is subject to the MIT license.
+
 #include "./headers/renderer.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
