@@ -43,7 +43,8 @@ $sources_game = (
 $flags = (
     "-Wno-write-strings",
     "-Wno-deprecated",
-    "-static-libstdc++"
+    "-static-libstdc++",
+    "-pipe"
 )
 
 

@@ -74,10 +74,16 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
 
         // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
         if (SDL_GL_SetSwapInterval(-1) < 0) {
+            SDL_Log("Warning: Unable to set AdaptiveVsync! Trying to set VSync SDL Error: %s\n",
+                    SDL_GetError());
+        }
+
+        if (SDL_GL_SetSwapInterval(1) < 0) {
             SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
                     SDL_GetError());
             return false;
         }
+
 
         // Initialize OpenGL
         if (!initGL(rs, transientStorage, renderData)) {
