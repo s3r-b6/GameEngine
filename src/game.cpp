@@ -4,8 +4,8 @@
 #include "./headers/game.h"
 #include "./headers/input.h"
 #include "./headers/renderer.h"
-#include "headers/engine_lib.h"
-#include "imgui.h"
+
+#include "./imgui.h"
 
 // This constant is the target simulations of the world per second
 constexpr double UPDATE_DELAY = 1. / 60.;
@@ -79,10 +79,10 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
     while (gGameState->updateTimer >= UPDATE_DELAY) {
         gGameState->updateTimer -= UPDATE_DELAY;
 
-        if (actionDown(MOVE_UP)) { gGameState->playerPos.y -= 2; }
-        if (actionDown(MOVE_DOWN)) { gGameState->playerPos.y += 2; }
-        if (actionDown(MOVE_RIGHT)) { gGameState->playerPos.x -= 2; }
-        if (actionDown(MOVE_LEFT)) { gGameState->playerPos.x += 2; }
+        if (actionDown(MOVE_UP)) { gGameState->playerPos.y -= 1; }
+        if (actionDown(MOVE_DOWN)) { gGameState->playerPos.y += 1; }
+        if (actionDown(MOVE_RIGHT)) { gGameState->playerPos.x -= 1; }
+        if (actionDown(MOVE_LEFT)) { gGameState->playerPos.x += 1; }
         gInput->mouseWorldPos = gInput->mousePos / (WORLD_SIZE / TILESIZE);
     }
 
