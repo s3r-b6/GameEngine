@@ -25,38 +25,36 @@ struct Input {
     std::map<SDL_Keycode, KeyState> usedKeys;
 };
 
-global Input *gInput;
-
-inline bool unregisterKey(SDL_Keycode kc) {
-    auto keyPair = gInput->usedKeys.find(kc);
-    if (keyPair != gInput->usedKeys.end()) {
+inline bool unregisterKey(SDL_Keycode kc, Input *input) {
+    auto keyPair = input->usedKeys.find(kc);
+    if (keyPair != input->usedKeys.end()) {
         // SDL_Log("Keycode %d already found in the keys map", kc);
         return false;
     }
 
-    gInput->usedKeys.erase(keyPair);
+    input->usedKeys.erase(keyPair);
     return true;
 }
 
-inline bool registerKey(SDL_Keycode kc) {
-    auto keyPair = gInput->usedKeys.find(kc);
+inline bool registerKey(SDL_Keycode kc, Input *input) {
+    auto keyPair = input->usedKeys.find(kc);
 
-    if (keyPair != gInput->usedKeys.end()) {
+    if (keyPair != input->usedKeys.end()) {
         // SDL_Log("Keycode %d already found in the keys map", kc);
         return false;
     }
 
     SDL_Log("Keycode %d not found in the keys map, registering it", kc);
     KeyState ks = {0};
-    gInput->usedKeys.insert({kc, ks});
+    input->usedKeys.insert({kc, ks});
     return true;
 }
 
-inline bool updateKeyState(SDL_Keycode kc, bool pressed) {
-    auto keyPair = gInput->usedKeys.find(kc);
+inline bool updateKeyState(SDL_Keycode kc, bool pressed, Input *input) {
+    auto keyPair = input->usedKeys.find(kc);
 
     // If it does not find the key, it returns the post end iterator
-    if (keyPair == gInput->usedKeys.end()) {
+    if (keyPair == input->usedKeys.end()) {
         // SDL_Log("Keycode %d not found in the keys map", kc);
         return false;
     } else {
@@ -71,10 +69,10 @@ inline bool updateKeyState(SDL_Keycode kc, bool pressed) {
     }
 }
 
-inline bool getKeyState(SDL_Keycode kc, KeyState *state) {
-    auto keyPair = gInput->usedKeys.find(kc);
+inline bool getKeyState(SDL_Keycode kc, KeyState *state, Input *input) {
+    auto keyPair = input->usedKeys.find(kc);
 
-    if (keyPair == gInput->usedKeys.end()) {
+    if (keyPair == input->usedKeys.end()) {
         SDL_Log("Keycode %d not found in the keys map", kc);
         return false;
     }

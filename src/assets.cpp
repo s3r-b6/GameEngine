@@ -1,7 +1,7 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "./headers/assets.h"
+#include "./assets.h"
 
 Sprite get_sprite(SpriteID spriteID) {
     Sprite sprite = {};

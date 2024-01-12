@@ -1,12 +1,15 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "./headers/main.h"
-#include "./headers/input.h"
-#include "./headers/renderer.h"
+#include "./main.h"
+#include "./engine_lib.h"
+#include "./globals.h"
+#include "./initialization.h"
+#include "./input.h"
+#include "./renderer.h"
 
-#include "../deps/imgui/imgui.h"
-#include "headers/engine_lib.h"
+#include "SDL2/SDL_events.h"
+#include "SDL2/SDL_timer.h"
 
 #ifdef _WIN32
 #define gameSharedObject "./game.dll"
@@ -22,66 +25,66 @@
 //
 // TODO: Test this for performance when I am actually rendering something
 // complex
-inline void render() {
-    auto color = gRenderData->clearColor;
+inline void render(int width, int height) {
+    auto color = g->renderData->clearColor;
     glClearColor(color[0], color[1], color[2], 1.f);
     glClearDepth(0.f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, gAppState->width, gAppState->height);
+    glViewport(0, 0, width, height);
 
-    glm::vec2 screenSize = {
-        static_cast<float>(gAppState->width),
-        static_cast<float>(gAppState->height),
-    };
-    glUniform2fv(gGlContext.screenSizeID, 1, &screenSize.x);
+    glm::vec2 screenSize = {static_cast<float>(width),
+                            static_cast<float>(height)};
+    glUniform2fv(g->glContext->screenSizeID, 1, &screenSize.x);
 
-    glm::mat4x4 mat = gRenderData->gameCamera.getProjectionMatrix();
-    glUniformMatrix4fv(gGlContext.orthoProjectionID, 1, GL_FALSE, &mat[0].x);
+    glm::mat4x4 mat =
+        g->renderData->gameCamera.getProjectionMatrix(width, height);
+    glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-                        sizeof(Transform) * gRenderData->transformCount,
-                        gRenderData->transforms);
+                        sizeof(Transform) * g->renderData->transformCount,
+                        g->renderData->transforms);
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gRenderData->transformCount);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6,
+                              g->renderData->transformCount);
 
-        gRenderData->transformCount = 0;
+        g->renderData->transformCount = 0;
     }
 }
 
 inline void handleSDLevents(SDL_Event *event) {
     switch (event->type) {
     case SDL_QUIT: {
-        gAppState->running = false;
+        g->appState->running = false;
         break;
     }
 
     case SDL_WINDOWEVENT: {
         if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            SDL_GL_GetDrawableSize(gAppState->window, &gAppState->width,
-                                   &gAppState->height);
+            SDL_GL_GetDrawableSize(g->appState->window, &g->appState->width,
+                                   &g->appState->height);
         }
 
         break;
     }
 
     case SDL_WINDOWEVENT_ENTER: {
-        gInput->mouseInWindow = true;
+        g->input->mouseInWindow = true;
         break;
     }
 
     case SDL_WINDOWEVENT_LEAVE: {
-        gInput->mouseInWindow = false;
+        g->input->mouseInWindow = false;
         break;
     }
 
     case SDL_MOUSEMOTION: {
-        if (gInput->mouseInWindow) {
-            SDL_GetMouseState(&gInput->mousePos.x, &gInput->mousePos.y);
-            // SDL_Log("New mousePos: %d %d", gInput->mousePos.x,
-            // gInput->mousePos.y);
+        if (g->input->mouseInWindow) {
+            SDL_GetMouseState(&g->input->mousePos.x, &g->input->mousePos.y);
+            // SDL_Log("New mousePos: %d %d", g->input->mousePos.x,
+            // g->input->mousePos.y);
         }
 
         break;
@@ -90,10 +93,9 @@ inline void handleSDLevents(SDL_Event *event) {
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEBUTTONUP: {
         char const *state = event->type == SDL_MOUSEBUTTONDOWN ? "down" : "up";
-
         char const *key = event->button.button == SDL_BUTTON_LEFT ? "M1" : "M2";
 
-        SDL_Log("%s %s", key, state);
+        // SDL_Log("%s %s", key, state);
 
         break;
     }
@@ -112,20 +114,19 @@ inline void handleSDLevents(SDL_Event *event) {
         //
         // Text mode: Only update ASCII keycodes.
         // UI mode:   Only update UI keycodes
-        updateKeyState(keyCode, pressed);
-        gInput->lastPressed = keyCode;
+        updateKeyState(keyCode, pressed, g->input);
+        g->input->lastPressed = keyCode;
 
         break;
     }
     }
 }
 
-void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                Input *inputIn, ImguiState *imguiIn, double dt) {
-    updateGame_ptr(gameStateIn, renderDataIn, inputIn, imguiIn, dt);
+void updateGame(GlobalState *globalStateIn, double dt) {
+    updateGame_ptr(globalStateIn, dt);
 }
 
-void reloadGameLib(BumpAllocator *transientStorage) {
+void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist void *gameSO;
     local_persist u64 lastModTimestamp;
 
@@ -142,8 +143,8 @@ void reloadGameLib(BumpAllocator *transientStorage) {
         }
 
         while (!plat_copyFile(gameSharedObject, loadedgameSharedObject,
-                              transientStorage)) {
-            if (gAppState->running) platform_sleep(10);
+                              tempStorage)) {
+            if (g->appState->running) platform_sleep(10);
         }
 
         SDL_Log("Copied game.so to game_load.so");
@@ -153,8 +154,8 @@ void reloadGameLib(BumpAllocator *transientStorage) {
 
         SDL_Log("Loaded dynamic library game_load.so");
 
-        updateGame_ptr = reinterpret_cast<update_game_type *>(
-            plat_loadDynamicFun(gameSO, "updateGame"));
+        updateGame_ptr =
+            (update_game_type *)(plat_loadDynamicFun(gameSO, "updateGame"));
 
         if (!updateGame_ptr) crash("Failed to load updateGame function");
 
@@ -171,47 +172,46 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 int main(int argc, char *args[])
 #endif
 {
-    BumpAllocator *permanentStorage = new BumpAllocator(MB(10));
-    BumpAllocator *transientStorage = new BumpAllocator(MB(10));
+    BumpAllocator *permStorage = new BumpAllocator(MB(10));
+    BumpAllocator *tempStorage = new BumpAllocator(MB(10));
 
-    gAppState = reinterpret_cast<ProgramState *>(
-        permanentStorage->alloc(sizeof(ProgramState)));
-    gGameState = reinterpret_cast<GameState *>(
-        permanentStorage->alloc(sizeof(GameState)));
-    gRenderData = reinterpret_cast<RenderData *>(
-        permanentStorage->alloc(sizeof(RenderData)));
-    gInput = reinterpret_cast<Input *>(permanentStorage->alloc(sizeof(Input)));
-    gImgui = reinterpret_cast<ImguiState *>(
-        permanentStorage->alloc(sizeof(ImguiState)));
+    // GlobalState just stitches together all pointers
+    g = (GlobalState *)permStorage->alloc(sizeof(GlobalState));
 
-    if (!gAppState || !gRenderData || !gGameState || !gInput) {
-        SDL_Log("ERROR: Failed to alloc ProgramState*, RenderData*, GameState* "
-                "or Input*");
+    g->appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
+    g->gameState = (GameState *)permStorage->alloc(sizeof(GameState));
+    g->renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
+    g->input = (Input *)permStorage->alloc(sizeof(Input));
+    g->imgui = (ImguiState *)permStorage->alloc(sizeof(ImguiState));
+    g->glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
+
+    if (!g->appState || !g->renderData || !g->gameState || !g->input) {
+        SDL_Log("ERROR: Failed to alloc globalState");
         return -1;
     }
 
-    gGameState->initialized = false;
+    g->gameState->initialized = false;
 
-    gInput->mouseInWindow = true;
-    gInput->showCursor = true;
-    gInput->usedKeys = std::map<SDL_Keycode, KeyState>();
+    g->input->mouseInWindow = true;
+    g->input->showCursor = true;
+    g->input->usedKeys = std::map<SDL_Keycode, KeyState>();
 
-    gAppState->running = true;
-    gAppState->width = 1280;
-    gAppState->height = 720;
-    gAppState->window = NULL;
-    gAppState->glContext = NULL;
+    g->appState->running = true;
+    g->appState->width = 1280;
+    g->appState->height = 720;
+    g->appState->window = NULL;
+    g->appState->glContext = NULL;
 
-    gRenderData->clearColor[0] = 119.f / 255.f;
-    gRenderData->clearColor[1] = 33.f / 255.f;
-    gRenderData->clearColor[2] = 111.f / 255.f;
+    g->renderData->clearColor[0] = 119.f / 255.f;
+    g->renderData->clearColor[1] = 33.f / 255.f;
+    g->renderData->clearColor[2] = 111.f / 255.f;
 
-    if (!initSDLandGL(gAppState, &gGlContext, gRenderData, transientStorage)) {
+    if (!initSDLandGL(tempStorage, g->appState, g->glContext, g->renderData)) {
         SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
         return -1;
     }
 
-    if (!initImgui(gImgui, gAppState)) {
+    if (!initImgui(g->imgui, g->appState)) {
         SDL_Log("ERROR: Failed to initialize ImGui");
         return -1;
     }
@@ -220,23 +220,23 @@ int main(int argc, char *args[])
 
     // Get initial window size. It should have been initialized to defaults,
     // but who knows
-    SDL_GL_GetDrawableSize(gAppState->window, &gAppState->width,
-                           &gAppState->height);
+    SDL_GL_GetDrawableSize(g->appState->window, &g->appState->width,
+                           &g->appState->height);
 
     SDL_Event event;
     SDL_StartTextInput();
 
-    loadTextureAtlas("../assets/textures/zelda-like/character.png", &gGlContext,
-                     GL_TEXTURE0);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", &gGlContext,
+    loadTextureAtlas("../assets/textures/zelda-like/character.png",
+                     g->glContext, GL_TEXTURE0);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext,
                      GL_TEXTURE1);
 
     u64 now = SDL_GetPerformanceCounter();
     u64 last = 0;
     double dt = 0;
 
-    reloadGameLib(transientStorage);
-    while (gAppState->running) {
+    reloadGameLib(tempStorage);
+    while (g->appState->running) {
         last = now;
         now = SDL_GetPerformanceCounter();
 
@@ -252,22 +252,22 @@ int main(int argc, char *args[])
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        SDL_ShowCursor(gInput->showCursor);
+        SDL_ShowCursor(g->input->showCursor);
 
-        updateGame(gGameState, gRenderData, gInput, gImgui, dt);
-        render();
+        updateGame(g, dt);
+        render(g->appState->width, g->appState->height);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        SDL_GL_SwapWindow(gAppState->window);
-        transientStorage->freeMemory();
+        SDL_GL_SwapWindow(g->appState->window);
+        tempStorage->freeMemory();
 
-        reloadGameLib(transientStorage);
+        reloadGameLib(tempStorage);
     }
 
     SDL_StopTextInput();
-    close(gAppState, &gGlContext);
+    close(g->glContext, g->appState);
 
     return 0;
 }

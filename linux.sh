@@ -13,11 +13,10 @@ include=(-I../deps/)
 include+=(-I../deps/linux/) 
 include+=(-I../deps/linux/SDL2)
 include+=(-I../deps/imgui/)
-include+=(-I../src/headers)
+include+=(-I../include)
 
 libs=(-L/lib)
 libs+=(-lSDL2)
-libs+=(-lGLEW)
 libs+=(-lGL)
 
 sources_main=(../src/main.cpp)

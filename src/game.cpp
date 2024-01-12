@@ -1,27 +1,31 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "./headers/game.h"
-#include "./headers/input.h"
-#include "./headers/renderer.h"
+#include "SDL2/SDL_log.h"
 
+#include "./engine_lib.h"
+#include "./game.h"
+#include "./globals.h"
 #include "./imgui.h"
+#include "./input.h"
+#include "./renderer.h"
 
 // This constant is the target simulations of the world per second
 constexpr double UPDATE_DELAY = 1. / 60.;
 
 inline void initializeGameState() {
-    gGameState->updateTimer = 0;
-    // Top left is 0, 0
-    gGameState->playerPos = {0, 0};
 
-    gRenderData->gameCamera = {
+    g->gameState->updateTimer = 0;
+    // Top left is 0, 0
+    g->gameState->playerPos = {0, 0};
+
+    g->renderData->gameCamera = {
         .pos = {160.f, 90.f},
         .dimensions = {static_cast<float>(WORLD_SIZE.x),
                        static_cast<float>(WORLD_SIZE.y)},
     };
 
-    // Last keycode pressed is stored in gInput->lastPressed. To allow for
+    // Last keycode pressed is stored in g->input->lastPressed. To allow for
     // rebinds the idea right now is that we would check which GameAction is
     // being requested to remap, and, move it to the new (last pressed)
     // keycode
@@ -30,23 +34,16 @@ inline void initializeGameState() {
     gameRegisterKey(MOVE_DOWN, 's');
     gameRegisterKey(MOVE_LEFT, 'd');
 
-    ImGui::SetCurrentContext(gImgui->ctxt);
-    ImGui::SetAllocatorFunctions(gImgui->p_alloc_func, gImgui->p_free_func);
+    ImGui::SetCurrentContext(g->imgui->ctxt);
+    ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
 
-    gGameState->initialized = true;
+    g->gameState->initialized = true;
 }
 
-EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
-                          Input *inputIn, ImguiState *imguiIn, float dt) {
+EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     // Since this is compiled as a separate dll, it holds its own static data
-    if (gRenderData != renderDataIn) {
-        gRenderData = renderDataIn;
-        gGameState = gameStateIn;
-        gInput = inputIn;
-        gImgui = imguiIn;
-    }
-
-    if (!gGameState->initialized) initializeGameState();
+    if (g != globalStateIn) { g = globalStateIn; }
+    if (!g->gameState->initialized) initializeGameState();
 
     {
         static float f = 0.0f;
@@ -60,7 +57,7 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
         ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
         // Edit 3 floats representing a color
         ImGui::ColorEdit3("clear color",
-                          reinterpret_cast<float *>(gRenderData->clearColor));
+                          reinterpret_cast<float *>(g->renderData->clearColor));
 
         // Buttons return true when clicked (most widgets return true when
         // edited/activated)
@@ -72,22 +69,51 @@ EXPORT_FN void updateGame(GameState *gameStateIn, RenderData *renderDataIn,
         ImGui::End();
     }
 
-    gGameState->updateTimer += dt;
+    g->gameState->updateTimer += dt;
 
     // World is simulated every 1/60 seconds
     // https://gafferongames.com/post/fix_your_timestep/
-    while (gGameState->updateTimer >= UPDATE_DELAY) {
-        gGameState->updateTimer -= UPDATE_DELAY;
+    while (g->gameState->updateTimer >= UPDATE_DELAY) {
+        g->gameState->updateTimer -= UPDATE_DELAY;
 
-        if (actionDown(MOVE_UP)) { gGameState->playerPos.y -= 1; }
-        if (actionDown(MOVE_DOWN)) { gGameState->playerPos.y += 1; }
-        if (actionDown(MOVE_RIGHT)) { gGameState->playerPos.x -= 1; }
-        if (actionDown(MOVE_LEFT)) { gGameState->playerPos.x += 1; }
-        gInput->mouseWorldPos = gInput->mousePos / (WORLD_SIZE / TILESIZE);
+        if (actionDown(MOVE_UP)) { g->gameState->playerPos.y -= 1; }
+        if (actionDown(MOVE_DOWN)) { g->gameState->playerPos.y += 1; }
+        if (actionDown(MOVE_RIGHT)) { g->gameState->playerPos.x -= 1; }
+        if (actionDown(MOVE_LEFT)) { g->gameState->playerPos.x += 1; }
+        g->input->mouseWorldPos = g->input->mousePos / (WORLD_SIZE / TILESIZE);
     }
 
     // SDL_Log("FPS: %d, deltaTime: %f, updateDelay: %f", (int)(1 / dt), dt,
     //         UPDATE_DELAY);
 
-    draw_sprite(gRenderData, Player, gGameState->playerPos, {16.f, 16.f});
+    draw_sprite(g->renderData, Player, g->gameState->playerPos, {16.f, 16.f});
+}
+
+inline bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
+    g->gameState->gameBinds[action] = kc;
+    if (registerKey(kc, g->input)) {
+        SDL_Log("Succesfuly bound %c to game action: %d", kc, action);
+        return true;
+    } else {
+        SDL_Log("Could not bind %c to game action: %d", kc, action);
+        return false;
+    }
+}
+
+inline bool actionDown(GameAction action) {
+    if (!g->gameState->gameBinds[action]) return false;
+
+    KeyState ks = {};
+    getKeyState(g->gameState->gameBinds[action], &ks, g->input);
+
+    return ks.isDown;
+}
+
+inline bool actionUp(GameAction action) {
+    if (!g->gameState->gameBinds[action]) return false;
+
+    KeyState ks = {};
+    getKeyState(g->gameState->gameBinds[action], &ks, g->input);
+
+    return !ks.isDown;
 }

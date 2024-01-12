@@ -1,5 +1,6 @@
 CompileFlags:
   Add:
+    - "-I../include/"
     - "-I../deps/"
     - "-I../deps/imgui/"
     - "-I../deps/win32/"

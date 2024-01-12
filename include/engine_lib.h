@@ -1,13 +1,10 @@
 #pragma once
 
-#include <glad/glad.h>
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-
-#include "./platform.h"
 #include "./types.h"
 #include "imgui.h"
+
+#include "SDL2/SDL_log.h"
+#include "SDL2/SDL_video.h"
 
 // Struct that holds all the data relevant to program execution.
 //  \bool running -> Marks if the program should continue to run the main loop
@@ -39,9 +36,6 @@ struct ImguiState {
     ImGuiMemFreeFunc p_free_func;
     void *p_user_data;
 };
-
-global ImguiState *gImgui;
-global ProgramState *gAppState;
 
 inline void crash(char *errorMsg) {
     SDL_Log("ERROR: %s", errorMsg);

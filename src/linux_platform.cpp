@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "./headers/memory.h"
-#include "./headers/types.h"
+#include "./memory.h"
+#include "./types.h"
 
 #include "SDL2/SDL_log.h"
 

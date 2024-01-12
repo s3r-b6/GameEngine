@@ -19,6 +19,20 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
+typedef unsigned int uint;
+
+// Forward declaration of common types
+struct BumpAllocator;
+struct GLContext;
+struct RenderData;
+struct ProgramState;
+struct ImguiState;
+struct GlobalState;
+struct KeyState;
+
+// KeyCodes
+#include "SDL2/SDL_keycode.h"
+
 // Math
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>

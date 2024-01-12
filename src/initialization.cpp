@@ -1,15 +1,23 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "./headers/initialization.h"
-#include "./headers/renderer.h"
+#include "../deps/imgui/backends/imgui_impl_opengl3.h"
+#include "../deps/imgui/backends/imgui_impl_sdl2.h"
+#include "../deps/imgui/imgui.h"
+
+#include "./initialization.h"
+
+#include "./engine_lib.h"
+#include "./memory.h"
+#include "./platform.h"
+#include "./renderer.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
 
 // TODO: Make logs different based on severity...
 
-bool initImgui(ImguiState *imgui, ProgramState *pState) {
+bool initImgui(ImguiState *imgui, ProgramState *appState) {
     IMGUI_CHECKVERSION();
     imgui->ctxt = ImGui::CreateContext();
 
@@ -19,7 +27,7 @@ bool initImgui(ImguiState *imgui, ProgramState *pState) {
     // Enable Gamepad Controls
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-    ImGui_ImplSDL2_InitForOpenGL(pState->window, pState->glContext);
+    ImGui_ImplSDL2_InitForOpenGL(appState->window, appState->glContext);
     ImGui_ImplOpenGL3_Init();
 
     ImGui::GetAllocatorFunctions(&imgui->p_alloc_func, &imgui->p_free_func,
@@ -28,8 +36,8 @@ bool initImgui(ImguiState *imgui, ProgramState *pState) {
     return true;
 }
 
-bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
-                  BumpAllocator *transientStorage) {
+bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState,
+                  GLContext *glContext, RenderData *renderData) {
     // Initialize SDL
     {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -46,13 +54,17 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
         // Create window and context
         SDL_Window *window = SDL_CreateWindow(
             "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            ps->width, ps->height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+            appState->width, appState->height,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+        SDL_Log("4");
 
         if (!window) {
             SDL_Log("Window could not be created! SDL Error: %s\n",
                     SDL_GetError());
             return false;
         }
+        SDL_Log("5");
 
         SDL_GLContext context = SDL_GL_CreateContext(window);
         if (!context) {
@@ -61,8 +73,10 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
             return false;
         }
 
-        ps->glContext = context;
-        ps->window = window;
+        SDL_Log("6");
+        appState->glContext = context;
+        appState->window = window;
+        SDL_Log("7");
     }
 
     // Initialize glew, set VSync, OpenGL
@@ -74,7 +88,8 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
 
         // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
         if (SDL_GL_SetSwapInterval(-1) < 0) {
-            SDL_Log("Warning: Unable to set AdaptiveVsync! Trying to set VSync SDL Error: %s\n",
+            SDL_Log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
+                    "SDL Error: %s\n",
                     SDL_GetError());
         }
 
@@ -84,9 +99,8 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
             return false;
         }
 
-
         // Initialize OpenGL
-        if (!initGL(rs, transientStorage, renderData)) {
+        if (!initGL(tempStorage, glContext, renderData)) {
             SDL_Log("Unable to initialize OpenGL!");
             return false;
         }
@@ -95,15 +109,15 @@ bool initSDLandGL(ProgramState *ps, GLContext *rs, RenderData *renderData,
     return true;
 }
 
-bool initGL(GLContext *glContext, BumpAllocator *tStorage,
+bool initGL(BumpAllocator *tempStorage, GLContext *glContext,
             RenderData *renderData) {
     glContext->programID = glCreateProgram();
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
     char *vertSource =
-        plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize, tStorage);
+        plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize, tempStorage);
     char *fragSource =
-        plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize, tStorage);
+        plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize, tempStorage);
 
     if (!vertSource) { SDL_Log("Failed to read vertex shader sources"); }
     if (!fragSource) { SDL_Log("Failed to read fragment shader sources"); }
@@ -127,12 +141,12 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
 
     if (vShaderCompiled != GL_TRUE) {
         SDL_Log("Unable to compile vertex shader %d!\n", vertexShaderID);
-        printShaderLog(vertexShaderID, tStorage);
+        printShaderLog(vertexShaderID, tempStorage);
     }
 
     if (fShaderCompiled != GL_TRUE) {
         SDL_Log("Unable to compile fragment shader %d!\n", fragmentShaderID);
-        printShaderLog(fragmentShaderID, tStorage);
+        printShaderLog(fragmentShaderID, tempStorage);
     }
 
     if (fShaderCompiled != GL_TRUE || vShaderCompiled != GL_TRUE) return false;
@@ -146,7 +160,7 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
     glGetProgramiv(glContext->programID, GL_LINK_STATUS, &programSuccess);
     if (programSuccess != GL_TRUE) {
         SDL_Log("Error linking program %d!\n", glContext->programID);
-        printProgramLog(glContext->programID, tStorage);
+        printProgramLog(glContext->programID, tempStorage);
         return false;
     }
 
@@ -165,8 +179,10 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    SDL_Log("1");
     // This is for the textureAtlases
     glGenTextures(MAX_TEXTURES, glContext->textureIDs);
+    SDL_Log("2");
 
     // This creates a buffer for the transforms
     glGenBuffers(1, &glContext->transformSBOID);
@@ -174,25 +190,28 @@ bool initGL(GLContext *glContext, BumpAllocator *tStorage,
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Transform) * MAX_TRANSFORMS,
                  renderData->transforms, GL_DYNAMIC_DRAW);
 
+    SDL_Log("3");
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_MULTISAMPLE);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
 
+    SDL_Log("4");
     glUseProgram(glContext->programID);
 
+    SDL_Log("5");
     return true;
 }
 
-void close(ProgramState *ps, GLContext *gc) {
+void close(GLContext *glContext, ProgramState *appState) {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
-    glDeleteProgram(gc->programID);
-    SDL_DestroyWindow(ps->window);
-    ps->window = NULL;
+    glDeleteProgram(glContext->programID);
+    SDL_DestroyWindow(appState->window);
+    appState->window = NULL;
     SDL_Quit();
 }
 
