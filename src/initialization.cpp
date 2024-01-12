@@ -54,17 +54,14 @@ bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState,
         // Create window and context
         SDL_Window *window = SDL_CreateWindow(
             "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            appState->width, appState->height,
+            appState->screenSize.x, appState->screenSize.y,
             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-
-        SDL_Log("4");
 
         if (!window) {
             SDL_Log("Window could not be created! SDL Error: %s\n",
                     SDL_GetError());
             return false;
         }
-        SDL_Log("5");
 
         SDL_GLContext context = SDL_GL_CreateContext(window);
         if (!context) {
@@ -73,10 +70,8 @@ bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState,
             return false;
         }
 
-        SDL_Log("6");
         appState->glContext = context;
         appState->window = window;
-        SDL_Log("7");
     }
 
     // Initialize glew, set VSync, OpenGL
@@ -179,10 +174,8 @@ bool initGL(BumpAllocator *tempStorage, GLContext *glContext,
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    SDL_Log("1");
     // This is for the textureAtlases
     glGenTextures(MAX_TEXTURES, glContext->textureIDs);
-    SDL_Log("2");
 
     // This creates a buffer for the transforms
     glGenBuffers(1, &glContext->transformSBOID);
@@ -190,17 +183,14 @@ bool initGL(BumpAllocator *tempStorage, GLContext *glContext,
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Transform) * MAX_TRANSFORMS,
                  renderData->transforms, GL_DYNAMIC_DRAW);
 
-    SDL_Log("3");
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_MULTISAMPLE);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
 
-    SDL_Log("4");
     glUseProgram(glContext->programID);
 
-    SDL_Log("5");
     return true;
 }
 

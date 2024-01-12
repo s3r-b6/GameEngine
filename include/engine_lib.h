@@ -24,8 +24,7 @@
 //                                      until it is compiled
 struct ProgramState {
     bool running = true;
-    int width;
-    int height;
+    glm::ivec2 screenSize;
     SDL_Window *window;
     SDL_GLContext glContext;
 };

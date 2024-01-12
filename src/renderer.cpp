@@ -56,3 +56,37 @@ void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
 
     renderData->transforms[renderData->transformCount++] = t;
 }
+
+void draw_tile(RenderData *renderData, SpriteID spriteID, glm::vec2 pos) {
+    Sprite sp = get_sprite(spriteID);
+
+    Transform t = {
+        .atlasOffset = sp.atlasOffset,
+        .spriteSize = sp.spriteSize,
+        .pos = pos,
+        .size = {16, 16},
+
+        .atlasIdx = sp.atlasIdx,
+    };
+
+    renderData->transforms[renderData->transformCount++] = t;
+}
+
+mat4x4 OrthographicCamera::getProjectionMatrix(int width, int height) {
+    float left = pos.x - dimensions.x / 2.0;
+    float right = pos.x + dimensions.x / 2.0;
+    float top = pos.y - dimensions.y / 2.0;
+    float bottom = pos.y + dimensions.y / 2.0;
+
+    return glm::ortho(left, right, bottom, top);
+}
+
+ivec2 OrthographicCamera::getMousePosInWorld(ivec2 mousePos, ivec2 screenSize) {
+    int xPos = (float)mousePos.x / (float)screenSize.x * dimensions.x;
+    xPos += -dimensions.x / 2.0f + pos.x;
+
+    int yPos = (float)mousePos.y / (float)screenSize.y * dimensions.y;
+    yPos += -dimensions.y / 2.0f + pos.y;
+
+    return ivec2(xPos, yPos) / TILESIZE;
+}

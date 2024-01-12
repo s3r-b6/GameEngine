@@ -10,6 +10,7 @@
 
 #include "SDL2/SDL_events.h"
 #include "SDL2/SDL_timer.h"
+#include "SDL2/SDL_video.h"
 
 #ifdef _WIN32
 #define gameSharedObject "./game.dll"
@@ -25,21 +26,20 @@
 // only called here and I mainly extracted them to make this file more
 // manageable.
 // Test this for performance when I am actually rendering something complex
-inline void render(int width, int height) {
+inline void render(glm::ivec2 screenSize) {
     auto color = g->renderData->clearColor;
     glClearColor(color[0], color[1], color[2], 1.f);
     glClearDepth(0.f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, screenSize.x, screenSize.y);
+    glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
+                                 static_cast<float>(screenSize.y)};
+    glUniform2fv(g->glContext->screenSizeID, 1, &floatScreenSize.x);
 
-    glm::vec2 screenSize = {static_cast<float>(width),
-                            static_cast<float>(height)};
-    glUniform2fv(g->glContext->screenSizeID, 1, &screenSize.x);
-
-    glm::mat4x4 mat =
-        g->renderData->gameCamera.getProjectionMatrix(width, height);
+    glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(
+        screenSize.x, screenSize.y);
     glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
     {
@@ -63,8 +63,9 @@ inline void handleSDLevents(SDL_Event *event) {
 
     case SDL_WINDOWEVENT: {
         if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            SDL_GL_GetDrawableSize(g->appState->window, &g->appState->width,
-                                   &g->appState->height);
+            SDL_GL_GetDrawableSize(g->appState->window,
+                                   &g->appState->screenSize.x,
+                                   &g->appState->screenSize.y);
         }
 
         break;
@@ -92,10 +93,14 @@ inline void handleSDLevents(SDL_Event *event) {
 
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEBUTTONUP: {
-        char const *state = event->type == SDL_MOUSEBUTTONDOWN ? "down" : "up";
-        char const *key = event->button.button == SDL_BUTTON_LEFT ? "M1" : "M2";
+        bool pressed = event->type == SDL_MOUSEBUTTONDOWN;
+        bool left = event->button.button == SDL_BUTTON_LEFT;
+        bool right = event->button.button == SDL_BUTTON_RIGHT;
+        bool mid = event->button.button == SDL_BUTTON_MIDDLE;
 
-        // SDL_Log("%s %s", key, state);
+        if (left) g->input->mLeftDown = pressed;
+        if (mid) g->input->mMidDown = pressed;
+        if (right) g->input->mRightDown = pressed;
 
         break;
     }
@@ -197,8 +202,7 @@ int main(int argc, char *args[])
     g->input->usedKeys = std::map<SDL_Keycode, KeyState>();
 
     g->appState->running = true;
-    g->appState->width = 1280;
-    g->appState->height = 720;
+    g->appState->screenSize = {1280, 720};
     g->appState->window = NULL;
     g->appState->glContext = NULL;
 
@@ -216,12 +220,16 @@ int main(int argc, char *args[])
         return -1;
     }
 
-    // Free the memory used for initialization
-
     // Get initial window size. It should have been initialized to defaults,
     // but who knows
-    SDL_GL_GetDrawableSize(g->appState->window, &g->appState->width,
-                           &g->appState->height);
+    SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
+                           &g->appState->screenSize.y);
+
+    // This is a dumb hack; at least for my WM, the window is resizable unless
+    // it has been in fullscreen before
+    SDL_SetWindowResizable(g->appState->window, SDL_FALSE);
+    SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN);
+    SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
 
     SDL_Event event;
     SDL_StartTextInput();
@@ -257,7 +265,7 @@ int main(int argc, char *args[])
         SDL_ShowCursor(g->input->showCursor);
 
         updateGame(g, dt);
-        render(g->appState->width, g->appState->height);
+        render(g->appState->screenSize);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

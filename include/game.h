@@ -1,10 +1,9 @@
-#pragma once
-
+#include "./assets.h"
 #include "./platform.h"
 #include "./types.h"
 
-constexpr glm::ivec2 WORLD_SIZE = {640, 360};
-constexpr int TILESIZE = 16;
+#include "./globals.h"
+#include "./renderer.h"
 
 enum GameAction {
     UNKNOWN,
@@ -21,8 +20,38 @@ enum GameAction {
 struct GameState {
     bool initialized;
     double updateTimer;
-    glm::ivec2 playerPos;
     SDL_Keycode gameBinds[GAME_ACTION_COUNT] = {0};
+};
+
+struct Tile {
+    SpriteID spriteID;
+    uint atlasIdx;
+};
+
+struct TileManager {
+    static constexpr int size = WORLD_SIZE.x * WORLD_SIZE.y;
+    Tile *worldGrid[size] = {nullptr};
+
+    void render() {
+        for (int i = 0; i < size; i++) {
+            int x = i % WORLD_SIZE.x;
+            int y = i / WORLD_SIZE.x;
+
+            Tile *t = worldGrid[(y * WORLD_SIZE.x) + x];
+            if (t != nullptr) {
+                draw_tile(g->renderData, t->spriteID,
+                          {x * TILESIZE, y * TILESIZE});
+            }
+        }
+    }
+
+    void removeTile(int x, int y) {
+        worldGrid[(y * WORLD_SIZE.x) + x] = nullptr;
+    }
+
+    void setTile(int x, int y, Tile *t) {
+        worldGrid[(y * WORLD_SIZE.x) + x] = t;
+    }
 };
 
 extern "C" {

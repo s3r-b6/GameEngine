@@ -1,7 +1,11 @@
 #pragma once
 
-#include "./assets.h"
 #include <glad/glad.h>
+
+#include "glm/ext/matrix_float4x4.hpp"
+
+#include "./assets.h"
+#include "./globals.h"
 
 using glm::ivec2;
 using glm::mat4;
@@ -18,26 +22,12 @@ struct Transform {
     uint padding[3];
 };
 
-constexpr int MAX_TRANSFORMS = 256;
 struct OrthographicCamera {
     vec2 pos;
     vec2 dimensions;
 
-    mat4x4 getProjectionMatrix(int width, int height) {
-        float screenAspectRatio =
-            static_cast<float>(width) / static_cast<float>(height);
-        float worldAspectRatio = dimensions.x / dimensions.y;
-
-        float aspectRatioCorrection = screenAspectRatio / worldAspectRatio;
-
-        float left = pos.x - dimensions.x / 2.0 * aspectRatioCorrection;
-        float right = pos.x + dimensions.x / 2.0 * aspectRatioCorrection;
-
-        float top = pos.y - dimensions.y / 2.0;
-        float bottom = pos.y + dimensions.y / 2.0;
-
-        return glm::ortho(left, right, bottom, top);
-    }
+    mat4x4 getProjectionMatrix(int width, int height);
+    ivec2 getMousePosInWorld(ivec2 mousePos, ivec2 screenSize);
 };
 
 struct RenderData {
@@ -49,10 +39,7 @@ struct RenderData {
     OrthographicCamera gameCamera;
 };
 
-constexpr GLsizei MAX_TEXTURES = 8;
-
 // Struct that holds all data relevant to the renderer
-// TODO: align this
 struct GLContext {
     GLuint programID = 0;
     GLuint textureIDs[MAX_TEXTURES];
@@ -65,6 +52,6 @@ struct GLContext {
 
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
                       GLenum glTextureIdx);
-
 void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
                  glm::vec2 size);
+void draw_tile(RenderData *renderData, SpriteID spriteID, glm::vec2 pos);

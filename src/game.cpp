@@ -1,6 +1,7 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
+#include "./imgui.h"
 #include "SDL2/SDL_log.h"
 
 #include "./game.h"
@@ -8,31 +9,29 @@
 #include "./engine_lib.h"
 #include "./entities.h"
 #include "./globals.h"
-#include "./imgui.h"
 #include "./input.h"
 #include "./renderer.h"
 
 // NOTE: g is the GlobalState object
 
 // This constant is the target simulations of the world per second
-constexpr double UPDATE_DELAY = 1. / 60.;
+global float speed = 1.f;
+global glm::ivec2 lastScreenSize;
 
 EntityManager entityManager;
+TileManager tileManager;
+
+Tile t1 = {Grass1, 2};
+Tile t2 = {Water1, 2};
+
 inline void initializeGameState() {
+    lastScreenSize = g->appState->screenSize;
+
     g->gameState->updateTimer = 0;
-    // Top left is 0, 0
-    g->gameState->playerPos = {0, 0};
+    g->renderData->gameCamera.pos = {320.f, 180.f};
 
-    g->renderData->gameCamera = {
-        .pos = {160.f, 90.f},
-        .dimensions = {static_cast<float>(WORLD_SIZE.x),
-                       static_cast<float>(WORLD_SIZE.y)},
-    };
+    g->renderData->gameCamera.dimensions = {WORLD_SIZE.x, WORLD_SIZE.y};
 
-    // Last keycode pressed is stored in g->input->lastPressed. To allow for
-    // rebinds the idea right now is that we would check which GameAction is
-    // being requested to remap, and, move it to the new (last pressed)
-    // keycode
     gameRegisterKey(MOVE_UP, 'w');
     gameRegisterKey(MOVE_RIGHT, 'a');
     gameRegisterKey(MOVE_DOWN, 's');
@@ -40,8 +39,6 @@ inline void initializeGameState() {
 
     ImGui::SetCurrentContext(g->imgui->ctxt);
     ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
-
-    g->gameState->initialized = true;
 
     auto playerEntity = std::make_shared<Entity>();
     auto transformComponent =
@@ -53,9 +50,8 @@ inline void initializeGameState() {
     playerEntity->components.push_back(spriteRenderer);
 
     entityManager.entities.push_back(playerEntity);
+    g->gameState->initialized = true;
 }
-
-static float speed = 1.f;
 
 void draw_imgui_frame(float dt) {
     ImGui::Begin("Hello, world!");
@@ -77,14 +73,30 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     // https://gafferongames.com/post/fix_your_timestep/
     while (g->gameState->updateTimer >= UPDATE_DELAY) {
         g->gameState->updateTimer -= UPDATE_DELAY;
-        g->input->mouseWorldPos = g->input->mousePos / (WORLD_SIZE / TILESIZE);
+
+        g->input->mouseWorldPos = g->renderData->gameCamera.getMousePosInWorld(
+            g->input->mousePos, g->appState->screenSize);
+
+        if (g->input->mouseInWindow && g->input->mLeftDown) {
+            auto pos = g->input->mouseWorldPos;
+            tileManager.setTile(pos.x, pos.y, &t1);
+            // SDL_Log("Placing tile at %d %d", pos.x, pos.y);
+        }
+
+        if (g->input->mouseInWindow && g->input->mRightDown) {
+            auto pos = g->input->mouseWorldPos;
+            tileManager.removeTile(pos.x, pos.y);
+            // SDL_Log("Removing tile at %d %d", pos.x, pos.y);
+        }
+
         simulate();
     }
 
     draw_imgui_frame(dt);
     entityManager.render();
-    draw_sprite(g->renderData, Grass1, {160, 90}, {16, 16});
-    draw_sprite(g->renderData, Water1, {140, 70}, {16, 16});
+    tileManager.render();
+
+    lastScreenSize = g->appState->screenSize;
 }
 
 void simulate() {

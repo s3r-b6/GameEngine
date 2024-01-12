@@ -13,12 +13,18 @@ struct KeyState {
     bool justReleased;
 };
 
+// TODO: The input system should allow also controllers
 struct Input {
     glm::ivec2 mouseWorldPos;
     glm::ivec2 mousePos;
 
     bool mouseInWindow;
     bool showCursor;
+
+    // TODO: This should not be like this
+    bool mLeftDown;
+    bool mRightDown;
+    bool mMidDown;
 
     SDL_Keycode lastPressed;
 
