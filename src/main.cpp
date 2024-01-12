@@ -19,12 +19,12 @@
 #define loadedgameSharedObject "./game_load.so"
 #endif
 
-// I don't think inlining is strictly necessary, but this functions are only
-// called here and I mainly extracted them to make this file more
+// NOTE: g is the GlobalState object
+
+// TODO: I don't think inlining is strictly necessary, but this functions are
+// only called here and I mainly extracted them to make this file more
 // manageable.
-//
-// TODO: Test this for performance when I am actually rendering something
-// complex
+// Test this for performance when I am actually rendering something complex
 inline void render(int width, int height) {
     auto color = g->renderData->clearColor;
     glClearColor(color[0], color[1], color[2], 1.f);

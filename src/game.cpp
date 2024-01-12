@@ -6,12 +6,13 @@
 #include "./game.h"
 
 #include "./engine_lib.h"
+#include "./entities.h"
 #include "./globals.h"
 #include "./imgui.h"
 #include "./input.h"
 #include "./renderer.h"
 
-#include "./entities.h"
+// NOTE: g is the GlobalState object
 
 // This constant is the target simulations of the world per second
 constexpr double UPDATE_DELAY = 1. / 60.;
@@ -58,7 +59,7 @@ static float speed = 1.f;
 
 void draw_imgui_frame(float dt) {
     ImGui::Begin("Hello, world!");
-    ImGui::SliderFloat("Speed", &speed, 1.0, 5.0);
+    ImGui::SliderFloat("Player Speed", &speed, 1.0, 5.0);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
     ImGui::ColorEdit3("clear color",
                       reinterpret_cast<float *>(g->renderData->clearColor));
@@ -76,7 +77,6 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     // https://gafferongames.com/post/fix_your_timestep/
     while (g->gameState->updateTimer >= UPDATE_DELAY) {
         g->gameState->updateTimer -= UPDATE_DELAY;
-
         g->input->mouseWorldPos = g->input->mousePos / (WORLD_SIZE / TILESIZE);
         simulate();
     }
