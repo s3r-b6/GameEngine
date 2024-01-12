@@ -1,40 +1,37 @@
-# TODO: check if this still works...
-
 # This script should be run from inside the .\build directory
-$include = ( "-I..\deps\",  
-    "-I..\deps\imgui\",
+$include = ( "-I..\deps\",
     "-I..\deps\win32\",
     "-I..\deps\win32\SDL2\",
+    "-I..\deps\imgui\",
     "-I..\src\headers\" 
-) 
+)
 
 $libs = (
     "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2"
 )
 
 $sources_main = (
-    "..\deps\glad\glad.c",
+    "..\src\main.cpp",
+    "..\src\win32_platform.cpp",
+    "..\src\initialization.cpp",
     "..\src\assets.cpp",
     "..\src\renderer.cpp",
-    "..\src\win32_platform.cpp", # This is win32 specific
-    "..\src\initialization.cpp",
-
-    "..\deps\imgui\imgui.cpp" ,
-    "..\deps\imgui\imgui_draw.cpp",
-    "..\deps\imgui\imgui_tables.cpp" ,
-    "..\deps\imgui\imgui_widgets.cpp",
-    "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
-    "..\deps\imgui\backends\imgui_impl_opengl3.cpp"
+    "..\deps\glad\glad.c",
+    ".\imgui.dll"
 )
 
 $sources_game = (
-    "..\deps\glad\glad.c",
     "..\src\assets.cpp",
     "..\src\renderer.cpp",
+    "..\src\win32_platform.cpp",
+    "..\deps\glad\glad.c",
+    ".\imgui.dll"
+)
 
-    "..\deps\imgui\imgui.cpp" ,
+$sources_imgui = (
+    "..\deps\imgui\imgui.cpp",
     "..\deps\imgui\imgui_draw.cpp",
-    "..\deps\imgui\imgui_tables.cpp" ,
+    "..\deps\imgui\imgui_tables.cpp",
     "..\deps\imgui\imgui_widgets.cpp",
     "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
     "..\deps\imgui\backends\imgui_impl_opengl3.cpp"
@@ -42,41 +39,53 @@ $sources_game = (
 
 $flags = (
     "-Wno-write-strings",
-    "-Wno-deprecated",
-    "-static-libstdc++",
+    "-D_REENTRANT",
+    "-static-libstdc++", 
     "-pipe"
 )
 
-
 $current_directory = Get-Location
 
-if ($current_directory -notlike "*\build")
-{
+if ($current_directory -notlike "*\build") {
     Write-Host "Running from wrong directory $current_directory"
     Write-Host "Should be running from .\build..."
     exit 1
 }
 
-$timestamp = Get-Date -Format "yyyyMMddHHmmss"
-
-$running = Get-Process -Name "game" -ErrorAction SilentlyContinue
-
-if ($running)
-{
-    Write-Output 'Game is running'
-    Remove-Item .\game* -ErrorAction SilentlyContinue
-    Write-Output "Start compiling build\game_$timestamp.dll..."
-    g++ $libs $include $sources_game -g ..\src\game.cpp -shared -o .\game_$timestamp.dll $flags # This is win32 specific
-    Remove-Item -ErrorAction SilentlyContinue .\game.dll
-    Move-Item -ErrorAction SilentlyContinue .\game_$timestamp.dll .\game.dll
-} else
-{
-    Write-Output "Could not find game through Get-Process 'game'. Assuming it is not running."
-    Remove-Item .\game* -ErrorAction SilentlyContinue
-    Write-Output "Start compiling build\game.dll..."
-    g++ $libs $include $sources_game -g ..\src\game.cpp -shared -o .\game.dll $flags # This is win32 specific &
-    Write-Output "Compiling game.exe"
-    g++ $libs $include $sources_main -g ..\src\main.cpp -o .\game.exe $flags
+if (-not (Test-Path ".\imgui.dll")) {
+    Write-Host "Imgui.dll not found, compiling..."
+    g++ -fPIC $sources_imgui $libs -I../deps/imgui/ -I../deps/imgui/backends -I../deps/win32/SDL2 -shared -o imgui.dll
 }
 
-Write-Output "Compilation completed."
+$gamesrc_stamp = (Get-Item "..\src\game.cpp").LastWriteTime.Ticks
+$gameobj_stamp = 0
+
+if (Test-Path ".\game.dll") {
+    $gameobj_stamp = (Get-Item ".\game.dll").LastWriteTime.Ticks
+}
+
+Write-Host "Trying to recompile game.cpp"
+
+if ($gamesrc_stamp -gt $gameobj_stamp) {
+    $timestamp = Get-Date -Format "yyyyMMddHHmmss"
+    Write-Host "Game.cpp file is newer. Recompiling..."
+    Remove-Item .\game_* -ErrorAction SilentlyContinue 
+    g++ -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\game.cpp $sources_game
+    Write-Host "Renaming game_$timestamp.dll to game.dll"
+    Rename-Item -Path ".\game_$timestamp.dll" -NewName ".\game.dll"
+}
+else {
+    Write-Host "Game.cpp file is not newer. No need to recompile."
+}
+
+if (-not (Get-Process -Name "game" -ErrorAction SilentlyContinue)) {
+    Write-Host "Game is not running"
+    Write-Host "Compiling main.cpp..."
+    Remove-Item .\game.exe -ErrorAction SilentlyContinue 
+    g++ $include $libs $flags -o game.exe $sources_main
+}
+else {
+    Write-Host "Game is running, skipping main.cpp..."
+}
+
+Write-Host "Compilation completed."
