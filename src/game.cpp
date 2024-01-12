@@ -47,7 +47,7 @@ inline void initializeGameState() {
     auto transformComponent =
         std::make_shared<TransformComponent>(glm::vec2(0, 0));
     auto spriteRenderer = std::make_shared<SpriteRenderer>(
-        g->renderData, Player, glm::vec2(16, 16), transformComponent);
+        g->renderData, Player, glm::vec2(16, 32), transformComponent);
 
     playerEntity->components.push_back(transformComponent);
     playerEntity->components.push_back(spriteRenderer);
@@ -83,6 +83,8 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
 
     draw_imgui_frame(dt);
     entityManager.render();
+    draw_sprite(g->renderData, Grass1, {160, 90}, {16, 16});
+    draw_sprite(g->renderData, Water1, {140, 70}, {16, 16});
 }
 
 void simulate() {

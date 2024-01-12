@@ -230,6 +230,8 @@ int main(int argc, char *args[])
                      g->glContext, GL_TEXTURE0);
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext,
                      GL_TEXTURE1);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png",
+                     g->glContext, GL_TEXTURE2);
 
     u64 now = SDL_GetPerformanceCounter();
     u64 last = 0;

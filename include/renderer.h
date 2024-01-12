@@ -24,11 +24,14 @@ struct OrthographicCamera {
     vec2 dimensions;
 
     mat4x4 getProjectionMatrix(int width, int height) {
-        float aspectRatio =
+        float screenAspectRatio =
             static_cast<float>(width) / static_cast<float>(height);
+        float worldAspectRatio = dimensions.x / dimensions.y;
 
-        float left = pos.x - (dimensions.x * aspectRatio) / 2.0;
-        float right = pos.x + (dimensions.x * aspectRatio) / 2.0;
+        float aspectRatioCorrection = screenAspectRatio / worldAspectRatio;
+
+        float left = pos.x - dimensions.x / 2.0 * aspectRatioCorrection;
+        float right = pos.x + dimensions.x / 2.0 * aspectRatioCorrection;
 
         float top = pos.y - dimensions.y / 2.0;
         float bottom = pos.y + dimensions.y / 2.0;

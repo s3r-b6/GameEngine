@@ -3,7 +3,7 @@
 #include "./platform.h"
 #include "./types.h"
 
-constexpr glm::ivec2 WORLD_SIZE = {320, 180};
+constexpr glm::ivec2 WORLD_SIZE = {640, 360};
 constexpr int TILESIZE = 16;
 
 enum GameAction {

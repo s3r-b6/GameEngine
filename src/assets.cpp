@@ -20,6 +20,20 @@ Sprite get_sprite(SpriteID spriteID) {
         sprite.spriteSize = {16, 16};
         break;
     };
+
+    case Grass1: {
+        sprite.atlasIdx = 2;
+        sprite.atlasOffset = {0, 0};
+        sprite.spriteSize = {16, 16};
+        break;
+    };
+
+    case Water1: {
+        sprite.atlasIdx = 2;
+        sprite.atlasOffset = {0, 16};
+        sprite.spriteSize = {16, 16};
+        break;
+    };
     }
 
     return sprite;
