@@ -3,18 +3,21 @@
 
 #include "SDL2/SDL_log.h"
 
-#include "./engine_lib.h"
 #include "./game.h"
+
+#include "./engine_lib.h"
 #include "./globals.h"
 #include "./imgui.h"
 #include "./input.h"
 #include "./renderer.h"
 
+#include "./entities.h"
+
 // This constant is the target simulations of the world per second
 constexpr double UPDATE_DELAY = 1. / 60.;
 
+EntityManager entityManager;
 inline void initializeGameState() {
-
     g->gameState->updateTimer = 0;
     // Top left is 0, 0
     g->gameState->playerPos = {0, 0};
@@ -38,36 +41,34 @@ inline void initializeGameState() {
     ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
 
     g->gameState->initialized = true;
+
+    auto playerEntity = std::make_shared<Entity>();
+    auto transformComponent =
+        std::make_shared<TransformComponent>(glm::vec2(0, 0));
+    auto spriteRenderer = std::make_shared<SpriteRenderer>(
+        g->renderData, Player, glm::vec2(16, 16), transformComponent);
+
+    playerEntity->components.push_back(transformComponent);
+    playerEntity->components.push_back(spriteRenderer);
+
+    entityManager.entities.push_back(playerEntity);
+}
+
+static float speed = 1.f;
+
+void draw_imgui_frame(float dt) {
+    ImGui::Begin("Hello, world!");
+    ImGui::SliderFloat("Speed", &speed, 1.0, 5.0);
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
+    ImGui::ColorEdit3("clear color",
+                      reinterpret_cast<float *>(g->renderData->clearColor));
+    ImGui::End();
 }
 
 EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     // Since this is compiled as a separate dll, it holds its own static data
     if (g != globalStateIn) { g = globalStateIn; }
     if (!g->gameState->initialized) initializeGameState();
-
-    {
-        static float f = 0.0f;
-        static int counter = 0;
-
-        // Create a window called "Hello, world!" and append into it.
-        ImGui::Begin("Hello, world!");
-        // Display some text (you can use a format strings too)
-        ImGui::Text("This is some useful text.");
-        // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-        // Edit 3 floats representing a color
-        ImGui::ColorEdit3("clear color",
-                          reinterpret_cast<float *>(g->renderData->clearColor));
-
-        // Buttons return true when clicked (most widgets return true when
-        // edited/activated)
-        if (ImGui::Button("Button")) counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
-        ImGui::End();
-    }
 
     g->gameState->updateTimer += dt;
 
@@ -76,19 +77,40 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     while (g->gameState->updateTimer >= UPDATE_DELAY) {
         g->gameState->updateTimer -= UPDATE_DELAY;
 
-        if (actionDown(MOVE_UP)) { g->gameState->playerPos.y -= 1; }
-        if (actionDown(MOVE_DOWN)) { g->gameState->playerPos.y += 1; }
-        if (actionDown(MOVE_RIGHT)) { g->gameState->playerPos.x -= 1; }
-        if (actionDown(MOVE_LEFT)) { g->gameState->playerPos.x += 1; }
         g->input->mouseWorldPos = g->input->mousePos / (WORLD_SIZE / TILESIZE);
+        simulate();
     }
 
-    // SDL_Log("FPS: %d, deltaTime: %f, updateDelay: %f", (int)(1 / dt), dt,
-    //         UPDATE_DELAY);
-
-    draw_sprite(g->renderData, Player, g->gameState->playerPos, {16.f, 16.f});
+    draw_imgui_frame(dt);
+    entityManager.render();
 }
 
+void simulate() {
+    // TODO: This is a placeholder
+    auto entity = entityManager.entities.at(0);
+    auto component = entity->components.at(0);
+
+    // TODO: Implement a way of asking an entity for a specific type of
+    // component and an entity manager for an specific entity (maybe ID?)
+    if (auto transformComponent =
+            std::dynamic_pointer_cast<TransformComponent>(component)) {
+        // SDL_Log("The component is a TransformComponent.");
+        auto pos = transformComponent->pos;
+
+        if (actionDown(MOVE_UP)) { pos.y -= speed; }
+        if (actionDown(MOVE_DOWN)) { pos.y += speed; }
+        if (actionDown(MOVE_RIGHT)) { pos.x -= speed; }
+        if (actionDown(MOVE_LEFT)) { pos.x += speed; }
+
+        transformComponent->setPos(pos.x, pos.y);
+    } else {
+        SDL_Log("The component is not a TransformComponent.");
+    }
+
+    entityManager.update();
+}
+
+// TODO: Implement some kind of InputManager
 inline bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
     g->gameState->gameBinds[action] = kc;
     if (registerKey(kc, g->input)) {

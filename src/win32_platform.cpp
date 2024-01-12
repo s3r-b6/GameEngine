@@ -4,7 +4,7 @@
 #include "SDL2/SDL_log.h"
 #include <windows.h>
 
-#include "./memory.h"
+#include "./mem.h"
 #include "./types.h"
 
 void *plat_loadDynamicLib(char *dll) {

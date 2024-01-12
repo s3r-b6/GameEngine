@@ -13,7 +13,7 @@
 #include <windows.h>
 #endif
 
-#include "./memory.h"
+#include "./mem.h"
 
 void *plat_loadDynamicLib(char *dll);
 void *plat_loadDynamicFun(void *dll, char *funName);

@@ -8,7 +8,7 @@
 #include "./initialization.h"
 
 #include "./engine_lib.h"
-#include "./memory.h"
+#include "./mem.h"
 #include "./platform.h"
 #include "./renderer.h"
 

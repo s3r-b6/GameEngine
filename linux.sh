@@ -5,7 +5,6 @@ if [[ $(pwd) != *"build" ]]; then
 	exit 1
 fi
 
-# TODO: This would benefit of a bit of cleaning...
 include=(-I../deps/)
 
 # SDL creates a config file with flags specific to each OS
@@ -15,9 +14,9 @@ include+=(-I../deps/linux/SDL2)
 include+=(-I../deps/imgui/)
 include+=(-I../include)
 
-libs=(-L/lib)
-libs+=(-lSDL2)
-libs+=(-lGL)
+include+=(-L/lib)
+include+=(-lSDL2)
+include+=(-lGL)
 
 sources_main=(../src/main.cpp)
 sources_main+=(../src/linux_platform.cpp)
@@ -33,7 +32,6 @@ sources_game+=(../src/linux_platform.cpp)
 sources_game+=(../deps/glad/glad.c)
 sources_game+=(./imgui.so)
 
-# TODO: probably not every single thing is needed
 sources_imgui=(../deps/imgui/imgui.cpp) 
 sources_imgui+=(../deps/imgui/imgui_draw.cpp)
 sources_imgui+=(../deps/imgui/imgui_tables.cpp) 
@@ -41,11 +39,11 @@ sources_imgui+=(../deps/imgui/imgui_widgets.cpp)
 sources_imgui+=(../deps/imgui/backends/imgui_impl_sdl2.cpp)
 sources_imgui+=(../deps/imgui/backends/imgui_impl_opengl3.cpp)
 
-flags=(-Wno-write-strings -D_REENTRANT)
+flags=(-pipe -Wno-write-strings -D_REENTRANT)
 
 if not [ -f "./imgui.so" ]; then
     echo "Imgui.so not found, compiling..."
-    g++ -fPIC -pipe "${sources_imgui[@]}" -I../deps/imgui/ -I../deps/imgui/backends -I../deps/linux/SDL2 -shared -o imgui.so
+    g++ -fPIC "${sources_imgui[@]}" -I../deps/imgui/ -I../deps/imgui/backends -I../deps/linux/SDL2 -shared -o imgui.so
 fi
 
 gamesrc_stamp=$(stat -c %Y ../src/game.cpp)
@@ -61,7 +59,7 @@ if [ "$gamesrc_stamp" -gt "$gameobj_stamp" ]; then
     timestamp=$(date '+%s')
     echo "Game.cpp file is newer. Recompiling..."
     echo "Compiling game_$timestamp.so..."
-    g++ -pipe -fPIC "${include[@]}" "${libs[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/game.cpp "${sources_game[@]}"
+    g++ -fPIC "${include[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/game.cpp "${sources_game[@]}"
     echo "Renaming game_$timestamp.so to game.so"
     mv "./game_$timestamp.so" ./game.so
 else 
@@ -71,7 +69,7 @@ fi
 if not pgrep game > /dev/null; then
     echo "Game is not running"
     echo "Compiling main.cpp..."
-    g++ -pipe "${include[@]}" "${libs[@]}" "${flags[@]}" -o game.out "${sources_main[@]}"
+    g++ "${include[@]}" "${flags[@]}" -o game.out "${sources_main[@]}"
 else 
     echo "Game is running, skipping main.cpp..."
 fi

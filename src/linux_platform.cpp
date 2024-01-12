@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "./memory.h"
+#include "./mem.h"
 #include "./types.h"
 
 #include "SDL2/SDL_log.h"

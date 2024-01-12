@@ -29,6 +29,7 @@ extern "C" {
 EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt);
 }
 
+void simulate();
 inline bool gameRegisterKey(GameAction action, SDL_Keycode kc);
 inline bool actionDown(GameAction action);
 inline bool actionUp(GameAction action);
