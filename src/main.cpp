@@ -38,8 +38,7 @@ inline void render(glm::ivec2 screenSize) {
                                  static_cast<float>(screenSize.y)};
     glUniform2fv(g->glContext->screenSizeID, 1, &floatScreenSize.x);
 
-    glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(
-        screenSize.x, screenSize.y);
+    glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
     glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
     {
@@ -47,8 +46,7 @@ inline void render(glm::ivec2 screenSize) {
                         sizeof(Transform) * g->renderData->transformCount,
                         g->renderData->transforms);
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6,
-                              g->renderData->transformCount);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
 
         g->renderData->transformCount = 0;
     }
@@ -63,8 +61,7 @@ inline void handleSDLevents(SDL_Event *event) {
 
     case SDL_WINDOWEVENT: {
         if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            SDL_GL_GetDrawableSize(g->appState->window,
-                                   &g->appState->screenSize.x,
+            SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
                                    &g->appState->screenSize.y);
         }
 
@@ -127,9 +124,7 @@ inline void handleSDLevents(SDL_Event *event) {
     }
 }
 
-void updateGame(GlobalState *globalStateIn, double dt) {
-    updateGame_ptr(globalStateIn, dt);
-}
+void updateGame(GlobalState *globalStateIn, double dt) { updateGame_ptr(globalStateIn, dt); }
 
 void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist void *gameSO;
@@ -147,8 +142,7 @@ void reloadGameLib(BumpAllocator *tempStorage) {
             SDL_Log("Freed gameSO");
         }
 
-        while (!plat_copyFile(gameSharedObject, loadedgameSharedObject,
-                              tempStorage)) {
+        while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
             if (g->appState->running) platform_sleep(10);
         }
 
@@ -159,8 +153,7 @@ void reloadGameLib(BumpAllocator *tempStorage) {
 
         SDL_Log("Loaded dynamic library game_load.so");
 
-        updateGame_ptr =
-            (update_game_type *)(plat_loadDynamicFun(gameSO, "updateGame"));
+        updateGame_ptr = (update_game_type *)(plat_loadDynamicFun(gameSO, "updateGame"));
 
         if (!updateGame_ptr) crash("Failed to load updateGame function");
 
@@ -171,8 +164,7 @@ void reloadGameLib(BumpAllocator *tempStorage) {
 }
 
 #ifdef _WIN32
-int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                      LPSTR lpCmdLine, int nCmdShow)
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 #elif __linux__
 int main(int argc, char *args[])
 #endif
@@ -234,12 +226,9 @@ int main(int argc, char *args[])
     SDL_Event event;
     SDL_StartTextInput();
 
-    loadTextureAtlas("../assets/textures/zelda-like/character.png",
-                     g->glContext, GL_TEXTURE0);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext,
-                     GL_TEXTURE1);
-    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png",
-                     g->glContext, GL_TEXTURE2);
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE0);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE1);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE2);
 
     u64 now = SDL_GetPerformanceCounter();
     u64 last = 0;
@@ -250,8 +239,7 @@ int main(int argc, char *args[])
         last = now;
         now = SDL_GetPerformanceCounter();
 
-        dt = static_cast<double>(now - last) /
-             static_cast<double>(SDL_GetPerformanceFrequency());
+        dt = static_cast<double>(now - last) / static_cast<double>(SDL_GetPerformanceFrequency());
 
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);

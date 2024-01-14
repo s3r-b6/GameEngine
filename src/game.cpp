@@ -41,10 +41,9 @@ inline void initializeGameState() {
     ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
 
     auto playerEntity = std::make_shared<Entity>();
-    auto transformComponent =
-        std::make_shared<TransformComponent>(glm::vec2(0, 0));
-    auto spriteRenderer = std::make_shared<SpriteRenderer>(
-        g->renderData, Player, glm::vec2(16, 32), transformComponent);
+    auto transformComponent = std::make_shared<TransformComponent>(glm::vec2(0, 0));
+    auto spriteRenderer = std::make_shared<SpriteRenderer>(g->renderData, Player, glm::vec2(16, 32),
+                                                           transformComponent);
 
     playerEntity->components.push_back(transformComponent);
     playerEntity->components.push_back(spriteRenderer);
@@ -57,8 +56,7 @@ void draw_imgui_frame(float dt) {
     ImGui::Begin("Hello, world!");
     ImGui::SliderFloat("Player Speed", &speed, 1.0, 5.0);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
-    ImGui::ColorEdit3("clear color",
-                      reinterpret_cast<float *>(g->renderData->clearColor));
+    ImGui::ColorEdit3("clear color", reinterpret_cast<float *>(g->renderData->clearColor));
     ImGui::End();
 }
 
@@ -106,8 +104,7 @@ void simulate() {
 
     // TODO: Implement a way of asking an entity for a specific type of
     // component and an entity manager for an specific entity (maybe ID?)
-    if (auto transformComponent =
-            std::dynamic_pointer_cast<TransformComponent>(component)) {
+    if (auto transformComponent = std::dynamic_pointer_cast<TransformComponent>(component)) {
         // SDL_Log("The component is a TransformComponent.");
         auto pos = transformComponent->pos;
 

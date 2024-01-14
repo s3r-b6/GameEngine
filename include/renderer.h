@@ -50,8 +50,6 @@ struct GLContext {
     u16 usedTextures = 0;
 };
 
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
-                      GLenum glTextureIdx);
-void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
-                 glm::vec2 size);
-void draw_tile(RenderData *renderData, SpriteID spriteID, glm::vec2 pos);
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx);
+void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size);
+void draw_tile(RenderData *renderData, TileID tileID, glm::vec2 pos);

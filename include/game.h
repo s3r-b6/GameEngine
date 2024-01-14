@@ -24,7 +24,7 @@ struct GameState {
 };
 
 struct Tile {
-    SpriteID spriteID;
+    TileID spriteID;
     uint atlasIdx;
 };
 
@@ -39,19 +39,14 @@ struct TileManager {
 
             Tile *t = worldGrid[(y * WORLD_SIZE.x) + x];
             if (t != nullptr) {
-                draw_tile(g->renderData, t->spriteID,
-                          {x * TILESIZE, y * TILESIZE});
+                draw_tile(g->renderData, t->spriteID, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
 
-    void removeTile(int x, int y) {
-        worldGrid[(y * WORLD_SIZE.x) + x] = nullptr;
-    }
+    void removeTile(int x, int y) { worldGrid[(y * WORLD_SIZE.x) + x] = nullptr; }
 
-    void setTile(int x, int y, Tile *t) {
-        worldGrid[(y * WORLD_SIZE.x) + x] = t;
-    }
+    void setTile(int x, int y, Tile *t) { worldGrid[(y * WORLD_SIZE.x) + x] = t; }
 };
 
 extern "C" {

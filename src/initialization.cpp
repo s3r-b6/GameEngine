@@ -30,43 +30,37 @@ bool initImgui(ImguiState *imgui, ProgramState *appState) {
     ImGui_ImplSDL2_InitForOpenGL(appState->window, appState->glContext);
     ImGui_ImplOpenGL3_Init();
 
-    ImGui::GetAllocatorFunctions(&imgui->p_alloc_func, &imgui->p_free_func,
-                                 &imgui->p_user_data);
+    ImGui::GetAllocatorFunctions(&imgui->p_alloc_func, &imgui->p_free_func, &imgui->p_user_data);
 
     return true;
 }
 
-bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState,
-                  GLContext *glContext, RenderData *renderData) {
+bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
+                  RenderData *renderData) {
     // Initialize SDL
     {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-            SDL_Log("SDL could not initialize! SDL Error: %s\n",
-                    SDL_GetError());
+            SDL_Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
             return false;
         }
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                            SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
         // Create window and context
         SDL_Window *window = SDL_CreateWindow(
-            "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            appState->screenSize.x, appState->screenSize.y,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+            "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, appState->screenSize.x,
+            appState->screenSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
         if (!window) {
-            SDL_Log("Window could not be created! SDL Error: %s\n",
-                    SDL_GetError());
+            SDL_Log("Window could not be created! SDL Error: %s\n", SDL_GetError());
             return false;
         }
 
         SDL_GLContext context = SDL_GL_CreateContext(window);
         if (!context) {
-            SDL_Log("OpenGL context could not be created! SDL Error: %s\n",
-                    SDL_GetError());
+            SDL_Log("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
             return false;
         }
 
@@ -89,8 +83,7 @@ bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState,
         }
 
         if (SDL_GL_SetSwapInterval(1) < 0) {
-            SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n",
-                    SDL_GetError());
+            SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
             return false;
         }
 
@@ -104,15 +97,12 @@ bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState,
     return true;
 }
 
-bool initGL(BumpAllocator *tempStorage, GLContext *glContext,
-            RenderData *renderData) {
+bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData) {
     glContext->programID = glCreateProgram();
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
-    char *vertSource =
-        plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize, tempStorage);
-    char *fragSource =
-        plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize, tempStorage);
+    char *vertSource = plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize, tempStorage);
+    char *fragSource = plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize, tempStorage);
 
     if (!vertSource) { SDL_Log("Failed to read vertex shader sources"); }
     if (!fragSource) { SDL_Log("Failed to read fragment shader sources"); }
@@ -164,10 +154,8 @@ bool initGL(BumpAllocator *tempStorage, GLContext *glContext,
     glDeleteShader(vertexShaderID);
     glDeleteShader(fragmentShaderID);
 
-    glContext->screenSizeID =
-        glGetUniformLocation(glContext->programID, "screenSize");
-    glContext->orthoProjectionID =
-        glGetUniformLocation(glContext->programID, "orthoProjection");
+    glContext->screenSizeID = glGetUniformLocation(glContext->programID, "screenSize");
+    glContext->orthoProjectionID = glGetUniformLocation(glContext->programID, "orthoProjection");
 
     // This seems necessary
     GLuint VAO;
@@ -218,8 +206,7 @@ void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
     // Get info string length
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-    char *infoLog =
-        reinterpret_cast<char *>(transientStorage->alloc(maxLength));
+    char *infoLog = reinterpret_cast<char *>(transientStorage->alloc(maxLength));
 
     glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
     if (infoLogLength > 0) SDL_Log("%s", infoLog);
@@ -237,8 +224,7 @@ void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
     int maxLength = 0;
 
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-    char *infoLog =
-        reinterpret_cast<char *>(transientStorage->alloc(maxLength));
+    char *infoLog = reinterpret_cast<char *>(transientStorage->alloc(maxLength));
 
     glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
     if (infoLogLength > 0) { SDL_Log("%s", infoLog); }

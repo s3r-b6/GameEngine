@@ -54,8 +54,7 @@ u64 plat_getFileTimestamp(char *fileName) {
     return filestat.st_mtime;
 }
 
-char *plat_readFile(char *fileName, size_t *fileSize,
-                    BumpAllocator *allocator) {
+char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator) {
     int fd = open(fileName, O_RDONLY);
 
     if (fd == -1) {
@@ -86,8 +85,7 @@ char *plat_readFile(char *fileName, size_t *fileSize,
     return reinterpret_cast<char *>(memory);
 }
 
-bool plat_copyFile(char *fileName, char *newFileName,
-                   BumpAllocator *allocator) {
+bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) {
     size_t fSize;
     char *f1_ptr = plat_readFile(fileName, &fSize, allocator);
 

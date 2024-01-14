@@ -10,7 +10,7 @@ Sprite get_sprite(SpriteID spriteID) {
     case Player: {
         sprite.atlasIdx = 0;
         sprite.atlasOffset = {1, 6};
-        sprite.spriteSize = {15, 22};
+        sprite.spriteSize = {16, 32};
         break;
     };
 
@@ -20,7 +20,15 @@ Sprite get_sprite(SpriteID spriteID) {
         sprite.spriteSize = {16, 16};
         break;
     };
+    }
 
+    return sprite;
+}
+
+Sprite get_tile(TileID tileID) {
+    Sprite sprite = {};
+
+    switch (tileID) {
     case Grass1: {
         sprite.atlasIdx = 2;
         sprite.atlasOffset = {0, 0};

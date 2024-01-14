@@ -43,8 +43,8 @@ struct SpriteRenderer : EntityComponentBase {
 
     glm::vec2 size;
 
-    SpriteRenderer(RenderData *renderDataIn, SpriteID spriteIn,
-                   glm::vec2 sizeIn, shared_ptr<TransformComponent> transform) {
+    SpriteRenderer(RenderData *renderDataIn, SpriteID spriteIn, glm::vec2 sizeIn,
+                   shared_ptr<TransformComponent> transform) {
         sprite = spriteIn;
         transformComponent = transform;
 

@@ -11,8 +11,7 @@
 
 // TODO: This should use a map or something similar, so one texture can be freed
 // and then I can ask which slot is free and occupy it again and so on
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
-                      GLenum glTextureIdx) {
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx) {
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
 
@@ -22,8 +21,7 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
     }
 
     glActiveTexture(glTextureIdx);
-    glBindTexture(GL_TEXTURE_2D,
-                  glContext->textureIDs[glContext->usedTextures]);
+    glBindTexture(GL_TEXTURE_2D, glContext->textureIDs[glContext->usedTextures]);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -31,8 +29,8 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 data);
 
     stbi_image_free(data);
 
@@ -41,8 +39,7 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext,
     return true;
 }
 
-void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
-                 glm::vec2 size) {
+void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size) {
     Sprite sp = get_sprite(spriteID);
 
     Transform t = {
@@ -57,8 +54,8 @@ void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos,
     renderData->transforms[renderData->transformCount++] = t;
 }
 
-void draw_tile(RenderData *renderData, SpriteID spriteID, glm::vec2 pos) {
-    Sprite sp = get_sprite(spriteID);
+void draw_tile(RenderData *renderData, TileID spriteID, glm::vec2 pos) {
+    Sprite sp = get_tile(spriteID);
 
     Transform t = {
         .atlasOffset = sp.atlasOffset,
