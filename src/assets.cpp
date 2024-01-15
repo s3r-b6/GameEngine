@@ -25,24 +25,12 @@ Sprite get_sprite(SpriteID spriteID) {
     return sprite;
 }
 
-Sprite get_tile(TileID tileID) {
-    Sprite sprite = {};
-
-    switch (tileID) {
-    case Grass1: {
-        sprite.atlasIdx = 2;
-        sprite.atlasOffset = {0, 0};
-        sprite.spriteSize = {16, 16};
-        break;
+Sprite get_tile(u8 x, u8 y, u8 atlasIdx) {
+    Sprite sprite = {
+        .atlasOffset = {x * 16, y * 16},
+        .spriteSize = {16, 16},
+        .atlasIdx = atlasIdx,
     };
-
-    case Water1: {
-        sprite.atlasIdx = 2;
-        sprite.atlasOffset = {0, 16};
-        sprite.spriteSize = {16, 16};
-        break;
-    };
-    }
 
     return sprite;
 }

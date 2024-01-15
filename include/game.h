@@ -24,29 +24,40 @@ struct GameState {
 };
 
 struct Tile {
-    TileID spriteID;
-    uint atlasIdx;
+    u8 x, y;
+    u8 atlasIdx;
+
+    bool initialized = false;
 };
+
+global Tile selectedTile = {0};
 
 struct TileManager {
     static constexpr int size = WORLD_SIZE.x * WORLD_SIZE.y;
-    Tile *worldGrid[size] = {nullptr};
+    Tile worldGrid[size] = {0};
 
     void render() {
         for (int i = 0; i < size; i++) {
             int x = i % WORLD_SIZE.x;
             int y = i / WORLD_SIZE.x;
 
-            Tile *t = worldGrid[(y * WORLD_SIZE.x) + x];
-            if (t != nullptr) {
-                draw_tile(g->renderData, t->spriteID, {x * TILESIZE, y * TILESIZE});
+            Tile t = worldGrid[(y * WORLD_SIZE.x) + x];
+            if (t.initialized) {
+                draw_tile(g->renderData, t.x, t.y, t.atlasIdx, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
 
-    void removeTile(int x, int y) { worldGrid[(y * WORLD_SIZE.x) + x] = nullptr; }
+    void removeTile(int x, int y) { worldGrid[(y * WORLD_SIZE.x) + x].initialized = false; }
+    void setTile(int x, int y, Tile t) {
+        Tile tile = {};
 
-    void setTile(int x, int y, Tile *t) { worldGrid[(y * WORLD_SIZE.x) + x] = t; }
+        tile.x = t.x;
+        tile.y = t.y;
+        tile.atlasIdx = t.atlasIdx;
+        tile.initialized = true;
+        worldGrid[(y * WORLD_SIZE.x) + x] = tile;
+    }
 };
 
 extern "C" {

@@ -12,6 +12,8 @@
 #include "./input.h"
 #include "./renderer.h"
 
+#include <string>
+
 // NOTE: g is the GlobalState object
 
 // This constant is the target simulations of the world per second
@@ -45,6 +47,11 @@ inline void initializeGameState() {
     auto spriteRenderer = std::make_shared<SpriteRenderer>(g->renderData, Player, glm::vec2(16, 32),
                                                            transformComponent);
 
+    selectedTile.initialized = true;
+    selectedTile.atlasIdx = 2;
+    selectedTile.x = 0;
+    selectedTile.y = 0;
+
     playerEntity->components.push_back(transformComponent);
     playerEntity->components.push_back(spriteRenderer);
 
@@ -66,8 +73,15 @@ void draw_imgui_frame(float dt) {
         ImVec2 uv_min = {spriteX * uvScale.x, spriteY * uvScale.y};
         ImVec2 uv_max = {(spriteX + 1) * uvScale.x, (spriteY + 1) * uvScale.y};
 
-        ImGui::ImageButton((void *)(intptr_t)g->glContext->textureIDs[2], ImVec2(16, 16), uv_min,
-                           uv_max);
+        char name[32];
+        std::sprintf(name, "Sprite_%d%d", spriteX, spriteY);
+
+        if (ImGui::ImageButton(name, (void *)(intptr_t)g->glContext->textureIDs[2], ImVec2(16, 16),
+                               uv_min, uv_max)) {
+            selectedTile.atlasIdx = 2;
+            selectedTile.x = spriteX;
+            selectedTile.y = spriteY;
+        }
         if (spriteX != 0) ImGui::SameLine();
     }
 }
@@ -89,7 +103,7 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
 
         if (g->input->mouseInWindow && g->input->mLeftDown) {
             auto pos = g->input->mouseWorldPos;
-            tileManager.setTile(pos.x, pos.y, &t1);
+            tileManager.setTile(pos.x, pos.y, selectedTile);
             // SDL_Log("Placing tile at %d %d", pos.x, pos.y);
         }
 

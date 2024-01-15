@@ -54,8 +54,8 @@ void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::
     renderData->transforms[renderData->transformCount++] = t;
 }
 
-void draw_tile(RenderData *renderData, TileID spriteID, glm::vec2 pos) {
-    Sprite sp = get_tile(spriteID);
+void draw_tile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
+    Sprite sp = get_tile(x, y, atlasIdx);
 
     Transform t = {
         .atlasOffset = sp.atlasOffset,
