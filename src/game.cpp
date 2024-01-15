@@ -58,6 +58,18 @@ void draw_imgui_frame(float dt) {
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
     ImGui::ColorEdit3("clear color", reinterpret_cast<float *>(g->renderData->clearColor));
     ImGui::End();
+
+    for (int x = 0; x < 40 * 36; x++) {
+        ImVec2 uvScale = {1.f / 40.f, 1.f / 36.f};
+        int spriteX = x % 40, spriteY = x / 40;
+
+        ImVec2 uv_min = {spriteX * uvScale.x, spriteY * uvScale.y};
+        ImVec2 uv_max = {(spriteX + 1) * uvScale.x, (spriteY + 1) * uvScale.y};
+
+        ImGui::ImageButton((void *)(intptr_t)g->glContext->textureIDs[2], ImVec2(16, 16), uv_min,
+                           uv_max);
+        if (spriteX != 0) ImGui::SameLine();
+    }
 }
 
 EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {

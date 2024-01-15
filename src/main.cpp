@@ -220,7 +220,7 @@ int main(int argc, char *args[])
     // This is a dumb hack; at least for my WM, the window is resizable unless
     // it has been in fullscreen before
     SDL_SetWindowResizable(g->appState->window, SDL_FALSE);
-    SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN);
+    SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
 
     SDL_Event event;
