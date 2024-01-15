@@ -24,6 +24,7 @@ bool initImgui(ImguiState *imgui, ProgramState *appState) {
     ImGuiIO &io = ImGui::GetIO();
     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // This does not work in wayland
     // Enable Gamepad Controls
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 

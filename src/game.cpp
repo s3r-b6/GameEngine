@@ -1,5 +1,6 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
+#include <cstdio>
 
 #include "./imgui.h"
 #include "SDL2/SDL_log.h"
@@ -12,23 +13,30 @@
 #include "./input.h"
 #include "./renderer.h"
 
-#include <string>
-
 // NOTE: g is the GlobalState object
 
-// This constant is the target simulations of the world per second
 global float speed = 1.f;
-global glm::ivec2 lastScreenSize;
 
 EntityManager entityManager;
 TileManager tileManager;
 
-Tile t1 = {Grass1, 2};
-Tile t2 = {Water1, 2};
+inline void imguiReloadContext() {
+    ImGui::SetCurrentContext(g->imgui->ctxt);
+    ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
+}
+
+// An empty vector results in a crash; so this has to be called after a hot-reload for now
+void loadEntities() {
+    auto playerEntity = std::make_shared<Entity>();
+    auto transformComponent = std::make_shared<TransformComponent>(glm::vec2(0, 0));
+    auto spriteRenderer = std::make_shared<SpriteRenderer>(g->renderData, Player, glm::vec2(16, 32),
+                                                           transformComponent);
+    playerEntity->components.push_back(transformComponent);
+    playerEntity->components.push_back(spriteRenderer);
+    entityManager.entities.push_back(playerEntity);
+}
 
 inline void initializeGameState() {
-    lastScreenSize = g->appState->screenSize;
-
     g->gameState->updateTimer = 0;
     g->renderData->gameCamera.pos = {320.f, 180.f};
 
@@ -39,27 +47,22 @@ inline void initializeGameState() {
     gameRegisterKey(MOVE_DOWN, 's');
     gameRegisterKey(MOVE_LEFT, 'd');
 
-    ImGui::SetCurrentContext(g->imgui->ctxt);
-    ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
-
-    auto playerEntity = std::make_shared<Entity>();
-    auto transformComponent = std::make_shared<TransformComponent>(glm::vec2(0, 0));
-    auto spriteRenderer = std::make_shared<SpriteRenderer>(g->renderData, Player, glm::vec2(16, 32),
-                                                           transformComponent);
+    imguiReloadContext();
+    loadEntities();
 
     selectedTile.initialized = true;
     selectedTile.atlasIdx = 2;
     selectedTile.x = 0;
     selectedTile.y = 0;
 
-    playerEntity->components.push_back(transformComponent);
-    playerEntity->components.push_back(spriteRenderer);
-
-    entityManager.entities.push_back(playerEntity);
     g->gameState->initialized = true;
 }
 
 void draw_imgui_frame(float dt) {
+    local_persist int selectedtile;
+    local_persist ivec2 selectedGroupStart;
+    local_persist ivec2 selectedGroupEnd;
+
     ImGui::Begin("Hello, world!");
     ImGui::SliderFloat("Player Speed", &speed, 1.0, 5.0);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
@@ -74,21 +77,37 @@ void draw_imgui_frame(float dt) {
         ImVec2 uv_max = {(spriteX + 1) * uvScale.x, (spriteY + 1) * uvScale.y};
 
         char name[32];
-        std::sprintf(name, "Sprite_%d%d", spriteX, spriteY);
+        std::snprintf(name, sizeof(name), "Sprite_%d%d", spriteX, spriteY);
 
+        ImVec4 bg;
+
+        if (spriteX == selectedTile.x && spriteY == selectedTile.y) { bg = ImVec4(1, 1, 1, 1); }
+
+        if (spriteX >= selectedGroupStart.x && spriteY >= selectedGroupStart.y &&
+            spriteX <= selectedGroupEnd.x && spriteY <= selectedGroupEnd.y) {
+            bg = ImVec4(1, 1, 1, 1);
+        }
+
+        ImGui::PushStyleColor(ImGuiCol_Button, bg);
         if (ImGui::ImageButton(name, (void *)(intptr_t)g->glContext->textureIDs[2], ImVec2(16, 16),
                                uv_min, uv_max)) {
             selectedTile.atlasIdx = 2;
             selectedTile.x = spriteX;
             selectedTile.y = spriteY;
         }
-        if (spriteX != 0) ImGui::SameLine();
+        ImGui::PopStyleColor();
+        if (spriteX != 0 || x == 0) ImGui::SameLine();
     }
 }
 
 EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     // Since this is compiled as a separate dll, it holds its own static data
-    if (g != globalStateIn) { g = globalStateIn; }
+    if (g != globalStateIn) {
+        g = globalStateIn;
+        imguiReloadContext();
+        loadEntities();
+    }
+
     if (!g->gameState->initialized) initializeGameState();
 
     g->gameState->updateTimer += dt;
@@ -119,8 +138,6 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     draw_imgui_frame(dt);
     entityManager.render();
     tileManager.render();
-
-    lastScreenSize = g->appState->screenSize;
 }
 
 void simulate() {

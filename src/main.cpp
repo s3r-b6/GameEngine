@@ -235,6 +235,8 @@ int main(int argc, char *args[])
     double dt = 0;
 
     reloadGameLib(tempStorage);
+
+    auto imguiIO = ImGui::GetIO();
     while (g->appState->running) {
         last = now;
         now = SDL_GetPerformanceCounter();
@@ -247,7 +249,7 @@ int main(int argc, char *args[])
         }
 
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDL2_NewFrame(g->appState->window);
         ImGui::NewFrame();
 
         SDL_ShowCursor(g->input->showCursor);
@@ -258,7 +260,14 @@ int main(int argc, char *args[])
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+        // This does not work in wayland
+        if (imguiIO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
+
         SDL_GL_SwapWindow(g->appState->window);
+
         tempStorage->freeMemory();
 
         reloadGameLib(tempStorage);
