@@ -1,9 +1,7 @@
 #pragma once
 
 #include "./game.h"
-
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_sdl2.h"
+#include "SDL_events.h"
 
 // Game shared object stub
 typedef decltype(updateGame) update_game_type;

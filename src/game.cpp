@@ -2,7 +2,6 @@
 // This code is subject to the MIT license.
 #include <cstdio>
 
-#include "./imgui.h"
 #include "SDL2/SDL_log.h"
 
 #include "./game.h"
@@ -20,20 +19,18 @@ global float speed = 1.f;
 EntityManager entityManager;
 TileManager tileManager;
 
-inline void imguiReloadContext() {
-    ImGui::SetCurrentContext(g->imgui->ctxt);
-    ImGui::SetAllocatorFunctions(g->imgui->p_alloc_func, g->imgui->p_free_func);
-}
-
 // An empty vector results in a crash; so this has to be called after a hot-reload for now
 void loadEntities() {
-    auto playerEntity = std::make_shared<Entity>();
-    auto transformComponent = std::make_shared<TransformComponent>(glm::vec2(0, 0));
-    auto spriteRenderer = std::make_shared<SpriteRenderer>(g->renderData, Player, glm::vec2(16, 32),
-                                                           transformComponent);
-    playerEntity->components.push_back(transformComponent);
-    playerEntity->components.push_back(spriteRenderer);
-    entityManager.entities.push_back(playerEntity);
+    if (entityManager.entities.size() == 0) {
+        auto playerEntity = std::make_shared<Entity>();
+        auto transformComponent = std::make_shared<TransformComponent>(glm::vec2(0, 0));
+        auto spriteRenderer = std::make_shared<SpriteRenderer>(
+            g->renderData, Player, glm::vec2(16, 32), transformComponent);
+
+        playerEntity->components.push_back(transformComponent);
+        playerEntity->components.push_back(spriteRenderer);
+        entityManager.entities.push_back(playerEntity);
+    }
 }
 
 inline void initializeGameState() {
@@ -47,7 +44,6 @@ inline void initializeGameState() {
     gameRegisterKey(MOVE_DOWN, 's');
     gameRegisterKey(MOVE_LEFT, 'd');
 
-    imguiReloadContext();
     loadEntities();
 
     selectedTile.initialized = true;
@@ -58,55 +54,9 @@ inline void initializeGameState() {
     g->gameState->initialized = true;
 }
 
-void draw_imgui_frame(float dt) {
-    local_persist int selectedtile;
-    local_persist ivec2 selectedGroupStart;
-    local_persist ivec2 selectedGroupEnd;
-
-    ImGui::Begin("Hello, world!");
-    ImGui::SliderFloat("Player Speed", &speed, 1.0, 5.0);
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1 / dt);
-    ImGui::ColorEdit3("clear color", reinterpret_cast<float *>(g->renderData->clearColor));
-    ImGui::End();
-
-    for (int x = 0; x < 40 * 36; x++) {
-        ImVec2 uvScale = {1.f / 40.f, 1.f / 36.f};
-        int spriteX = x % 40, spriteY = x / 40;
-
-        ImVec2 uv_min = {spriteX * uvScale.x, spriteY * uvScale.y};
-        ImVec2 uv_max = {(spriteX + 1) * uvScale.x, (spriteY + 1) * uvScale.y};
-
-        char name[32];
-        std::snprintf(name, sizeof(name), "Sprite_%d%d", spriteX, spriteY);
-
-        ImVec4 bg;
-
-        if (spriteX == selectedTile.x && spriteY == selectedTile.y) { bg = ImVec4(1, 1, 1, 1); }
-
-        if (spriteX >= selectedGroupStart.x && spriteY >= selectedGroupStart.y &&
-            spriteX <= selectedGroupEnd.x && spriteY <= selectedGroupEnd.y) {
-            bg = ImVec4(1, 1, 1, 1);
-        }
-
-        ImGui::PushStyleColor(ImGuiCol_Button, bg);
-        if (ImGui::ImageButton(name, (void *)(intptr_t)g->glContext->textureIDs[2], ImVec2(16, 16),
-                               uv_min, uv_max)) {
-            selectedTile.atlasIdx = 2;
-            selectedTile.x = spriteX;
-            selectedTile.y = spriteY;
-        }
-        ImGui::PopStyleColor();
-        if (spriteX != 0 || x == 0) ImGui::SameLine();
-    }
-}
-
 EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     // Since this is compiled as a separate dll, it holds its own static data
-    if (g != globalStateIn) {
-        g = globalStateIn;
-        imguiReloadContext();
-        loadEntities();
-    }
+    if (g != globalStateIn) { g = globalStateIn; }
 
     if (!g->gameState->initialized) initializeGameState();
 
@@ -135,7 +85,6 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
         simulate();
     }
 
-    draw_imgui_frame(dt);
     entityManager.render();
     tileManager.render();
 }

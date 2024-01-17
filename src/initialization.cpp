@@ -1,10 +1,6 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "../deps/imgui/backends/imgui_impl_opengl3.h"
-#include "../deps/imgui/backends/imgui_impl_sdl2.h"
-#include "../deps/imgui/imgui.h"
-
 #include "./initialization.h"
 
 #include "./engine_lib.h"
@@ -17,82 +13,59 @@
 
 // TODO: Make logs different based on severity...
 
-bool initImgui(ImguiState *imgui, ProgramState *appState) {
-    IMGUI_CHECKVERSION();
-    imgui->ctxt = ImGui::CreateContext();
-
-    ImGuiIO &io = ImGui::GetIO();
-    // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // This does not work in wayland
-    // Enable Gamepad Controls
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-    ImGui_ImplSDL2_InitForOpenGL(appState->window, appState->glContext);
-    ImGui_ImplOpenGL3_Init();
-
-    ImGui::GetAllocatorFunctions(&imgui->p_alloc_func, &imgui->p_free_func, &imgui->p_user_data);
-
-    return true;
-}
-
 bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
                   RenderData *renderData) {
     // Initialize SDL
-    {
-        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-            SDL_Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
-            return false;
-        }
-
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-        // Create window and context
-        SDL_Window *window = SDL_CreateWindow(
-            "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, appState->screenSize.x,
-            appState->screenSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-
-        if (!window) {
-            SDL_Log("Window could not be created! SDL Error: %s\n", SDL_GetError());
-            return false;
-        }
-
-        SDL_GLContext context = SDL_GL_CreateContext(window);
-        if (!context) {
-            SDL_Log("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
-            return false;
-        }
-
-        appState->glContext = context;
-        appState->window = window;
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        SDL_Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+        return false;
     }
 
-    // Initialize glew, set VSync, OpenGL
-    {
-        if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-            SDL_Log("Error initializing glad!\n");
-            return false;
-        }
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-        // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
-        if (SDL_GL_SetSwapInterval(-1) < 0) {
-            SDL_Log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
-                    "SDL Error: %s\n",
-                    SDL_GetError());
-        }
+    // Create window and context
+    SDL_Window *window = SDL_CreateWindow(
+        "Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, appState->screenSize.x,
+        appState->screenSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+
+    if (!window) {
+        SDL_Log("Window could not be created! SDL Error: %s\n", SDL_GetError());
+        return false;
+    }
+
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+    if (!context) {
+        SDL_Log("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
+        return false;
+    }
+
+    appState->glContext = context;
+    appState->window = window;
+
+    // Initialize glew, set VSync, OpenGL
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        SDL_Log("Error initializing glad!\n");
+        return false;
+    }
+
+    // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
+    if (SDL_GL_SetSwapInterval(-1) < 0) {
+        SDL_Log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
+                "SDL Error: %s\n",
+                SDL_GetError());
 
         if (SDL_GL_SetSwapInterval(1) < 0) {
             SDL_Log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
             return false;
         }
+    }
 
-        // Initialize OpenGL
-        if (!initGL(tempStorage, glContext, renderData)) {
-            SDL_Log("Unable to initialize OpenGL!");
-            return false;
-        }
+    // Initialize OpenGL
+    if (!initGL(tempStorage, glContext, renderData)) {
+        SDL_Log("Unable to initialize OpenGL!");
+        return false;
     }
 
     return true;
@@ -184,9 +157,7 @@ bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *render
 }
 
 void close(GLContext *glContext, ProgramState *appState) {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
+    SDL_StopTextInput();
 
     glDeleteProgram(glContext->programID);
     SDL_DestroyWindow(appState->window);

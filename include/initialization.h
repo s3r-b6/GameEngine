@@ -8,8 +8,6 @@ bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext 
                   RenderData *renderData);
 
 bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData);
-
-bool initImgui(ImguiState *imgui, ProgramState *appState);
 void close(GLContext *glContext, ProgramState *appState);
 
 void printProgramLog(uint program, BumpAllocator *transientStorage);

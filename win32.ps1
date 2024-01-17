@@ -2,7 +2,6 @@
 $include = ( "-I..\deps\",
     "-I..\deps\win32\",
     "-I..\deps\win32\SDL2\",
-    "-I..\deps\imgui\",
     "-I..\include" 
 )
 
@@ -16,25 +15,14 @@ $sources_main = (
     "..\src\initialization.cpp",
     "..\src\assets.cpp",
     "..\src\renderer.cpp",
-    "..\deps\glad\glad.c",
-    ".\imgui.dll"
+    "..\deps\glad\glad.c"
 )
 
 $sources_game = (
     "..\src\assets.cpp",
     "..\src\renderer.cpp",
     "..\src\win32_platform.cpp",
-    "..\deps\glad\glad.c",
-    ".\imgui.dll"
-)
-
-$sources_imgui = (
-    "..\deps\imgui\imgui.cpp",
-    "..\deps\imgui\imgui_draw.cpp",
-    "..\deps\imgui\imgui_tables.cpp",
-    "..\deps\imgui\imgui_widgets.cpp",
-    "..\deps\imgui\backends\imgui_impl_sdl2.cpp",
-    "..\deps\imgui\backends\imgui_impl_opengl3.cpp"
+    "..\deps\glad\glad.c"
 )
 
 $flags = (
@@ -59,12 +47,6 @@ if (-not (Test-Path ".\SDL2.dll"))
     Copy-Item ..\lib\SDL2.dll .\SDL2.dll
 }
 
-
-if (-not (Test-Path ".\imgui.dll"))
-{
-    Write-Host "Imgui.dll not found, compiling..."
-    g++ -fPIC $sources_imgui $libs -I../deps/imgui/ -I../deps/imgui/backends -I../deps/win32/SDL2 -shared -o imgui.dll
-}
 
 $gamesrc_stamp = (Get-Item "..\src\game.cpp").LastWriteTime.Ticks
 $gameobj_stamp = 0

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./types.h"
-#include "imgui.h"
 
 #include "SDL2/SDL_log.h"
 #include "SDL2/SDL_video.h"
@@ -27,13 +26,6 @@ struct ProgramState {
     glm::ivec2 screenSize;
     SDL_Window *window;
     SDL_GLContext glContext;
-};
-
-struct ImguiState {
-    ImGuiContext *ctxt;
-    ImGuiMemAllocFunc p_alloc_func;
-    ImGuiMemFreeFunc p_free_func;
-    void *p_user_data;
 };
 
 inline void crash(char *errorMsg) {

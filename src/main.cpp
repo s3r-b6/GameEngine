@@ -26,7 +26,8 @@
 // only called here and I mainly extracted them to make this file more
 // manageable.
 // Test this for performance when I am actually rendering something complex
-inline void render(glm::ivec2 screenSize) {
+inline void render() {
+    auto screenSize = g->appState->screenSize;
     auto color = g->renderData->clearColor;
     glClearColor(color[0], color[1], color[2], 1.f);
     glClearDepth(0.f);
@@ -41,15 +42,14 @@ inline void render(glm::ivec2 screenSize) {
     glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
     glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
-    {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-                        sizeof(Transform) * g->renderData->transformCount,
-                        g->renderData->transforms);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Transform) * g->renderData->transformCount,
+                    g->renderData->transforms);
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
 
-        g->renderData->transformCount = 0;
-    }
+    g->renderData->transformCount = 0;
+
+    SDL_GL_SwapWindow(g->appState->window);
 }
 
 inline void handleSDLevents(SDL_Event *event) {
@@ -124,7 +124,9 @@ inline void handleSDLevents(SDL_Event *event) {
     }
 }
 
-void updateGame(GlobalState *globalStateIn, double dt) { updateGame_ptr(globalStateIn, dt); }
+inline void _updateGame(GlobalState *globalStateIn, double dt) {
+    updateGame_ptr(globalStateIn, dt);
+}
 
 void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist void *gameSO;
@@ -163,15 +165,10 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     }
 }
 
-#ifdef _WIN32
-int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-#elif __linux__
-int main(int argc, char *args[])
-#endif
-{
-    BumpAllocator *permStorage = new BumpAllocator(MB(10));
-    BumpAllocator *tempStorage = new BumpAllocator(MB(10));
+global BumpAllocator *permStorage = new BumpAllocator(MB(10));
+global BumpAllocator *tempStorage = new BumpAllocator(MB(10));
 
+inline bool initialize() {
     // GlobalState just stitches together all pointers
     g = (GlobalState *)permStorage->alloc(sizeof(GlobalState));
 
@@ -179,12 +176,11 @@ int main(int argc, char *args[])
     g->gameState = (GameState *)permStorage->alloc(sizeof(GameState));
     g->renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
     g->input = (Input *)permStorage->alloc(sizeof(Input));
-    g->imgui = (ImguiState *)permStorage->alloc(sizeof(ImguiState));
     g->glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
 
     if (!g->appState || !g->renderData || !g->gameState || !g->input) {
         SDL_Log("ERROR: Failed to alloc globalState");
-        return -1;
+        return false;
     }
 
     g->gameState->initialized = false;
@@ -204,12 +200,7 @@ int main(int argc, char *args[])
 
     if (!initSDLandGL(tempStorage, g->appState, g->glContext, g->renderData)) {
         SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
-        return -1;
-    }
-
-    if (!initImgui(g->imgui, g->appState)) {
-        SDL_Log("ERROR: Failed to initialize ImGui");
-        return -1;
+        return false;
     }
 
     // Get initial window size. It should have been initialized to defaults,
@@ -223,21 +214,35 @@ int main(int argc, char *args[])
     SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
 
-    SDL_Event event;
     SDL_StartTextInput();
 
     loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE0);
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE1);
     loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE2);
 
-    u64 now = SDL_GetPerformanceCounter();
-    u64 last = 0;
+    return true;
+}
+
+#ifdef _WIN32
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#elif __linux__
+int main(int argc, char *args[])
+#endif
+{
+    if (!initialize()) {
+        SDL_Log("Failed to initialize the engine.");
+        return -1;
+    }
+
+    u64 now = SDL_GetPerformanceCounter(), last = 0;
     double dt = 0;
 
     reloadGameLib(tempStorage);
 
-    auto imguiIO = ImGui::GetIO();
+    SDL_Event event;
     while (g->appState->running) {
+        SDL_ShowCursor(g->input->showCursor);
+
         last = now;
         now = SDL_GetPerformanceCounter();
 
@@ -245,36 +250,14 @@ int main(int argc, char *args[])
 
         while (SDL_PollEvent(&event) != 0) {
             handleSDLevents(&event);
-            ImGui_ImplSDL2_ProcessEvent(&event);
         }
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(g->appState->window);
-        ImGui::NewFrame();
-
-        SDL_ShowCursor(g->input->showCursor);
-
-        updateGame(g, dt);
-        render(g->appState->screenSize);
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        // This does not work in wayland
-        if (imguiIO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-        }
-
-        SDL_GL_SwapWindow(g->appState->window);
-
+        _updateGame(g, dt);
+        render();
         tempStorage->freeMemory();
-
         reloadGameLib(tempStorage);
     }
 
-    SDL_StopTextInput();
     close(g->glContext, g->appState);
-
     return 0;
 }

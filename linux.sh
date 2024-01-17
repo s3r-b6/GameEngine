@@ -11,7 +11,6 @@ include=(-I../deps/)
 # This is dumb, but for now it will stay like this
 include+=(-I../deps/linux/) 
 include+=(-I../deps/linux/SDL2)
-include+=(-I../deps/imgui/)
 include+=(-I../include)
 
 include+=(-L/lib)
@@ -24,27 +23,13 @@ sources_main+=(../src/initialization.cpp)
 sources_main+=(../src/assets.cpp)
 sources_main+=(../src/renderer.cpp)
 sources_main+=(../deps/glad/glad.c)
-sources_main+=(./imgui.so)
 
 sources_game=(../src/assets.cpp)
 sources_game+=(../src/renderer.cpp)
 sources_game+=(../src/linux_platform.cpp)
 sources_game+=(../deps/glad/glad.c)
-sources_game+=(./imgui.so)
-
-sources_imgui=(../deps/imgui/imgui.cpp) 
-sources_imgui+=(../deps/imgui/imgui_draw.cpp)
-sources_imgui+=(../deps/imgui/imgui_tables.cpp) 
-sources_imgui+=(../deps/imgui/imgui_widgets.cpp)
-sources_imgui+=(../deps/imgui/backends/imgui_impl_sdl2.cpp)
-sources_imgui+=(../deps/imgui/backends/imgui_impl_opengl3.cpp)
 
 flags=(-pipe -Wno-write-strings -D_REENTRANT)
-
-if not [ -f "./imgui.so" ]; then
-    echo "Imgui.so not found, compiling..."
-    g++ -fPIC "${sources_imgui[@]}" -I../deps/imgui/ -I../deps/imgui/backends -I../deps/linux/SDL2 -shared -o imgui.so
-fi
 
 gamesrc_stamp=$(stat -c %Y ../src/game.cpp)
 gameobj_stamp=0  
