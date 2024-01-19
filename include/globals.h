@@ -2,6 +2,8 @@
 
 #include "./types.h"
 
+#include "./mem.h"
+
 struct RenderData;
 struct GLContext;
 struct ProgramState;
@@ -18,8 +20,12 @@ struct GlobalState {
 
 global GlobalState *g;
 
-constexpr int MAX_TEXTURES = 8;
-constexpr double UPDATE_DELAY = 1. / 60.;
-constexpr int MAX_TRANSFORMS = 256;
-constexpr glm::ivec2 WORLD_SIZE = {640, 360};
-constexpr int TILESIZE = 16;
+global BumpAllocator *permStorage = new BumpAllocator(MB(10));
+global BumpAllocator *tempStorage = new BumpAllocator(MB(10));
+
+#define MAX_TEXTURES 8
+#define UPDATE_DELAY 1. / 60.
+#define MAX_TRANSFORMS 256
+#define WORLD_SIZE_x 640
+#define WORLD_SIZE_y 360
+#define TILESIZE 16

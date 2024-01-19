@@ -22,36 +22,6 @@
 
 // NOTE: g is the GlobalState object
 
-// TODO: I don't think inlining is strictly necessary, but this functions are
-// only called here and I mainly extracted them to make this file more
-// manageable.
-// Test this for performance when I am actually rendering something complex
-inline void render() {
-    auto screenSize = g->appState->screenSize;
-    auto color = g->renderData->clearColor;
-    glClearColor(color[0], color[1], color[2], 1.f);
-    glClearDepth(0.f);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glViewport(0, 0, screenSize.x, screenSize.y);
-    glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
-                                 static_cast<float>(screenSize.y)};
-    glUniform2fv(g->glContext->screenSizeID, 1, &floatScreenSize.x);
-
-    glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
-    glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
-
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Transform) * g->renderData->transformCount,
-                    g->renderData->transforms);
-
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
-
-    g->renderData->transformCount = 0;
-
-    SDL_GL_SwapWindow(g->appState->window);
-}
-
 inline void handleSDLevents(SDL_Event *event) {
     switch (event->type) {
     case SDL_QUIT: {
@@ -107,25 +77,12 @@ inline void handleSDLevents(SDL_Event *event) {
         bool pressed = event->type == SDL_KEYDOWN;
         SDL_Keycode keyCode = event->key.keysym.sym;
 
-        // char const *keyName = SDL_GetKeyName(keyCode);
-        // SDL_Log("%s '%s'", pressed, keyName);
-        //
-        // TODO: Right now, the idea is just to update the keys that are
-        // relevant (bound) to the game. In the future, I'd like to add states.
-        // For example:
-        //
-        // Text mode: Only update ASCII keycodes.
-        // UI mode:   Only update UI keycodes
         updateKeyState(keyCode, pressed, g->input);
         g->input->lastPressed = keyCode;
 
         break;
     }
     }
-}
-
-inline void _updateGame(GlobalState *globalStateIn, double dt) {
-    updateGame_ptr(globalStateIn, dt);
 }
 
 void reloadGameLib(BumpAllocator *tempStorage) {
@@ -165,71 +122,13 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     }
 }
 
-global BumpAllocator *permStorage = new BumpAllocator(MB(10));
-global BumpAllocator *tempStorage = new BumpAllocator(MB(10));
-
-inline bool initialize() {
-    // GlobalState just stitches together all pointers
-    g = (GlobalState *)permStorage->alloc(sizeof(GlobalState));
-
-    g->appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
-    g->gameState = (GameState *)permStorage->alloc(sizeof(GameState));
-    g->renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
-    g->input = (Input *)permStorage->alloc(sizeof(Input));
-    g->glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
-
-    if (!g->appState || !g->renderData || !g->gameState || !g->input) {
-        SDL_Log("ERROR: Failed to alloc globalState");
-        return false;
-    }
-
-    g->gameState->initialized = false;
-
-    g->input->mouseInWindow = true;
-    g->input->showCursor = true;
-    g->input->usedKeys = std::map<SDL_Keycode, KeyState>();
-
-    g->appState->running = true;
-    g->appState->screenSize = {1280, 720};
-    g->appState->window = NULL;
-    g->appState->glContext = NULL;
-
-    g->renderData->clearColor[0] = 119.f / 255.f;
-    g->renderData->clearColor[1] = 33.f / 255.f;
-    g->renderData->clearColor[2] = 111.f / 255.f;
-
-    if (!initSDLandGL(tempStorage, g->appState, g->glContext, g->renderData)) {
-        SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
-        return false;
-    }
-
-    // Get initial window size. It should have been initialized to defaults,
-    // but who knows
-    SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
-                           &g->appState->screenSize.y);
-
-    // This is a dumb hack; at least for my WM, the window is resizable unless
-    // it has been in fullscreen before
-    SDL_SetWindowResizable(g->appState->window, SDL_FALSE);
-    SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
-
-    SDL_StartTextInput();
-
-    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE0);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE1);
-    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE2);
-
-    return true;
-}
-
 #ifdef _WIN32
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 #elif __linux__
 int main(int argc, char *args[])
 #endif
 {
-    if (!initialize()) {
+    if (!(g = initialize())) {
         SDL_Log("Failed to initialize the engine.");
         return -1;
     }
@@ -238,6 +137,11 @@ int main(int argc, char *args[])
     double dt = 0;
 
     reloadGameLib(tempStorage);
+
+    // TODO: This should be handled by some kind of system
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE0);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE1);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE2);
 
     SDL_Event event;
     while (g->appState->running) {
@@ -252,8 +156,8 @@ int main(int argc, char *args[])
             handleSDLevents(&event);
         }
 
-        _updateGame(g, dt);
-        render();
+        updateGame_ptr(g, dt);
+        render(g);
         tempStorage->freeMemory();
         reloadGameLib(tempStorage);
     }

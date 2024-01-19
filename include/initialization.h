@@ -3,11 +3,11 @@
 #include "./types.h"
 #include <SDL2/SDL.h>
 
-// bumpAlloc to store logs and read shader sources
-bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
-                  RenderData *renderData);
+GlobalState *initialize();
+inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
+                         RenderData *renderData);
 
-bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData);
+inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData);
 void close(GLContext *glContext, ProgramState *appState);
 
 void printProgramLog(uint program, BumpAllocator *transientStorage);

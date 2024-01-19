@@ -8,13 +8,69 @@
 #include "./platform.h"
 #include "./renderer.h"
 
+#include "./game.h"
+#include "./input.h"
+
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
 
 // TODO: Make logs different based on severity...
 
-bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
-                  RenderData *renderData) {
+GlobalState *initialize() {
+    // GlobalState just stitches together all pointers
+    GlobalState *g = (GlobalState *)permStorage->alloc(sizeof(GlobalState));
+
+    {
+        g->appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
+        g->gameState = (GameState *)permStorage->alloc(sizeof(GameState));
+        g->renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
+        g->input = (Input *)permStorage->alloc(sizeof(Input));
+        g->glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
+
+        if (!g->appState || !g->renderData || !g->gameState || !g->input) {
+            SDL_Log("ERROR: Failed to alloc globalState");
+            return nullptr;
+        }
+
+        g->gameState->initialized = false;
+
+        g->input->mouseInWindow = true;
+        g->input->showCursor = true;
+        g->input->usedKeys = std::map<SDL_Keycode, KeyState>();
+
+        g->appState->running = true;
+        g->appState->screenSize = {1280, 720};
+        g->appState->window = NULL;
+        g->appState->glContext = NULL;
+
+        g->renderData->clearColor[0] = 119.f / 255.f;
+        g->renderData->clearColor[1] = 33.f / 255.f;
+        g->renderData->clearColor[2] = 111.f / 255.f;
+    }
+
+    if (!initSDLandGL(tempStorage, g->appState, g->glContext, g->renderData)) {
+        SDL_Log("ERROR: Failed to initialize SDL or OpenGL!");
+        return nullptr;
+    }
+
+    // Get initial window size. It should have been initialized to defaults,
+    // but who knows
+    SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
+                           &g->appState->screenSize.y);
+
+    // This is a dumb hack; at least for my WM, the window is resizable unless
+    // it has been in fullscreen before
+    SDL_SetWindowResizable(g->appState->window, SDL_FALSE);
+    SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
+
+    SDL_StartTextInput();
+
+    return g;
+}
+
+inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
+                         RenderData *renderData) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -71,7 +127,7 @@ bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext 
     return true;
 }
 
-bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData) {
+inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData) {
     glContext->programID = glCreateProgram();
 
     size_t vertSourceSize = 0, fragSourceSize = 0;

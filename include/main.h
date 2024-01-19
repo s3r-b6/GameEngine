@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./game.h"
-#include "SDL_events.h"
+#include "SDL2/SDL_events.h"
 
 // Game shared object stub
 typedef decltype(updateGame) update_game_type;

@@ -33,22 +33,22 @@ struct Tile {
 global Tile selectedTile = {0};
 
 struct TileManager {
-    static constexpr int size = WORLD_SIZE.x * WORLD_SIZE.y;
+    static constexpr int size = WORLD_SIZE_x * WORLD_SIZE_y;
     Tile worldGrid[size] = {0};
 
     void render() {
         for (int i = 0; i < size; i++) {
-            int x = i % WORLD_SIZE.x;
-            int y = i / WORLD_SIZE.x;
+            int x = i % WORLD_SIZE_x;
+            int y = i / WORLD_SIZE_x;
 
-            Tile t = worldGrid[(y * WORLD_SIZE.x) + x];
+            Tile t = worldGrid[(y * WORLD_SIZE_x) + x];
             if (t.initialized) {
                 draw_tile(g->renderData, t.x, t.y, t.atlasIdx, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
 
-    void removeTile(int x, int y) { worldGrid[(y * WORLD_SIZE.x) + x].initialized = false; }
+    void removeTile(int x, int y) { worldGrid[(y * WORLD_SIZE_x) + x].initialized = false; }
     void setTile(int x, int y, Tile t) {
         Tile tile = {};
 
@@ -56,7 +56,7 @@ struct TileManager {
         tile.y = t.y;
         tile.atlasIdx = t.atlasIdx;
         tile.initialized = true;
-        worldGrid[(y * WORLD_SIZE.x) + x] = tile;
+        worldGrid[(y * WORLD_SIZE_x) + x] = tile;
     }
 };
 

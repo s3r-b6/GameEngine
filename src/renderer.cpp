@@ -2,6 +2,7 @@
 // This code is subject to the MIT license.
 
 #include "./renderer.h"
+#include "./engine_lib.h"
 #include "SDL2/SDL_log.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
@@ -86,4 +87,30 @@ ivec2 OrthographicCamera::getMousePosInWorld(ivec2 mousePos, ivec2 screenSize) {
     yPos += -dimensions.y / 2.0f + pos.y;
 
     return ivec2(xPos, yPos) / TILESIZE;
+}
+
+void render(GlobalState *g) {
+    auto screenSize = g->appState->screenSize;
+    auto color = g->renderData->clearColor;
+    glClearColor(color[0], color[1], color[2], 1.f);
+    glClearDepth(0.f);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, screenSize.x, screenSize.y);
+    glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
+                                 static_cast<float>(screenSize.y)};
+    glUniform2fv(g->glContext->screenSizeID, 1, &floatScreenSize.x);
+
+    glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
+    glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
+
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Transform) * g->renderData->transformCount,
+                    g->renderData->transforms);
+
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
+
+    g->renderData->transformCount = 0;
+
+    SDL_GL_SwapWindow(g->appState->window);
 }
