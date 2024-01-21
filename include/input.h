@@ -2,7 +2,9 @@
 
 #include <map>
 
+#include "./game.h"
 #include "./types.h"
+
 #include "SDL2/SDL_keycode.h"
 #include "SDL2/SDL_log.h"
 
@@ -86,4 +88,34 @@ inline bool getKeyState(SDL_Keycode kc, KeyState *state, Input *input) {
     // SDL_Log("Keycode %d found in the keys map", kc);
     *state = keyPair->second;
     return true;
+}
+
+// TODO: Implement some kind of InputManager
+inline bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
+    g->gameState->gameBinds[action] = kc;
+    if (registerKey(kc, g->input)) {
+        SDL_Log("Succesfuly bound %c to game action: %d", kc, action);
+        return true;
+    } else {
+        SDL_Log("Could not bind %c to game action: %d", kc, action);
+        return false;
+    }
+}
+
+inline bool actionDown(GameAction action) {
+    if (!g->gameState->gameBinds[action]) return false;
+
+    KeyState ks = {0};
+    getKeyState(g->gameState->gameBinds[action], &ks, g->input);
+
+    return ks.isDown;
+}
+
+inline bool actionUp(GameAction action) {
+    if (!g->gameState->gameBinds[action]) return false;
+
+    KeyState ks = {0};
+    getKeyState(g->gameState->gameBinds[action], &ks, g->input);
+
+    return !ks.isDown;
 }

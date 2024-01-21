@@ -1,9 +1,12 @@
-#include "./assets.h"
-#include "./platform.h"
-#include "./types.h"
+#pragma once
 
 #include "./globals.h"
+#include "./platform.h"
 #include "./renderer.h"
+#include "./types.h"
+
+struct EntityManager;
+struct TileManager;
 
 enum GameAction {
     UNKNOWN,
@@ -21,6 +24,9 @@ struct GameState {
     bool initialized;
     double updateTimer;
     SDL_Keycode gameBinds[GAME_ACTION_COUNT] = {0};
+
+    EntityManager *entityManager;
+    TileManager *tileManager;
 };
 
 struct Tile {
@@ -65,6 +71,3 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt);
 }
 
 void simulate();
-inline bool gameRegisterKey(GameAction action, SDL_Keycode kc);
-inline bool actionDown(GameAction action);
-inline bool actionUp(GameAction action);

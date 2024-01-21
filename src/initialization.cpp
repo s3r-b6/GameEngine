@@ -4,12 +4,13 @@
 #include "./initialization.h"
 
 #include "./engine_lib.h"
+#include "./game.h"
+#include "./input.h"
 #include "./mem.h"
 #include "./platform.h"
 #include "./renderer.h"
 
-#include "./game.h"
-#include "./input.h"
+#include "./entities.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
@@ -29,6 +30,14 @@ GlobalState *initialize() {
 
         if (!g->appState || !g->renderData || !g->gameState || !g->input) {
             SDL_Log("ERROR: Failed to alloc globalState");
+            return nullptr;
+        }
+
+        g->gameState->entityManager = (EntityManager *)permStorage->alloc(sizeof(EntityManager));
+        g->gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
+
+        if (!g->gameState->entityManager || !g->gameState->tileManager) {
+            SDL_Log("ERROR: Failed to alloc gameState");
             return nullptr;
         }
 

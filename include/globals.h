@@ -26,6 +26,11 @@ global BumpAllocator *tempStorage = new BumpAllocator(MB(10));
 #define MAX_TEXTURES 8
 #define UPDATE_DELAY 1. / 60.
 #define MAX_TRANSFORMS 256
+
 #define WORLD_SIZE_x 640
 #define WORLD_SIZE_y 360
+
+#define CAMERA_SIZE_x 640
+#define CAMERA_SIZE_y 360
+
 #define TILESIZE 16
