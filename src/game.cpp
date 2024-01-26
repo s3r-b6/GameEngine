@@ -44,7 +44,7 @@ inline void initializeGameState() {
     loadEntities();
 
     selectedTile.initialized = true;
-    selectedTile.atlasIdx = 2;
+    selectedTile.atlasIdx = WORLD_ATLAS;
     selectedTile.x = 0;
     selectedTile.y = 0;
 
@@ -81,6 +81,8 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
 
         simulate();
     }
+
+    draw_text(g->renderData, "TEST", FONT_ATLAS, {20, 20});
 
     g->gameState->entityManager->render();
     g->gameState->tileManager->render();

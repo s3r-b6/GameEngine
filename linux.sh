@@ -38,9 +38,15 @@ if [ -f "./game.so" ]; then
     gameobj_stamp=$(stat -c %Y ./game.so)
 fi
 
+assets_stamp=$(stat -c %Y ../src/assets.cpp)
+renderer_stamp=$(stat -c %Y ../src/renderer.cpp)
+
 echo "Trying to recompile game.cpp"
 # This is a bit naive, but for now is OKish
-if [ "$gamesrc_stamp" -gt "$gameobj_stamp" ]; then
+if [ "$gamesrc_stamp" -gt "$gameobj_stamp"  ] ||
+   [ "$renderer_stamp" -gt "$gameobj_stamp" ] ||
+   [ "$assets_stamp" -gt "$gameobj_stamp" ]; 
+then
     timestamp=$(date '+%s')
     echo "Game.cpp file is newer. Recompiling..."
     echo "Compiling game_$timestamp.so..."
@@ -54,6 +60,9 @@ fi
 if not pgrep game > /dev/null; then
     echo "Game is not running"
     echo "Compiling main.cpp..."
+    if [ -f "./game_load.so" ]; then
+	rm ./game_load.so
+    fi
     g++ "${include[@]}" "${flags[@]}" -o game.out "${sources_main[@]}"
 else 
     echo "Game is running, skipping main.cpp..."

@@ -40,9 +40,10 @@ int main(int argc, char *args[])
     reloadGameLib(tempStorage);
 
     // TODO: This should be handled by some kind of system
-    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE0);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE1);
-    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE2);
+    loadTextureAtlas("../assets/textures/fonts/font.png", g->glContext, GL_TEXTURE0);
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE1);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE2);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE3);
 
     SDL_Event event;
     while (g->appState->running) {

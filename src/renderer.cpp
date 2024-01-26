@@ -114,3 +114,25 @@ void render(GlobalState *g) {
 
     SDL_GL_SwapWindow(g->appState->window);
 }
+
+void draw_text(RenderData *renderData, char *text, u8 atlasIdx, glm::vec2 pos) {
+    int x = 0;
+
+    while (char ch = *(text++)) {
+        Sprite sp = get_char(ch);
+
+        Transform t = {
+            .atlasOffset = sp.atlasOffset,
+            .spriteSize = sp.spriteSize,
+            .pos = pos,
+            .size = {16, 16},
+
+            .atlasIdx = atlasIdx,
+        };
+
+        t.pos.x += x * 8;
+
+        renderData->transforms[renderData->transformCount++] = t;
+        x++;
+    }
+}

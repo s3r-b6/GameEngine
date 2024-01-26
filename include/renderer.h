@@ -53,4 +53,5 @@ struct GLContext {
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx);
 void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size);
 void draw_tile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);
+void draw_text(RenderData *renderData, char *text, u8 atlasIdx, glm::vec2 pos);
 void render(GlobalState *g);
