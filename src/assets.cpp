@@ -50,8 +50,6 @@ Sprite get_char(char ch) {
     int xPos = (idx * 32) % 512;
     int yPos = (idx * 32) / 512 * 32;
 
-    SDL_Log("%d %d", xPos, yPos);
-
     sprite.atlasOffset = {xPos, yPos};
     sprite.spriteSize = {32, 32};
 

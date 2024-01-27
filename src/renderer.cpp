@@ -4,6 +4,7 @@
 #include "./renderer.h"
 #include "./engine_lib.h"
 #include "SDL2/SDL_log.h"
+#include <string>
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -115,22 +116,37 @@ void render(GlobalState *g) {
     SDL_GL_SwapWindow(g->appState->window);
 }
 
-void draw_text(RenderData *renderData, char *text, u8 atlasIdx, glm::vec2 pos) {
+void draw_text(RenderData *renderData, u8 atlasIdx, glm::vec2 pos, float fontSize, char *text,
+               ...) {
+    va_list args;
+    va_start(args, text);
+
+    // Determine the size of the formatted string
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    int size = vsnprintf(nullptr, 0, text, argsCopy) + 1; // +1 for null terminator
+    va_end(argsCopy);
+
+    std::string result(size, '\0');
+    vsnprintf(&result[0], size, text, args);
+
     int x = 0;
 
-    while (char ch = *(text++)) {
+    const char *char_ptr = result.c_str();
+
+    while (char ch = *(char_ptr++)) {
         Sprite sp = get_char(ch);
 
         Transform t = {
             .atlasOffset = sp.atlasOffset,
             .spriteSize = sp.spriteSize,
             .pos = pos,
-            .size = {16, 16},
+            .size = {fontSize, fontSize},
 
             .atlasIdx = atlasIdx,
         };
 
-        t.pos.x += x * 8;
+        t.pos.x += x * 4;
 
         renderData->transforms[renderData->transformCount++] = t;
         x++;

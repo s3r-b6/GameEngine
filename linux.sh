@@ -38,6 +38,7 @@ if [ -f "./game.so" ]; then
     gameobj_stamp=$(stat -c %Y ./game.so)
 fi
 
+gamehdr_stamp=$(stat -c %Y ../include/game.h)
 assets_stamp=$(stat -c %Y ../src/assets.cpp)
 renderer_stamp=$(stat -c %Y ../src/renderer.cpp)
 
@@ -45,6 +46,7 @@ echo "Trying to recompile game.cpp"
 # This is a bit naive, but for now is OKish
 if [ "$gamesrc_stamp" -gt "$gameobj_stamp"  ] ||
    [ "$renderer_stamp" -gt "$gameobj_stamp" ] ||
+   [ "$gamehdr_stamp" -gt "$gameobj_stamp" ] ||
    [ "$assets_stamp" -gt "$gameobj_stamp" ]; 
 then
     timestamp=$(date '+%s')

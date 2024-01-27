@@ -1,7 +1,5 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
-#include <cstdio>
-
 #include "SDL2/SDL_log.h"
 
 #include "./game.h"
@@ -41,17 +39,25 @@ inline void initializeGameState() {
     gameRegisterKey(MOVE_DOWN, 's');
     gameRegisterKey(MOVE_LEFT, 'd');
 
+    gameRegisterKey(TILE_1, '1');
+    gameRegisterKey(TILE_2, '2');
+    gameRegisterKey(TILE_3, '3');
+
     loadEntities();
 
-    selectedTile.initialized = true;
     selectedTile.atlasIdx = WORLD_ATLAS;
     selectedTile.x = 0;
     selectedTile.y = 0;
+
+    u32 data = selectedTile.serialize();
+    selectedTile.deserialize(data);
 
     g->gameState->initialized = true;
 }
 
 EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
+    int fps = 1.f / dt;
+
     // Since this is compiled as a separate dll, it holds its own static data
     if (g != globalStateIn) { g = globalStateIn; }
 
@@ -79,13 +85,16 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
             // SDL_Log("Removing tile at %d %d", pos.x, pos.y);
         }
 
+        draw_tile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
+                  g->input->mouseWorldPos * TILESIZE);
+
         simulate();
     }
 
-    draw_text(g->renderData, "TEST", FONT_ATLAS, {20, 20});
-
     g->gameState->entityManager->render();
     g->gameState->tileManager->render();
+
+    draw_text(g->renderData, FONT_ATLAS, {550, 5}, 12, "FPS:%d DT:%f", fps, dt);
 }
 
 void simulate() {
@@ -103,6 +112,19 @@ void simulate() {
         if (actionDown(MOVE_DOWN)) { pos.y += speed; }
         if (actionDown(MOVE_RIGHT)) { pos.x -= speed; }
         if (actionDown(MOVE_LEFT)) { pos.x += speed; }
+
+        if (actionDown(TILE_1)) {
+            selectedTile.x = 0;
+            selectedTile.y = 0;
+        }
+        if (actionDown(TILE_2)) {
+            selectedTile.x = 16;
+            selectedTile.y = 0;
+        }
+        if (actionDown(TILE_3)) {
+            selectedTile.x = 32;
+            selectedTile.y = 0;
+        }
 
         transformComponent->setPos(pos.x, pos.y);
     } else {
