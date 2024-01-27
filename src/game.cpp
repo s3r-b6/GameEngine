@@ -56,6 +56,10 @@ inline void initializeGameState() {
     selectedTile.x = 0;
     selectedTile.y = 0;
 
+    if (g->gameState->tileManager->deserialize()) {
+        SDL_Log("Found previous world.data, loading the map");
+    }
+
     g->gameState->initialized = true;
 }
 
@@ -103,23 +107,20 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     g->gameState->entityManager->render();
     g->gameState->tileManager->render(g->renderData);
 
+    local_persist bool just_loaded = false;
     // TODO: This should use the tempStorage and write to a file
-    local_persist u32 *worldData = nullptr;
     if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
-        worldData = g->gameState->tileManager->serialize(permStorage);
+        just_loaded = false;
+        g->gameState->tileManager->serialize();
     }
 
-    if (worldData && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
-        g->gameState->tileManager->deserialize(worldData);
-
-        // The input seems to be updated very slowly, and the deserialization happens
-        // at least 4 times in my PC for each keypress. This is a dumb hack to avoid that,
-        // anyways, this should read from a file and after the level is loaded, the memory
-        // should be reclaimed, so more or less this is what should happen
-        worldData = nullptr;
+    if (!just_loaded && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
+        just_loaded = true;
+        g->gameState->tileManager->deserialize();
     }
 
     if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
+        just_loaded = false;
         g->gameState->tileManager->clear();
     }
 

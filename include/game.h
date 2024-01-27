@@ -3,6 +3,7 @@
 #include "./platform.h"
 #include "./renderer.h"
 #include "./types.h"
+#include <cstdio>
 
 struct EntityManager;
 struct TileManager;
@@ -78,30 +79,39 @@ struct TileManager {
         }
     }
 
-    void deserialize(u32 *data) {
+    bool deserialize() {
+        FILE *f = fopen("world.data", "rb");
+
+        if (!f) { return false; }
+
         for (int i = 0; i < size; i++) {
             int x = i % WORLD_SIZE_x;
             int y = i / WORLD_SIZE_x;
-
             Tile *t = &worldGrid[i];
-            if (t->deserialize(*data)) {
-                SDL_Log("Tile {%d, %d} data: %d %d %d", x, y, t->x, t->y, t->atlasIdx);
+
+            u32 data;
+            fread(&data, sizeof(u32), 1, f);
+            if (t->deserialize(data)) {
+                // SDL_Log("Tile {%d, %d} data: %d %d %d", x, y, t->x, t->y, t->atlasIdx);
             }
-            data++;
         }
 
-        SDL_Log("Ended");
+        fclose(f);
+
+        return true;
     }
 
-    u32 *serialize(BumpAllocator *alloc) {
-        u32 *firstPtr = (u32 *)alloc->alloc(size * sizeof(Tile));
+    // TODO: Should also store some metadata about the world (size, id, that kind of things)
+    bool serialize() {
+        FILE *f = fopen("world.data", "wb");
 
-        u32 *memPtr = firstPtr;
         for (Tile t : worldGrid) {
-            *memPtr++ = t.serialize();
+            u32 data = t.serialize();
+            fwrite(&data, sizeof(u32), 1, f);
         }
 
-        return firstPtr;
+        fclose(f);
+        return true;
     }
 
     void render(RenderData *renderData) {
