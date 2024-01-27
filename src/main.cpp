@@ -7,19 +7,6 @@
 #include "./globals.h"
 #include "./initialization.h"
 #include "./input.h"
-#include "./renderer.h"
-
-#include "SDL2/SDL_events.h"
-#include "SDL2/SDL_timer.h"
-#include "SDL2/SDL_video.h"
-
-#ifdef _WIN32
-#define gameSharedObject "./game.dll"
-#define loadedgameSharedObject "./game_load.dll"
-#elif __linux__
-#define gameSharedObject "./game.so"
-#define loadedgameSharedObject "./game_load.so"
-#endif
 
 // NOTE: g is the GlobalState object
 
@@ -29,7 +16,10 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 int main(int argc, char *args[])
 #endif
 {
-    if (!(g = initialize())) {
+    permStorage = new BumpAllocator(MB(10));
+    tempStorage = new BumpAllocator(MB(10));
+
+    if (!(g = initialize(permStorage, tempStorage))) {
         SDL_Log("Failed to initialize the engine.");
         return -1;
     }
@@ -58,7 +48,7 @@ int main(int argc, char *args[])
             handleSDLevents(&event);
         }
 
-        updateGame_ptr(g, dt);
+        updateGame_ptr(permStorage, tempStorage, g, dt);
         render(g);
         tempStorage->freeMemory();
         reloadGameLib(tempStorage);

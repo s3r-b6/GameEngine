@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./mem.h"
 #include "./types.h"
 
 #ifdef __linux__
@@ -13,7 +14,13 @@
 #include <windows.h>
 #endif
 
-#include "./mem.h"
+#ifdef _WIN32
+#define gameSharedObject "./game.dll"
+#define loadedgameSharedObject "./game_load.dll"
+#elif __linux__
+#define gameSharedObject "./game.so"
+#define loadedgameSharedObject "./game_load.so"
+#endif
 
 void *plat_loadDynamicLib(char *dll);
 void *plat_loadDynamicFun(void *dll, char *funName);
@@ -22,3 +29,5 @@ u64 plat_getFileTimestamp(char *fileName);
 
 char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator);
 bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator);
+
+bool plat_writeFile(char *fileName);

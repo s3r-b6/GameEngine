@@ -91,9 +91,9 @@ inline bool getKeyState(SDL_Keycode kc, KeyState *state, Input *input) {
 }
 
 // TODO: Implement some kind of InputManager
-inline bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
-    g->gameState->gameBinds[action] = kc;
-    if (registerKey(kc, g->input)) {
+inline bool gameRegisterKey(GameState *gameState, Input *input, GameAction action, SDL_Keycode kc) {
+    gameState->gameBinds[action] = kc;
+    if (registerKey(kc, input)) {
         SDL_Log("Succesfuly bound %c to game action: %d", kc, action);
         return true;
     } else {
@@ -102,20 +102,20 @@ inline bool gameRegisterKey(GameAction action, SDL_Keycode kc) {
     }
 }
 
-inline bool actionDown(GameAction action) {
-    if (!g->gameState->gameBinds[action]) return false;
+inline bool actionDown(GameState *gameState, Input *input, GameAction action) {
+    if (!gameState->gameBinds[action]) return false;
 
     KeyState ks = {0};
-    getKeyState(g->gameState->gameBinds[action], &ks, g->input);
+    getKeyState(gameState->gameBinds[action], &ks, input);
 
     return ks.isDown;
 }
 
-inline bool actionUp(GameAction action) {
-    if (!g->gameState->gameBinds[action]) return false;
+inline bool actionUp(GameState *gameState, Input *input, GameAction action) {
+    if (!gameState->gameBinds[action]) return false;
 
     KeyState ks = {0};
-    getKeyState(g->gameState->gameBinds[action], &ks, g->input);
+    getKeyState(gameState->gameBinds[action], &ks, input);
 
     return !ks.isDown;
 }

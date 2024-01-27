@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./globals.h"
 #include "./platform.h"
 #include "./renderer.h"
 #include "./types.h"
@@ -21,6 +20,10 @@ enum GameAction {
     TILE_2,
     TILE_3,
 
+    SAVE_WORLD,
+    DELETE_WORLD,
+    RELOAD_WORLD,
+
     GAME_ACTION_COUNT,
 };
 
@@ -38,8 +41,9 @@ struct Tile {
     u8 atlasIdx; // An atlasIdx of 0 == an invalid tile or a non-tile
     u8 pad = 0;
 
-    void deserialize(u32 data) {
+    bool deserialize(u32 data) {
         u8 *dataP = (u8 *)&data;
+        if (!dataP[1]) { return false; } // If no-tile, skip
 
         SDL_Log("First byte        (x): %hx\n", dataP[3]);
         SDL_Log("Second byte       (y): %hx\n", dataP[2]);
@@ -49,6 +53,8 @@ struct Tile {
         x = dataP[3];
         y = dataP[2];
         atlasIdx = dataP[1];
+
+        return true;
     }
 
     u32 serialize() {
@@ -66,16 +72,50 @@ struct TileManager {
     static constexpr int size = WORLD_SIZE_x * WORLD_SIZE_y;
     Tile worldGrid[size] = {0};
 
-    // u32 serialize() {}
+    void clear() {
+        for (int i = 0; i < size; i++) {
+            worldGrid[i] = {0};
+        }
+    }
 
-    void render() {
+    void deserialize(u32 *data) {
+        int tileCounter = 0;
+
         for (int i = 0; i < size; i++) {
             int x = i % WORLD_SIZE_x;
             int y = i / WORLD_SIZE_x;
 
-            Tile t = worldGrid[(y * WORLD_SIZE_x) + x];
+            Tile *t = &worldGrid[i];
+            if (t->deserialize(*data)) {
+                SDL_Log("^^^ Tile {%d, %d}\n", x, y);
+                SDL_Log("%d %d %d", t->x, t->y, t->atlasIdx);
+            }
+            data++;
+            tileCounter++;
+        }
+    }
+
+    u32 *serialize(BumpAllocator *alloc) {
+        u32 *firstPtr = (u32 *)alloc->alloc(size * sizeof(Tile));
+
+        u32 *memPtr = firstPtr;
+        for (Tile t : worldGrid) {
+            u32 tileData = t.serialize();
+            *memPtr = tileData;
+            memPtr++;
+        }
+
+        return firstPtr;
+    }
+
+    void render(RenderData *renderData) {
+        for (int i = 0; i < size; i++) {
+            int x = i % WORLD_SIZE_x;
+            int y = i / WORLD_SIZE_x;
+
+            Tile t = worldGrid[i];
             if (t.atlasIdx) {
-                draw_tile(g->renderData, t.x, t.y, t.atlasIdx, {x * TILESIZE, y * TILESIZE});
+                draw_tile(renderData, t.x, t.y, t.atlasIdx, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
@@ -91,7 +131,8 @@ struct TileManager {
 };
 
 extern "C" {
-EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt);
+EXPORT_FN void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage,
+                          GlobalState *globalStateIn, float dt);
 }
 
 void simulate();

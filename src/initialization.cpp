@@ -4,20 +4,16 @@
 #include "./initialization.h"
 
 #include "./engine_lib.h"
-#include "./game.h"
-#include "./input.h"
-#include "./mem.h"
-#include "./platform.h"
-#include "./renderer.h"
-
 #include "./entities.h"
+#include "./input.h"
+#include "./renderer.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
 
 // TODO: Make logs different based on severity...
 
-GlobalState *initialize() {
+GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
     // GlobalState just stitches together all pointers
     GlobalState *g = (GlobalState *)permStorage->alloc(sizeof(GlobalState));
 

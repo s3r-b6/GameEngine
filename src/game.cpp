@@ -10,6 +10,8 @@
 #include "./input.h"
 #include "./renderer.h"
 
+#include "./platform.h"
+
 // NOTE: g is the GlobalState object
 
 global float speed = 1.5f;
@@ -34,14 +36,18 @@ inline void initializeGameState() {
 
     g->renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
-    gameRegisterKey(MOVE_UP, 'w');
-    gameRegisterKey(MOVE_RIGHT, 'a');
-    gameRegisterKey(MOVE_DOWN, 's');
-    gameRegisterKey(MOVE_LEFT, 'd');
+    gameRegisterKey(g->gameState, g->input, MOVE_UP, 'w');
+    gameRegisterKey(g->gameState, g->input, MOVE_RIGHT, 'a');
+    gameRegisterKey(g->gameState, g->input, MOVE_DOWN, 's');
+    gameRegisterKey(g->gameState, g->input, MOVE_LEFT, 'd');
 
-    gameRegisterKey(TILE_1, '1');
-    gameRegisterKey(TILE_2, '2');
-    gameRegisterKey(TILE_3, '3');
+    gameRegisterKey(g->gameState, g->input, TILE_1, '1');
+    gameRegisterKey(g->gameState, g->input, TILE_2, '2');
+    gameRegisterKey(g->gameState, g->input, TILE_3, '3');
+
+    gameRegisterKey(g->gameState, g->input, SAVE_WORLD, '8');
+    gameRegisterKey(g->gameState, g->input, DELETE_WORLD, '9');
+    gameRegisterKey(g->gameState, g->input, RELOAD_WORLD, '0');
 
     loadEntities();
 
@@ -49,17 +55,19 @@ inline void initializeGameState() {
     selectedTile.x = 0;
     selectedTile.y = 0;
 
-    u32 data = selectedTile.serialize();
-    selectedTile.deserialize(data);
-
     g->gameState->initialized = true;
 }
 
-EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
+EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
+                          GlobalState *globalStateIn, float dt) {
     int fps = 1.f / dt;
 
     // Since this is compiled as a separate dll, it holds its own static data
-    if (g != globalStateIn) { g = globalStateIn; }
+    if (g != globalStateIn) {
+        permStorage = permStorageIn;
+        tempStorage = tempStorageIn;
+        g = globalStateIn;
+    }
 
     if (!g->gameState->initialized) initializeGameState();
 
@@ -92,7 +100,7 @@ EXPORT_FN void updateGame(GlobalState *globalStateIn, float dt) {
     }
 
     g->gameState->entityManager->render();
-    g->gameState->tileManager->render();
+    g->gameState->tileManager->render(g->renderData);
 
     draw_text(g->renderData, FONT_ATLAS, {550, 5}, 12, "FPS:%d DT:%f", fps, dt);
 }
@@ -108,22 +116,35 @@ void simulate() {
         // SDL_Log("The component is a TransformComponent.");
         auto pos = transformComponent->pos;
 
-        if (actionDown(MOVE_UP)) { pos.y -= speed; }
-        if (actionDown(MOVE_DOWN)) { pos.y += speed; }
-        if (actionDown(MOVE_RIGHT)) { pos.x -= speed; }
-        if (actionDown(MOVE_LEFT)) { pos.x += speed; }
+        if (actionDown(g->gameState, g->input, MOVE_UP)) { pos.y -= speed; }
+        if (actionDown(g->gameState, g->input, MOVE_DOWN)) { pos.y += speed; }
+        if (actionDown(g->gameState, g->input, MOVE_RIGHT)) { pos.x -= speed; }
+        if (actionDown(g->gameState, g->input, MOVE_LEFT)) { pos.x += speed; }
 
-        if (actionDown(TILE_1)) {
+        if (actionDown(g->gameState, g->input, TILE_1)) {
             selectedTile.x = 0;
             selectedTile.y = 0;
         }
-        if (actionDown(TILE_2)) {
+        if (actionDown(g->gameState, g->input, TILE_2)) {
             selectedTile.x = 16;
             selectedTile.y = 0;
         }
-        if (actionDown(TILE_3)) {
+        if (actionDown(g->gameState, g->input, TILE_3)) {
             selectedTile.x = 32;
             selectedTile.y = 0;
+        }
+
+        local_persist u32 *worldData = nullptr;
+        if (actionDown(g->gameState, g->input, SAVE_WORLD)) {
+            worldData = g->gameState->tileManager->serialize(permStorage);
+        }
+
+        if (worldData && actionDown(g->gameState, g->input, RELOAD_WORLD)) {
+            g->gameState->tileManager->deserialize(worldData);
+        }
+
+        if (actionDown(g->gameState, g->input, DELETE_WORLD)) {
+            g->gameState->tileManager->clear();
         }
 
         transformComponent->setPos(pos.x, pos.y);

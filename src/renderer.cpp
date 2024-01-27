@@ -1,10 +1,12 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "./renderer.h"
-#include "./engine_lib.h"
-#include "SDL2/SDL_log.h"
 #include <string>
+
+#include "./engine_lib.h"
+#include "./globals.h"
+#include "./renderer.h"
+#include "SDL2/SDL_log.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION

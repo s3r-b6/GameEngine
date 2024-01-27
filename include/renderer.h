@@ -1,11 +1,9 @@
 #pragma once
 
-#include <glad/glad.h>
-
-#include "glm/ext/matrix_float4x4.hpp"
-
 #include "./assets.h"
-#include "./globals.h"
+#include "./types.h"
+
+#include <glad/glad.h>
 
 using glm::ivec2;
 using glm::mat4;
