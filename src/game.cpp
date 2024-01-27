@@ -121,29 +121,21 @@ void simulate() {
         if (actionDown(g->gameState, g->input, MOVE_RIGHT)) { pos.x -= speed; }
         if (actionDown(g->gameState, g->input, MOVE_LEFT)) { pos.x += speed; }
 
-        if (actionDown(g->gameState, g->input, TILE_1)) {
-            selectedTile.x = 0;
-            selectedTile.y = 0;
-        }
-        if (actionDown(g->gameState, g->input, TILE_2)) {
-            selectedTile.x = 16;
-            selectedTile.y = 0;
-        }
-        if (actionDown(g->gameState, g->input, TILE_3)) {
-            selectedTile.x = 32;
-            selectedTile.y = 0;
-        }
+        if (actionDown(g->gameState, g->input, TILE_1)) { selectedTile.x = 0, selectedTile.y = 0; }
+        if (actionDown(g->gameState, g->input, TILE_2)) { selectedTile.x = 16, selectedTile.y = 0; }
+        if (actionDown(g->gameState, g->input, TILE_3)) { selectedTile.x = 32, selectedTile.y = 0; }
 
+        // TODO: This should use the tempStorage and write to a file
         local_persist u32 *worldData = nullptr;
-        if (actionDown(g->gameState, g->input, SAVE_WORLD)) {
+        if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
             worldData = g->gameState->tileManager->serialize(permStorage);
         }
 
-        if (worldData && actionDown(g->gameState, g->input, RELOAD_WORLD)) {
+        if (worldData && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
             g->gameState->tileManager->deserialize(worldData);
         }
 
-        if (actionDown(g->gameState, g->input, DELETE_WORLD)) {
+        if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
             g->gameState->tileManager->clear();
         }
 

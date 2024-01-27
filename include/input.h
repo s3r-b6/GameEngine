@@ -5,6 +5,7 @@
 #include "./game.h"
 #include "./types.h"
 
+#include "SDL2/SDL_keyboard.h"
 #include "SDL2/SDL_keycode.h"
 #include "SDL2/SDL_log.h"
 
@@ -67,11 +68,13 @@ inline bool updateKeyState(SDL_Keycode kc, bool pressed, Input *input) {
         return false;
     } else {
         // SDL_Log("Keycode %d found in the keys map", kc);
-
-        keyPair->second.justPressed = pressed & !keyPair->second.wasDown;
-        keyPair->second.justReleased = !pressed && keyPair->second.wasDown;
         keyPair->second.wasDown = keyPair->second.isDown;
+        keyPair->second.justPressed = pressed && !keyPair->second.wasDown;
+        keyPair->second.justReleased = !pressed && keyPair->second.wasDown;
         keyPair->second.isDown = pressed;
+
+        SDL_Log("%s, wd %b, id %b, p %b, jp %b", SDL_GetKeyName(kc), keyPair->second.wasDown,
+                keyPair->second.isDown, pressed, keyPair->second.justPressed);
 
         return true;
     }
@@ -100,6 +103,15 @@ inline bool gameRegisterKey(GameState *gameState, Input *input, GameAction actio
         SDL_Log("Could not bind %c to game action: %d", kc, action);
         return false;
     }
+}
+
+inline bool actionJustPressed(GameState *gameState, Input *input, GameAction action) {
+    if (!gameState->gameBinds[action]) return false;
+
+    KeyState ks = {0};
+    getKeyState(gameState->gameBinds[action], &ks, input);
+
+    return ks.justPressed;
 }
 
 inline bool actionDown(GameState *gameState, Input *input, GameAction action) {
