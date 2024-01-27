@@ -62,9 +62,6 @@ fi
 if not pgrep game > /dev/null; then
     echo "Game is not running"
     echo "Compiling main.cpp..."
-    if [ -f "./game_load.so" ]; then
-	rm ./game_load.so
-    fi
     g++ "${include[@]}" "${flags[@]}" -o game.out "${sources_main[@]}"
 else 
     echo "Game is running, skipping main.cpp..."

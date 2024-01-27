@@ -31,3 +31,4 @@ char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator);
 bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator);
 
 bool plat_writeFile(char *fileName);
+bool plat_deleteFile(char *fileName);

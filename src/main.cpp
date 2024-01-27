@@ -55,6 +55,8 @@ int main(int argc, char *args[])
     }
 
     close(g->glContext, g->appState);
+
+    plat_deleteFile(loadedgameSharedObject);
     return 0;
 }
 

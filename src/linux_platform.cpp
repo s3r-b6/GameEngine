@@ -106,3 +106,13 @@ bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) 
 
     return true;
 }
+
+bool plat_deleteFile(char *fileName) {
+    if (unlink(fileName) == 0) {
+        SDL_Log("File '%s' deleted successfully.\n", fileName);
+        return true;
+    } else {
+        SDL_Log("Error deleting file");
+        return false;
+    }
+}
