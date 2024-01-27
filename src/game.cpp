@@ -11,6 +11,7 @@
 #include "./renderer.h"
 
 #include "./platform.h"
+#include "types.h"
 
 // NOTE: g is the GlobalState object
 
@@ -102,17 +103,44 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     g->gameState->entityManager->render();
     g->gameState->tileManager->render(g->renderData);
 
+    // TODO: This should use the tempStorage and write to a file
+    local_persist u32 *worldData = nullptr;
+    if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
+        worldData = g->gameState->tileManager->serialize(permStorage);
+    }
+
+    if (worldData && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
+        g->gameState->tileManager->deserialize(worldData);
+
+        // The input seems to be updated very slowly, and the deserialization happens
+        // at least 4 times in my PC for each keypress. This is a dumb hack to avoid that,
+        // anyways, this should read from a file and after the level is loaded, the memory
+        // should be reclaimed, so more or less this is what should happen
+        worldData = nullptr;
+    }
+
+    if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
+        g->gameState->tileManager->clear();
+    }
+
     draw_text(g->renderData, FONT_ATLAS, {550, 5}, 12, "FPS:%d DT:%f", fps, dt);
 }
 
 void simulate() {
-    // TODO: This is a placeholder
-    auto entity = g->gameState->entityManager->entities.at(0);
-    auto component = entity->components.at(0);
+    local_persist std::shared_ptr<Entity> entity;
+    local_persist std::shared_ptr<EntityComponentBase> component;
+    local_persist std::shared_ptr<TransformComponent> transformComponent;
 
-    // TODO: Implement a way of asking an entity for a specific type of
+    // TODO: This is a placeholder
+    // I should Implement a way of asking an entity for a specific type of
     // component and an entity manager for an specific entity (maybe ID?)
-    if (auto transformComponent = std::dynamic_pointer_cast<TransformComponent>(component)) {
+    if (!entity) {
+        entity = g->gameState->entityManager->entities.at(0);
+        component = entity->components.at(0);
+        transformComponent = std::dynamic_pointer_cast<TransformComponent>(component);
+    }
+
+    if (transformComponent) {
         // SDL_Log("The component is a TransformComponent.");
         auto pos = transformComponent->pos;
 
@@ -124,20 +152,6 @@ void simulate() {
         if (actionDown(g->gameState, g->input, TILE_1)) { selectedTile.x = 0, selectedTile.y = 0; }
         if (actionDown(g->gameState, g->input, TILE_2)) { selectedTile.x = 16, selectedTile.y = 0; }
         if (actionDown(g->gameState, g->input, TILE_3)) { selectedTile.x = 32, selectedTile.y = 0; }
-
-        // TODO: This should use the tempStorage and write to a file
-        local_persist u32 *worldData = nullptr;
-        if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
-            worldData = g->gameState->tileManager->serialize(permStorage);
-        }
-
-        if (worldData && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
-            g->gameState->tileManager->deserialize(worldData);
-        }
-
-        if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
-            g->gameState->tileManager->clear();
-        }
 
         transformComponent->setPos(pos.x, pos.y);
     } else {

@@ -73,9 +73,6 @@ inline bool updateKeyState(SDL_Keycode kc, bool pressed, Input *input) {
         keyPair->second.justReleased = !pressed && keyPair->second.wasDown;
         keyPair->second.isDown = pressed;
 
-        SDL_Log("%s, wd %b, id %b, p %b, jp %b", SDL_GetKeyName(kc), keyPair->second.wasDown,
-                keyPair->second.isDown, pressed, keyPair->second.justPressed);
-
         return true;
     }
 }

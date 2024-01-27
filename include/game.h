@@ -45,10 +45,10 @@ struct Tile {
         u8 *dataP = (u8 *)&data;
         if (!dataP[1]) { return false; } // If no-tile, skip
 
-        SDL_Log("First byte        (x): %hx\n", dataP[3]);
-        SDL_Log("Second byte       (y): %hx\n", dataP[2]);
-        SDL_Log("Third byte (atlasIdx): %hx\n", dataP[1]);
-        SDL_Log("Pad byte             : %hx\n", dataP[0]);
+        // SDL_Log("First byte        (x): %hx\n", dataP[3]);
+        // SDL_Log("Second byte       (y): %hx\n", dataP[2]);
+        // SDL_Log("Third byte (atlasIdx): %hx\n", dataP[1]);
+        // SDL_Log("Pad byte             : %hx\n", dataP[0]);
 
         x = dataP[3];
         y = dataP[2];
@@ -79,20 +79,18 @@ struct TileManager {
     }
 
     void deserialize(u32 *data) {
-        int tileCounter = 0;
-
         for (int i = 0; i < size; i++) {
             int x = i % WORLD_SIZE_x;
             int y = i / WORLD_SIZE_x;
 
             Tile *t = &worldGrid[i];
             if (t->deserialize(*data)) {
-                SDL_Log("^^^ Tile {%d, %d}\n", x, y);
-                SDL_Log("%d %d %d", t->x, t->y, t->atlasIdx);
+                SDL_Log("Tile {%d, %d} data: %d %d %d", x, y, t->x, t->y, t->atlasIdx);
             }
             data++;
-            tileCounter++;
         }
+
+        SDL_Log("Ended");
     }
 
     u32 *serialize(BumpAllocator *alloc) {
@@ -100,9 +98,7 @@ struct TileManager {
 
         u32 *memPtr = firstPtr;
         for (Tile t : worldGrid) {
-            u32 tileData = t.serialize();
-            *memPtr = tileData;
-            memPtr++;
+            *memPtr++ = t.serialize();
         }
 
         return firstPtr;
