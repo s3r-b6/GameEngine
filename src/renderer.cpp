@@ -115,42 +115,63 @@ void render(GlobalState *g) {
 
     g->renderData->transformCount = 0;
 
+    render_ui(mat, g);
+
     SDL_GL_SwapWindow(g->appState->window);
 }
 
-void draw_text(RenderData *renderData, u8 atlasIdx, glm::vec2 pos, float fontSize, char *text,
-               ...) {
+void render_ui(glm::mat4x4 proj, GlobalState *g) {
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+                    sizeof(Transform) * g->renderData->uiTransformCount,
+                    g->renderData->uiTransforms);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->uiTransformCount);
+    g->renderData->uiTransformCount = 0;
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void draw_ui_text_formatted(RenderData *renderData, vec2 pos, float fontSize, const char *text,
+                            ...) {
     va_list args;
     va_start(args, text);
 
-    // Determine the size of the formatted string
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int size = vsnprintf(nullptr, 0, text, argsCopy) + 1; // +1 for null terminator
+    int size = vsnprintf(nullptr, 0, text, argsCopy) + 1;
     va_end(argsCopy);
 
     std::string result(size, '\0');
     vsnprintf(&result[0], size, text, args);
 
-    int x = 0;
-
     const char *char_ptr = result.c_str();
+    draw_ui_text(renderData, pos, fontSize, char_ptr);
+}
 
-    while (char ch = *(char_ptr++)) {
-        Sprite sp = get_char(ch);
+void draw_ui_text(RenderData *renderData, vec2 pos, float fontSize, const char *text) {
+    if (!text) { return; }
 
-        Transform t = {
-            .atlasOffset = sp.atlasOffset,
-            .spriteSize = sp.spriteSize,
-            .pos = pos,
-            .size = {fontSize, fontSize},
+    vec2 origin = pos;
+    while (char c = *(text++)) {
+        if (c == '\n') {
+            pos.y += renderData->fontHeight * fontSize;
+            pos.x = origin.x;
+            continue;
+        }
 
-            .atlasIdx = atlasIdx,
-        };
+        Glyph glyph = renderData->glyphs[c];
+        Transform transform = {};
+        transform.pos.x = pos.x + glyph.offset.x * fontSize;
+        transform.pos.y = pos.y - glyph.offset.y * fontSize;
+        transform.atlasOffset = glyph.textureCoords;
+        transform.spriteSize = glyph.size;
+        transform.size = vec2(glyph.size) * fontSize;
 
-        t.pos.x += x * 4;
-
-        renderData->transforms[renderData->transformCount++] = t;
-        x++;
+        renderData->uiTransforms[renderData->uiTransformCount++] = transform;
+        pos.x += glyph.advance.x * fontSize;
     }
 }

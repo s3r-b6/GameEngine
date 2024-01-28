@@ -18,9 +18,13 @@ void main() {
     vec4 textureColor;
 
     if (textureAtlasIdx == 0) {
-        textureColor = texelFetch(fontAtlas, ivec2(textureCoordsIn), 0);
-        if (textureColor.r <= 25.f / 255.f && textureColor.g <= 25.f / 255.f && textureColor.b <= 25.f / 255.f) discard;
-    }
+        float red = texelFetch(fontAtlas, ivec2(textureCoordsIn), 0).r;
+
+        if (red == 0.f) discard;
+
+        textureColor = red * vec4(1.f, 1.f, 1.f, 1.f);
+    } 
+
     else if (textureAtlasIdx == 1) textureColor = texelFetch(textureAtlas1, ivec2(textureCoordsIn), 0);
     else if (textureAtlasIdx == 2) textureColor = texelFetch(textureAtlas2, ivec2(textureCoordsIn), 0);
     else if (textureAtlasIdx == 3) textureColor = texelFetch(textureAtlas3, ivec2(textureCoordsIn), 0);

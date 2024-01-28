@@ -9,22 +9,27 @@ include=(-I../deps/)
 
 # SDL creates a config file with flags specific to each OS
 # This is dumb, but for now it will stay like this
+include+=(-I../deps/freetype2/) 
+include+=(-I../deps/glad/) 
 include+=(-I../deps/linux/) 
 include+=(-I../deps/linux/SDL2)
 include+=(-I../include)
 
 include+=(-L/lib)
+include+=(-lfreetype)
 include+=(-lSDL2)
 include+=(-lGL)
 
 sources_main=(../src/main.cpp)
 sources_main+=(../src/linux_platform.cpp)
 sources_main+=(../src/initialization.cpp)
+sources_main+=(../src/fonts.cpp)
 sources_main+=(../src/assets.cpp)
 sources_main+=(../src/renderer.cpp)
 sources_main+=(../deps/glad/glad.c)
 
 sources_game=(../src/assets.cpp)
+sources_game+=(../src/fonts.cpp)
 sources_game+=(../src/renderer.cpp)
 sources_game+=(../src/linux_platform.cpp)
 sources_game+=(../deps/glad/glad.c)

@@ -1,14 +1,10 @@
 CompileFlags:
   Add:
     - "-I../include/"
-    - "-I../deps/"
-    - "-I../deps/imgui/"
+    - "-I../deps/glad/"
+    - "-I../deps/freetype2/"
     - "-I../deps/win32/"
     - "-I../deps/linux/"
-    - "-I../../deps/" # Okay, this is dumb, but otherwise the header files cannot find the dependencies for the LSP
-    - "-I../../deps/imgui/"
-    - "-I../../deps/win32/"
-    - "-I../../deps/linux/"
     - "-L../lib/"
     - "-lSDL2"
     - "-lGLEW"

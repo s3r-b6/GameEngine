@@ -16,6 +16,7 @@
 // NOTE: g is the GlobalState object
 
 global float speed = 1.5f;
+global u8 selectedLayer = 0;
 
 // An empty vector results in a crash; so this has to be called after a hot-reload for now
 void loadEntities() {
@@ -45,6 +46,9 @@ inline void initializeGameState() {
     gameRegisterKey(g->gameState, g->input, TILE_1, '1');
     gameRegisterKey(g->gameState, g->input, TILE_2, '2');
     gameRegisterKey(g->gameState, g->input, TILE_3, '3');
+
+    gameRegisterKey(g->gameState, g->input, LAYER_FRONT, 'f');
+    gameRegisterKey(g->gameState, g->input, LAYER_BACK, 'b');
 
     gameRegisterKey(g->gameState, g->input, SAVE_WORLD, '8');
     gameRegisterKey(g->gameState, g->input, DELETE_WORLD, '9');
@@ -88,7 +92,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 
         if (g->input->mouseInWindow && g->input->mLeftDown) {
             auto pos = g->input->mouseWorldPos;
-            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile);
+            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedLayer);
             // SDL_Log("Placing tile at %d %d", pos.x, pos.y);
         }
 
@@ -104,27 +108,40 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         simulate();
     }
 
+    g->gameState->tileManager->renderBack(g->renderData);
     g->gameState->entityManager->render();
-    g->gameState->tileManager->render(g->renderData);
+    g->gameState->tileManager->renderFront(g->renderData);
 
     local_persist bool just_loaded = false;
-    // TODO: This should use the tempStorage and write to a file
+
     if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
         just_loaded = false;
         g->gameState->tileManager->serialize();
-    }
-
-    if (!just_loaded && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
+    } else if (!just_loaded && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
         just_loaded = true;
         g->gameState->tileManager->deserialize();
-    }
-
-    if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
+    } else if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
         just_loaded = false;
         g->gameState->tileManager->clear();
     }
 
-    draw_text(g->renderData, FONT_ATLAS, {550, 5}, 12, "FPS:%d DT:%f", fps, dt);
+    if (actionJustPressed(g->gameState, g->input, LAYER_BACK)) {
+        SDL_Log("Back layer");
+        selectedLayer = 0;
+    }
+
+    if (actionJustPressed(g->gameState, g->input, LAYER_FRONT)) {
+        SDL_Log("Front layer");
+        selectedLayer = 1;
+    }
+
+    draw_tile(g->renderData, 1, 1, 3, {0, 0});
+
+    draw_ui_text(g->renderData, {20, 190}, 0.1, "TEST");
+    draw_ui_text(g->renderData, {50, 50}, 0.2, "TEST");
+    draw_ui_text_formatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
+    draw_ui_text_formatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
+                           selectedTile.x, selectedTile.y, selectedLayer);
 }
 
 void simulate() {
@@ -150,9 +167,18 @@ void simulate() {
         if (actionDown(g->gameState, g->input, MOVE_RIGHT)) { pos.x -= speed; }
         if (actionDown(g->gameState, g->input, MOVE_LEFT)) { pos.x += speed; }
 
-        if (actionDown(g->gameState, g->input, TILE_1)) { selectedTile.x = 0, selectedTile.y = 0; }
-        if (actionDown(g->gameState, g->input, TILE_2)) { selectedTile.x = 16, selectedTile.y = 0; }
-        if (actionDown(g->gameState, g->input, TILE_3)) { selectedTile.x = 32, selectedTile.y = 0; }
+        if (actionDown(g->gameState, g->input, TILE_1)) {
+            selectedTile.x = 0, selectedTile.y = 0;
+            selectedTile.atlasIdx = WORLD_ATLAS;
+        }
+        if (actionDown(g->gameState, g->input, TILE_2)) {
+            selectedTile.x = 1, selectedTile.y = 0;
+            selectedTile.atlasIdx = WORLD_ATLAS;
+        }
+        if (actionDown(g->gameState, g->input, TILE_3)) {
+            selectedTile.x = 0, selectedTile.y = 9;
+            selectedTile.atlasIdx = WORLD_ATLAS;
+        }
 
         transformComponent->setPos(pos.x, pos.y);
     } else {

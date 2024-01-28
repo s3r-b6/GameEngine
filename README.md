@@ -26,11 +26,16 @@ I primarily keep this public in the hopes that anyone can learn anything from it
 
 I welcome any comments, suggestions, bug fixes, and improvements. This is the first release of the code, and my first time working in a game engine and much of it is rough and unfinished.
 
+# Assets:
+- [Zelda-like tilesets and sprites](https://opengameart.org/content/zelda-like-tilesets-and-sprites)
+- [Joystix font](https://www.1001fonts.com/joystix-font.html)
+
 # Dependencies:
 - [SDL2](https://www.libsdl.org/)
 - [glad](https://glad.dav1d.de/)
 - [glm](https://github.com/g-truc/glm)
 - [stb_image](https://github.com/nothings/stb)
+- [freetype](https://freetype.org/)
 
 # Credits:
 - [Cakez](https://www.youtube.com/@Cakez77)

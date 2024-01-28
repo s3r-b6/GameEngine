@@ -1,4 +1,4 @@
-// Copyright (c) 2024 <Sergio Bermejo de las Heras>
+// Copyright (c) 2024 <Sergio Bermejo de las Heras>main
 // This code is subject to the MIT license.
 
 #include "./main.h"
@@ -7,6 +7,8 @@
 #include "./globals.h"
 #include "./initialization.h"
 #include "./input.h"
+
+#include "./fonts.h"
 
 // NOTE: g is the GlobalState object
 
@@ -29,8 +31,8 @@ int main(int argc, char *args[])
 
     reloadGameLib(tempStorage);
 
-    // TODO: This should be handled by some kind of system
-    loadTextureAtlas("../assets/textures/fonts/font.png", g->glContext, GL_TEXTURE0);
+    // GL_TEXTURE0 is for the font
+    load_font("../fonts/joystix.otf", 48, g->renderData, g->glContext, tempStorage);
     loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE1);
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE2);
     loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE3);

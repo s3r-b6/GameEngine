@@ -21,6 +21,9 @@ enum GameAction {
     TILE_2,
     TILE_3,
 
+    LAYER_FRONT,
+    LAYER_BACK,
+
     SAVE_WORLD,
     DELETE_WORLD,
     RELOAD_WORLD,
@@ -71,11 +74,13 @@ global Tile selectedTile = {0};
 
 struct TileManager {
     static constexpr int size = WORLD_SIZE_x * WORLD_SIZE_y;
-    Tile worldGrid[size] = {0};
+    Tile worldGridLayer0[size] = {0};
+    Tile worldGridLayer1[size] = {0};
 
     void clear() {
         for (int i = 0; i < size; i++) {
-            worldGrid[i] = {0};
+            worldGridLayer0[i] = {0};
+            worldGridLayer1[i] = {0};
         }
     }
 
@@ -87,9 +92,15 @@ struct TileManager {
         for (int i = 0; i < size; i++) {
             int x = i % WORLD_SIZE_x;
             int y = i / WORLD_SIZE_x;
-            Tile *t = &worldGrid[i];
+            Tile *t = &worldGridLayer0[i];
 
             u32 data;
+            fread(&data, sizeof(u32), 1, f);
+            if (t->deserialize(data)) {
+                // SDL_Log("Tile {%d, %d} data: %d %d %d", x, y, t->x, t->y, t->atlasIdx);
+            }
+
+            t = &worldGridLayer1[i];
             fread(&data, sizeof(u32), 1, f);
             if (t->deserialize(data)) {
                 // SDL_Log("Tile {%d, %d} data: %d %d %d", x, y, t->x, t->y, t->atlasIdx);
@@ -105,8 +116,13 @@ struct TileManager {
     bool serialize() {
         FILE *f = fopen("world.data", "wb");
 
-        for (Tile t : worldGrid) {
-            u32 data = t.serialize();
+        for (int i = 0; i < size; i++) {
+            Tile t1 = worldGridLayer0[i];
+            Tile t2 = worldGridLayer1[i];
+
+            u32 data = t1.serialize();
+            fwrite(&data, sizeof(u32), 1, f);
+            data = t2.serialize();
             fwrite(&data, sizeof(u32), 1, f);
         }
 
@@ -114,25 +130,43 @@ struct TileManager {
         return true;
     }
 
-    void render(RenderData *renderData) {
+    void renderFront(RenderData *renderData) {
         for (int i = 0; i < size; i++) {
             int x = i % WORLD_SIZE_x;
             int y = i / WORLD_SIZE_x;
 
-            Tile t = worldGrid[i];
-            if (t.atlasIdx) {
-                draw_tile(renderData, t.x, t.y, t.atlasIdx, {x * TILESIZE, y * TILESIZE});
+            Tile t1 = worldGridLayer0[i];
+            if (t1.atlasIdx) {
+                draw_tile(renderData, t1.x, t1.y, t1.atlasIdx, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
 
-    void removeTile(int x, int y) { worldGrid[(y * WORLD_SIZE_x) + x].atlasIdx = 0; }
-    void setTile(int x, int y, Tile t) {
+    void renderBack(RenderData *renderData) {
+        for (int i = 0; i < size; i++) {
+            int x = i % WORLD_SIZE_x;
+            int y = i / WORLD_SIZE_x;
+            Tile t2 = worldGridLayer1[i];
+            if (t2.atlasIdx) {
+                draw_tile(renderData, t2.x, t2.y, t2.atlasIdx, {x * TILESIZE, y * TILESIZE});
+            }
+        }
+    }
+
+    void removeTile(int x, int y) {
+        worldGridLayer0[(y * WORLD_SIZE_x) + x].atlasIdx = 0;
+        worldGridLayer1[(y * WORLD_SIZE_x) + x].atlasIdx = 0;
+    }
+    void setTile(int x, int y, Tile t, u8 layer) {
         Tile tile = {};
 
         tile.x = t.x, tile.y = t.y;
         tile.atlasIdx = t.atlasIdx;
-        worldGrid[(y * WORLD_SIZE_x) + x] = tile;
+        if (layer == 0) {
+            worldGridLayer0[(y * WORLD_SIZE_x) + x] = tile;
+        } else {
+            worldGridLayer1[(y * WORLD_SIZE_x) + x] = tile;
+        }
     }
 };
 

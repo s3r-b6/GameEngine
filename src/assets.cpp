@@ -35,23 +35,3 @@ Sprite get_tile(u8 x, u8 y, u8 atlasIdx) {
 
     return sprite;
 }
-
-Sprite get_char(char ch) {
-    if (ch < 32 || ch > 126) { crash("Non-ASCII not supported yet"); }
-
-    Sprite sprite = {};
-
-    // width = 512, height = 256
-    // cellWidth and cellHeight = 32
-    // fontSize 
-
-    int idx = ch - 32;
-
-    int xPos = (idx * 32) % 512;
-    int yPos = (idx * 32) / 512 * 32;
-
-    sprite.atlasOffset = {xPos, yPos};
-    sprite.spriteSize = {32, 32};
-
-    return sprite;
-}
