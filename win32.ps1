@@ -1,12 +1,15 @@
 # This script should be run from inside the .\build directory
 $include = ( "-I..\deps\",
+    "-I..\deps\glad\",
+    "-I..\deps\freetype2\",
     "-I..\deps\win32\",
     "-I..\deps\win32\SDL2\",
     "-I..\include" 
 )
 
 $libs = (
-    "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2"
+    "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2",
+    "-lfreetype"
 )
 
 $sources_main = (
@@ -14,6 +17,7 @@ $sources_main = (
     "..\src\win32_platform.cpp",
     "..\src\initialization.cpp",
     "..\src\assets.cpp",
+    "../src/fonts.cpp",
     "..\src\renderer.cpp",
     "..\deps\glad\glad.c"
 )
@@ -21,6 +25,7 @@ $sources_main = (
 $sources_game = (
     "..\src\assets.cpp",
     "..\src\renderer.cpp",
+    "../src/fonts.cpp",
     "..\src\win32_platform.cpp",
     "..\deps\glad\glad.c"
 )

@@ -12,6 +12,8 @@
 
 // NOTE: g is the GlobalState object
 
+global void *gameSO;
+
 #ifdef _WIN32
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 #elif __linux__
@@ -57,7 +59,7 @@ int main(int argc, char *args[])
     }
 
     close(g->glContext, g->appState);
-
+    plat_freeDynamicLib(gameSO);
     plat_deleteFile(loadedgameSharedObject);
     return 0;
 }
@@ -126,7 +128,6 @@ inline void handleSDLevents(SDL_Event *event) {
 }
 
 void reloadGameLib(BumpAllocator *tempStorage) {
-    local_persist void *gameSO;
     local_persist u64 lastModTimestamp;
 
     u64 currentTimestamp = plat_getFileTimestamp(gameSharedObject);

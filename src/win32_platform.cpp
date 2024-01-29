@@ -119,7 +119,7 @@ bool plat_deleteFile(char *fileName) {
         SDL_Log("File '%s' deleted successfully.\n", fileName);
         return true;
     } else {
-        SDL_Log("Error deleting file");
+        SDL_Log("Error deleting file '%s'", fileName);
         return false;
     }
 }

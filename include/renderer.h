@@ -72,3 +72,4 @@ void render(GlobalState *g);
 void draw_ui_text_formatted(RenderData *renderData, vec2 pos, float fontSize, const char *text,
                             ...);
 void draw_ui_text(RenderData *renderData, vec2 pos, float fontSize, const char *text);
+void draw_tile_ui(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);

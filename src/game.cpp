@@ -18,6 +18,8 @@
 global float speed = 1.5f;
 global u8 selectedLayer = 0;
 
+global bool pickerShown = false;
+
 // An empty vector results in a crash; so this has to be called after a hot-reload for now
 void loadEntities() {
     if (g->gameState->entityManager->entities.size() == 0) {
@@ -93,7 +95,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         if (g->input->mouseInWindow && g->input->mLeftDown) {
             auto pos = g->input->mouseWorldPos;
             g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedLayer);
-            // SDL_Log("Placing tile at %d %d", pos.x, pos.y);
+            //  SDL_Log("Placing tile at %d %d", pos.x, pos.y);
         }
 
         if (g->input->mouseInWindow && g->input->mRightDown) {
@@ -102,15 +104,28 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
             // SDL_Log("Removing tile at %d %d", pos.x, pos.y);
         }
 
-        draw_tile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
-                  g->input->mouseWorldPos * TILESIZE);
+        if (!pickerShown) {
+            draw_tile_ui(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
+                         g->input->mouseWorldPos * TILESIZE);
+            draw_tile_ui(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
+        }
 
         simulate();
     }
 
-    g->gameState->tileManager->renderBack(g->renderData);
-    g->gameState->entityManager->render();
-    g->gameState->tileManager->renderFront(g->renderData);
+    if (!pickerShown) g->gameState->tileManager->renderBack(g->renderData);
+    if (!pickerShown) g->gameState->entityManager->render();
+    if (!pickerShown) g->gameState->tileManager->renderFront(g->renderData);
+
+    if (pickerShown) {
+        for (int i = 0; i < MAX_TRANSFORMS - 1; i++) {
+            int x = i % 40, y = i / 40;
+
+            int worldPosX = i * 16 % WORLD_SIZE_x;
+            int worldPosY = i * 16 / WORLD_SIZE_x * 16;
+            draw_tile(g->renderData, x, y, WORLD_ATLAS, {worldPosX, worldPosY});
+        }
+    }
 
     local_persist bool just_loaded = false;
 
@@ -135,13 +150,13 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         selectedLayer = 1;
     }
 
-    draw_tile(g->renderData, 1, 1, 3, {0, 0});
-
-    draw_ui_text(g->renderData, {20, 190}, 0.1, "TEST");
-    draw_ui_text(g->renderData, {50, 50}, 0.2, "TEST");
-    draw_ui_text_formatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
-    draw_ui_text_formatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
-                           selectedTile.x, selectedTile.y, selectedLayer);
+    if (!pickerShown) {
+        draw_ui_text(g->renderData, {20, 190}, 0.1, "TEST");
+        draw_ui_text(g->renderData, {50, 50}, 0.2, "TEST");
+        draw_ui_text_formatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
+        draw_ui_text_formatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
+                               selectedTile.x, selectedTile.y, selectedLayer);
+    }
 }
 
 void simulate() {
@@ -167,14 +182,8 @@ void simulate() {
         if (actionDown(g->gameState, g->input, MOVE_RIGHT)) { pos.x -= speed; }
         if (actionDown(g->gameState, g->input, MOVE_LEFT)) { pos.x += speed; }
 
-        if (actionDown(g->gameState, g->input, TILE_1)) {
-            selectedTile.x = 0, selectedTile.y = 0;
-            selectedTile.atlasIdx = WORLD_ATLAS;
-        }
-        if (actionDown(g->gameState, g->input, TILE_2)) {
-            selectedTile.x = 1, selectedTile.y = 0;
-            selectedTile.atlasIdx = WORLD_ATLAS;
-        }
+        if (actionDown(g->gameState, g->input, TILE_1)) { pickerShown = true; }
+        if (actionDown(g->gameState, g->input, TILE_2)) { pickerShown = false; }
         if (actionDown(g->gameState, g->input, TILE_3)) {
             selectedTile.x = 0, selectedTile.y = 9;
             selectedTile.atlasIdx = WORLD_ATLAS;

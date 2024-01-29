@@ -175,3 +175,18 @@ void draw_ui_text(RenderData *renderData, vec2 pos, float fontSize, const char *
         pos.x += glyph.advance.x * fontSize;
     }
 }
+
+void draw_tile_ui(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
+    Sprite sp = get_tile(x, y, atlasIdx);
+
+    Transform t = {
+        .atlasOffset = sp.atlasOffset,
+        .spriteSize = sp.spriteSize,
+        .pos = pos,
+        .size = {16, 16},
+
+        .atlasIdx = sp.atlasIdx,
+    };
+
+    renderData->uiTransforms[renderData->uiTransformCount++] = t;
+}
