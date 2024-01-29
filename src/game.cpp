@@ -21,6 +21,8 @@ global u8 selectedLayer = 0;
 
 global bool pickerShown = false;
 
+global u64 frame;
+
 // An empty vector results in a crash; so this has to be called after a hot-reload for now
 void loadEntities() {
     if (g->gameState->entityManager->entities.size() == 0) {
@@ -36,28 +38,23 @@ void loadEntities() {
 }
 
 inline void initializeGameState() {
-    g->gameState->updateTimer = 0;
-
     g->renderData->gameCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
     g->renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
     g->renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
     g->renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
-    gameRegisterKey(g->gameState, g->input, MOVE_UP, 'w');
-    gameRegisterKey(g->gameState, g->input, MOVE_RIGHT, 'a');
-    gameRegisterKey(g->gameState, g->input, MOVE_DOWN, 's');
-    gameRegisterKey(g->gameState, g->input, MOVE_LEFT, 'd');
-
-    gameRegisterKey(g->gameState, g->input, TILE_1, '1');
-    gameRegisterKey(g->gameState, g->input, TILE_2, '2');
-    gameRegisterKey(g->gameState, g->input, TILE_3, '3');
-
-    gameRegisterKey(g->gameState, g->input, LAYER_FRONT, 'f');
-    gameRegisterKey(g->gameState, g->input, LAYER_BACK, 'b');
-
-    gameRegisterKey(g->gameState, g->input, SAVE_WORLD, '8');
-    gameRegisterKey(g->gameState, g->input, DELETE_WORLD, '9');
-    gameRegisterKey(g->gameState, g->input, RELOAD_WORLD, '0');
+    g->gameState->gameRegisterKey(MOVE_UP, 'w');
+    g->gameState->gameRegisterKey(MOVE_RIGHT, 'a');
+    g->gameState->gameRegisterKey(MOVE_DOWN, 's');
+    g->gameState->gameRegisterKey(MOVE_LEFT, 'd');
+    g->gameState->gameRegisterKey(TILE_1, '1');
+    g->gameState->gameRegisterKey(TILE_2, '2');
+    g->gameState->gameRegisterKey(TILE_3, '3');
+    g->gameState->gameRegisterKey(LAYER_FRONT, 'f');
+    g->gameState->gameRegisterKey(LAYER_BACK, 'b');
+    g->gameState->gameRegisterKey(SAVE_WORLD, '8');
+    g->gameState->gameRegisterKey(DELETE_WORLD, '9');
+    g->gameState->gameRegisterKey(RELOAD_WORLD, '0');
 
     loadEntities();
 
@@ -72,6 +69,7 @@ inline void initializeGameState() {
     g->gameState->initialized = true;
 }
 
+global double updateTimer;
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, float dt) {
     int fps = 1.f / dt;
@@ -84,61 +82,20 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     }
 
     if (!g->gameState->initialized) initializeGameState();
-
-    g->gameState->updateTimer += dt;
+    updateTimer += dt;
 
     // World is simulated every 1/60 seconds
     // https://gafferongames.com/post/fix_your_timestep/
-
-    while (g->gameState->updateTimer >= UPDATE_DELAY) {
-
-        g->gameState->updateTimer -= UPDATE_DELAY;
+    while (updateTimer >= UPDATE_DELAY) {
+        updateTimer -= UPDATE_DELAY;
 
         g->input->mouseWorldPos = g->renderData->gameCamera.getMousePosInWorld(
             g->input->mousePos, g->appState->screenSize);
         g->input->mouseUIpos =
             g->renderData->uiCamera.getMousePosInWorld(g->input->mousePos, g->appState->screenSize);
 
-        if (!pickerShown && g->input->mouseInWindow && g->input->mLeftDown) {
-            auto pos = g->input->mouseWorldPos;
-            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedLayer);
-            //  SDL_Log("Placing tile at %d %d", pos.x, pos.y);
-        }
-
-        if (!pickerShown && g->input->mouseInWindow && g->input->mRightDown) {
-            auto pos = g->input->mouseWorldPos;
-            g->gameState->tileManager->removeTile(pos.x, pos.y);
-            // SDL_Log("Removing tile at %d %d", pos.x, pos.y);
-        }
-
-        if (!pickerShown) {
-            ui_drawTile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
-                        g->input->mouseWorldPos * TILESIZE);
-            ui_drawTile(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
-        }
-
+        handleInput();
         simulate();
-    }
-
-    local_persist bool just_loaded = false;
-
-    if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
-        just_loaded = false;
-        g->gameState->tileManager->serialize();
-    } else if (!just_loaded && actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
-        just_loaded = true;
-        g->gameState->tileManager->deserialize();
-    } else if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
-        just_loaded = false;
-        g->gameState->tileManager->clear();
-    }
-
-    if (actionJustPressed(g->gameState, g->input, LAYER_BACK)) {
-        SDL_Log("Back layer");
-        selectedLayer = 0;
-    } else if (actionJustPressed(g->gameState, g->input, LAYER_FRONT)) {
-        SDL_Log("Front layer");
-        selectedLayer = 1;
     }
 
     if (!pickerShown) {
@@ -151,9 +108,17 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         ui_drawTextFormatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
         ui_drawTextFormatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
                              selectedTile.x, selectedTile.y, selectedLayer);
+
+        ui_drawTile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
+                    g->input->mouseWorldPos * TILESIZE);
+        ui_drawTile(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
     }
 
     if (pickerShown) { drawTilePicker(WORLD_ATLAS, (int)1440, 40); }
+
+    releaseActions(g->gameState, g->input);
+
+    frame += 1;
 }
 
 void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
@@ -182,38 +147,13 @@ void simulate() {
         transformComponent = std::dynamic_pointer_cast<TransformComponent>(component);
     }
 
-    if (pickerShown) {
-        if (actionDown(g->gameState, g->input, TILE_2)) {
-            g->renderData->uiCamera.pos = g->renderData->gameCamera.pos; // TODO: ???
-            pickerShown = false;
-        }
-
-        if (g->input->mouseInWindow && g->input->mLeftDown) {
-            auto mousePos = g->input->mouseUIpos;
-            selectedTile = {(u8)mousePos.x, (u8)mousePos.y};
-            selectedTile.atlasIdx = WORLD_ATLAS;
-            SDL_Log("%d %d", selectedTile.x, selectedTile.y);
-        }
-
-        if (actionJustPressed(g->gameState, g->input, MOVE_UP)) {
-            g->renderData->uiCamera.pos.y -= 16;
-        } else if (actionJustPressed(g->gameState, g->input, MOVE_DOWN)) {
-            g->renderData->uiCamera.pos.y += 16;
-        }
-        if (actionJustPressed(g->gameState, g->input, MOVE_RIGHT)) {
-            g->renderData->uiCamera.pos.x -= 16;
-        } else if (actionJustPressed(g->gameState, g->input, MOVE_LEFT)) {
-            g->renderData->uiCamera.pos.x += 16;
-        }
-    } else {
-        if (actionDown(g->gameState, g->input, TILE_1)) { pickerShown = true; }
-
+    if (!pickerShown) {
         if (transformComponent) {
-            // SDL_Log("The component is a TransformComponent.");
             auto pos = transformComponent->pos;
 
             if (actionDown(g->gameState, g->input, MOVE_UP)) {
                 pos.y -= speed;
+                SDL_Log("Moving up. FRAME: %lu", frame);
             } else if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
                 pos.y += speed;
             }
@@ -229,6 +169,60 @@ void simulate() {
             SDL_Log("The component is not a TransformComponent.");
         }
     }
-
     g->gameState->entityManager->update();
+}
+
+void handleInput() {
+    if (!pickerShown) {
+        if (g->input->lMouseDown()) {
+            auto pos = g->input->mouseWorldPos;
+            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedLayer);
+        } else if (g->input->rMouseDown()) {
+            auto pos = g->input->mouseWorldPos;
+            g->gameState->tileManager->removeTile(pos.x, pos.y);
+        }
+
+        if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
+            g->gameState->tileManager->serialize();
+        } else if (actionJustPressed(g->gameState, g->input, RELOAD_WORLD)) {
+            g->gameState->tileManager->deserialize();
+        } else if (actionJustPressed(g->gameState, g->input, DELETE_WORLD)) {
+            g->gameState->tileManager->clear();
+        }
+    }
+
+    if (actionJustPressed(g->gameState, g->input, LAYER_BACK)) {
+        SDL_Log("Back layer");
+        selectedLayer = 0;
+    } else if (actionJustPressed(g->gameState, g->input, LAYER_FRONT)) {
+        SDL_Log("Front layer");
+        selectedLayer = 1;
+    }
+
+    if (pickerShown) {
+        if (actionJustPressed(g->gameState, g->input, TILE_2)) {
+            g->renderData->uiCamera.pos = g->renderData->gameCamera.pos; // TODO: ???
+            pickerShown = false;
+        }
+
+        if (g->input->lMouseJustPressed()) {
+            auto mousePos = g->input->mouseUIpos;
+            selectedTile = {(u8)mousePos.x, (u8)mousePos.y};
+            selectedTile.atlasIdx = WORLD_ATLAS;
+            SDL_Log("SELECTED TILE: %d %d", selectedTile.x, selectedTile.y);
+        }
+
+        if (actionDown(g->gameState, g->input, MOVE_UP)) {
+            g->renderData->uiCamera.pos.y -= 16;
+        } else if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
+            g->renderData->uiCamera.pos.y += 16;
+        }
+        if (actionDown(g->gameState, g->input, MOVE_RIGHT)) {
+            g->renderData->uiCamera.pos.x -= 16;
+        } else if (actionDown(g->gameState, g->input, MOVE_LEFT)) {
+            g->renderData->uiCamera.pos.x += 16;
+        }
+    } else {
+        if (actionJustPressed(g->gameState, g->input, TILE_1)) { pickerShown = true; }
+    }
 }

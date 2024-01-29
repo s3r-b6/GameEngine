@@ -26,106 +26,57 @@ struct Input {
     bool showCursor;
 
     // TODO: This should not be like this
-    bool mLeftDown;
-    bool mRightDown;
-    bool mMidDown;
+    bool mouseState[3] = {0};
+    bool prevMouseState[3] = {0};
 
     SDL_Keycode lastPressed;
+    const u8 *keyboardState;
 
-    std::map<SDL_Keycode, KeyState> usedKeys;
+    inline bool lMouseJustPressed() { return mouseInWindow && mouseState[0] && !prevMouseState[0]; }
+
+    inline bool rMouseJustPressed() { return mouseInWindow && mouseState[1] && !prevMouseState[1]; }
+    inline bool mMouseJustPressed() { return mouseInWindow && mouseState[2] && !prevMouseState[2]; }
+
+    inline bool lMouseDown() { return mouseInWindow && mouseState[0]; }
+    inline bool rMouseDown() { return mouseInWindow && mouseState[1]; }
+    inline bool mMouseDown() { return mouseInWindow && mouseState[2]; }
+
+    inline bool lMouseUp() { return mouseInWindow && !mouseState[0]; }
+    inline bool rMouseUp() { return mouseInWindow && !mouseState[1]; }
+    inline bool mMouseUp() { return mouseInWindow && !mouseState[2]; }
+
+    inline bool keyIsUp(SDL_Keycode kc) { return !keyboardState[SDL_GetScancodeFromKey(kc)]; }
+    inline bool keyIsDown(SDL_Keycode kc) { return keyboardState[SDL_GetScancodeFromKey(kc)]; }
 };
 
-inline bool unregisterKey(SDL_Keycode kc, Input *input) {
-    auto keyPair = input->usedKeys.find(kc);
-    if (keyPair != input->usedKeys.end()) {
-        // SDL_Log("Keycode %d already found in the keys map", kc);
-        return false;
-    }
-
-    input->usedKeys.erase(keyPair);
-    return true;
-}
-
-inline bool registerKey(SDL_Keycode kc, Input *input) {
-    auto keyPair = input->usedKeys.find(kc);
-
-    if (keyPair != input->usedKeys.end()) {
-        // SDL_Log("Keycode %d already found in the keys map", kc);
-        return false;
-    }
-
-    SDL_Log("Keycode %d not found in the keys map, registering it", kc);
-    KeyState ks = {0};
-    input->usedKeys.insert({kc, ks});
-    return true;
-}
-
-inline bool updateKeyState(SDL_Keycode kc, bool pressed, Input *input) {
-    auto keyPair = input->usedKeys.find(kc);
-
-    // If it does not find the key, it returns the post end iterator
-    if (keyPair == input->usedKeys.end()) {
-        // SDL_Log("Keycode %d not found in the keys map", kc);
-        return false;
-    } else {
-        // SDL_Log("Keycode %d found in the keys map", kc);
-        keyPair->second.wasDown = keyPair->second.isDown;
-        keyPair->second.justPressed = pressed && !keyPair->second.wasDown;
-        keyPair->second.justReleased = !pressed && keyPair->second.wasDown;
-        keyPair->second.isDown = pressed;
-
-        return true;
-    }
-}
-
-inline bool getKeyState(SDL_Keycode kc, KeyState *state, Input *input) {
-    auto keyPair = input->usedKeys.find(kc);
-
-    if (keyPair == input->usedKeys.end()) {
-        SDL_Log("Keycode %d not found in the keys map", kc);
-        return false;
-    }
-
-    // SDL_Log("Keycode %d found in the keys map", kc);
-    *state = keyPair->second;
-    return true;
-}
-
-// TODO: Implement some kind of InputManager
-inline bool gameRegisterKey(GameState *gameState, Input *input, GameAction action, SDL_Keycode kc) {
-    gameState->gameBinds[action] = kc;
-    if (registerKey(kc, input)) {
-        SDL_Log("Succesfuly bound %c to game action: %d", kc, action);
-        return true;
-    } else {
-        SDL_Log("Could not bind %c to game action: %d", kc, action);
-        return false;
-    }
-}
-
+// This should return true only once until the action key is released
 inline bool actionJustPressed(GameState *gameState, Input *input, GameAction action) {
-    if (!gameState->gameBinds[action]) return false;
-
-    KeyState ks = {0};
-    getKeyState(gameState->gameBinds[action], &ks, input);
-
-    return ks.justPressed;
+    bool keyPressed = input->keyboardState[gameState->gameBinds[action]];
+    if (!keyPressed || gameState->actionsTriggered[action]) { return false; }
+    gameState->actionsTriggered[action] = true;
+    return true;
 }
 
+// This returns true until the action key is released
 inline bool actionDown(GameState *gameState, Input *input, GameAction action) {
-    if (!gameState->gameBinds[action]) return false;
-
-    KeyState ks = {0};
-    getKeyState(gameState->gameBinds[action], &ks, input);
-
-    return ks.isDown;
+    return input->keyboardState[gameState->gameBinds[action]];
 }
 
+// This returns true while the action key is up
 inline bool actionUp(GameState *gameState, Input *input, GameAction action) {
-    if (!gameState->gameBinds[action]) return false;
+    return !input->keyboardState[gameState->gameBinds[action]];
+}
 
-    KeyState ks = {0};
-    getKeyState(gameState->gameBinds[action], &ks, input);
+// This returns true only once until the action key is pressed
+inline bool actionJustReleased(GameState *gameState, Input *input, GameAction action) {
+    bool keyReleased = !input->keyboardState[gameState->gameBinds[action]];
 
-    return !ks.isDown;
+    return keyReleased && gameState->actionsTriggered[action];
+}
+
+inline void releaseActions(GameState *gameState, Input *input) {
+    for (int i = 0; i < GAME_ACTION_COUNT; i++) {
+        bool keyReleased = !input->keyboardState[gameState->gameBinds[i]];
+        if (keyReleased) { gameState->actionsTriggered[i] = false; }
+    }
 }

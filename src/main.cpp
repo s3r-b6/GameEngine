@@ -56,6 +56,10 @@ int main(int argc, char *args[])
         render(g);
         tempStorage->freeMemory();
         reloadGameLib(tempStorage);
+
+        g->input->prevMouseState[0] = g->input->mouseState[0];
+        g->input->prevMouseState[1] = g->input->mouseState[1];
+        g->input->prevMouseState[2] = g->input->mouseState[2];
     }
 
     close(g->glContext, g->appState);
@@ -103,27 +107,26 @@ inline void handleSDLevents(SDL_Event *event) {
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEBUTTONUP: {
         bool pressed = event->type == SDL_MOUSEBUTTONDOWN;
+
         bool left = event->button.button == SDL_BUTTON_LEFT;
         bool right = event->button.button == SDL_BUTTON_RIGHT;
         bool mid = event->button.button == SDL_BUTTON_MIDDLE;
 
-        if (left) g->input->mLeftDown = pressed;
-        if (mid) g->input->mMidDown = pressed;
-        if (right) g->input->mRightDown = pressed;
+        if (left) {
+            g->input->mouseState[0] = pressed;
+        } else if (mid) {
+            g->input->mouseState[1] = pressed;
+        } else if (right) {
+            g->input->mouseState[2] = pressed;
+        }
 
         break;
     }
 
-    case SDL_KEYUP:
-    case SDL_KEYDOWN: {
-        bool pressed = event->type == SDL_KEYDOWN;
-        SDL_Keycode keyCode = event->key.keysym.sym;
-
-        updateKeyState(keyCode, pressed, g->input);
-        g->input->lastPressed = keyCode;
-
-        break;
-    }
+        // case SDL_KEYUP:
+        // case SDL_KEYDOWN: {
+        //     break;
+        // }
     }
 }
 

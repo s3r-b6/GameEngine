@@ -41,7 +41,10 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
 
         g->input->mouseInWindow = true;
         g->input->showCursor = true;
-        g->input->usedKeys = std::map<SDL_Keycode, KeyState>();
+
+        int numKeys;
+        g->input->keyboardState = SDL_GetKeyboardState(&numKeys);
+        SDL_Log("numKeys: %d", numKeys);
 
         g->appState->running = true;
         g->appState->screenSize = {1280, 720};

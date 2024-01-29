@@ -3,6 +3,7 @@
 #include "./platform.h"
 #include "./renderer.h"
 #include "./types.h"
+#include "SDL2/SDL_keyboard.h"
 #include <cstdio>
 
 struct EntityManager;
@@ -33,11 +34,15 @@ enum GameAction {
 
 struct GameState {
     bool initialized;
-    double updateTimer;
-    SDL_Keycode gameBinds[GAME_ACTION_COUNT] = {0};
+    SDL_Scancode gameBinds[GAME_ACTION_COUNT] = {};
+    bool actionsTriggered[GAME_ACTION_COUNT] = {false};
 
     EntityManager *entityManager;
     TileManager *tileManager;
+
+    inline void gameRegisterKey(GameAction action, SDL_Keycode kc) {
+        gameBinds[action] = SDL_GetScancodeFromKey(kc);
+    }
 };
 
 struct Tile {
@@ -177,4 +182,5 @@ void drawTilePicker();
 }
 
 void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow);
+void handleInput();
 void simulate();
