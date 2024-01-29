@@ -5,8 +5,9 @@
 
 #include "./engine_lib.h"
 #include "./entities.h"
+#include "./game.h"
+#include "./globals.h"
 #include "./input.h"
-#include "./renderer.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination

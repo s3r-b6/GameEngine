@@ -5,23 +5,21 @@
 #include "./game.h"
 
 #include "./engine_lib.h"
-#include "./entities.h"
 #include "./globals.h"
+
+#include "./entities.h"
 #include "./input.h"
 #include "./renderer.h"
 
-#include "./platform.h"
-#include "game.h"
-#include "types.h"
-
 // NOTE: g is the GlobalState object
 
-global float speed = 1.5f;
-global u8 selectedLayer = 0;
-
-global bool pickerShown = false;
-
+global double updateTimer;
 global u64 frame;
+
+global float playerSpeed = 1.5f;
+
+global u8 selectedWorldLayer = 0;
+global bool pickerShown = false;
 
 // An empty vector results in a crash; so this has to be called after a hot-reload for now
 void loadEntities() {
@@ -69,7 +67,6 @@ inline void initializeGameState() {
     g->gameState->initialized = true;
 }
 
-global double updateTimer;
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, float dt) {
     int fps = 1.f / dt;
@@ -107,7 +104,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         ui_drawText(g->renderData, {50, 50}, 0.2, "TEST");
         ui_drawTextFormatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
         ui_drawTextFormatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
-                             selectedTile.x, selectedTile.y, selectedLayer);
+                             selectedTile.x, selectedTile.y, selectedWorldLayer);
 
         ui_drawTile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
                     g->input->mouseWorldPos * TILESIZE);
@@ -152,16 +149,16 @@ void simulate() {
             auto pos = transformComponent->pos;
 
             if (actionDown(g->gameState, g->input, MOVE_UP)) {
-                pos.y -= speed;
+                pos.y -= playerSpeed;
                 SDL_Log("Moving up. FRAME: %lu", frame);
             } else if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
-                pos.y += speed;
+                pos.y += playerSpeed;
             }
 
             if (actionDown(g->gameState, g->input, MOVE_RIGHT)) {
-                pos.x -= speed;
+                pos.x -= playerSpeed;
             } else if (actionDown(g->gameState, g->input, MOVE_LEFT)) {
-                pos.x += speed;
+                pos.x += playerSpeed;
             }
 
             transformComponent->setPos(pos.x, pos.y);
@@ -176,7 +173,7 @@ void handleInput() {
     if (!pickerShown) {
         if (g->input->lMouseDown()) {
             auto pos = g->input->mouseWorldPos;
-            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedLayer);
+            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedWorldLayer);
         } else if (g->input->rMouseDown()) {
             auto pos = g->input->mouseWorldPos;
             g->gameState->tileManager->removeTile(pos.x, pos.y);
@@ -193,10 +190,10 @@ void handleInput() {
 
     if (actionJustPressed(g->gameState, g->input, LAYER_BACK)) {
         SDL_Log("Back layer");
-        selectedLayer = 0;
+        selectedWorldLayer = 0;
     } else if (actionJustPressed(g->gameState, g->input, LAYER_FRONT)) {
         SDL_Log("Front layer");
-        selectedLayer = 1;
+        selectedWorldLayer = 1;
     }
 
     if (pickerShown) {
