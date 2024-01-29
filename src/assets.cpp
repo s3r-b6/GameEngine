@@ -26,7 +26,7 @@ Sprite get_sprite(SpriteID spriteID) {
     return sprite;
 }
 
-Sprite get_tile(u8 x, u8 y, u8 atlasIdx) {
+Sprite getTile(u8 x, u8 y, u8 atlasIdx) {
     Sprite sprite = {
         .atlasOffset = {x * 16, y * 16},
         .spriteSize = {16, 16},

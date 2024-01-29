@@ -57,7 +57,7 @@ struct SpriteRenderer : EntityComponentBase {
         // SDL_Log("Trying to render at %f %f, spriteID %d, size %f %f",
         //         transformComponent->pos.x, transformComponent->pos.y, sprite,
         //         size.x, size.y);
-        draw_sprite(renderData, sprite, transformComponent->pos, size);
+        drawSprite(renderData, sprite, transformComponent->pos, size);
     }
 };
 

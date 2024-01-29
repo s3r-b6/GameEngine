@@ -137,7 +137,7 @@ struct TileManager {
 
             Tile t1 = worldGridLayer0[i];
             if (t1.atlasIdx) {
-                draw_tile(renderData, t1.x, t1.y, t1.atlasIdx, {x * TILESIZE, y * TILESIZE});
+                drawTile(renderData, t1.x, t1.y, t1.atlasIdx, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
@@ -148,7 +148,7 @@ struct TileManager {
             int y = i / WORLD_SIZE_x;
             Tile t2 = worldGridLayer1[i];
             if (t2.atlasIdx) {
-                draw_tile(renderData, t2.x, t2.y, t2.atlasIdx, {x * TILESIZE, y * TILESIZE});
+                drawTile(renderData, t2.x, t2.y, t2.atlasIdx, {x * TILESIZE, y * TILESIZE});
             }
         }
     }
@@ -173,6 +173,8 @@ struct TileManager {
 extern "C" {
 EXPORT_FN void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage,
                           GlobalState *globalStateIn, float dt);
+void drawTilePicker();
 }
 
+void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow);
 void simulate();

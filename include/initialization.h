@@ -10,5 +10,6 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
 inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData);
 
 void close(GLContext *glContext, ProgramState *appState);
+
 void printProgramLog(uint program, BumpAllocator *tempStorage);
 void printShaderLog(uint shader, BumpAllocator *tempStorage);

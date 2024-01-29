@@ -11,6 +11,7 @@
 #include "./renderer.h"
 
 #include "./platform.h"
+#include "game.h"
 #include "types.h"
 
 // NOTE: g is the GlobalState object
@@ -36,9 +37,11 @@ void loadEntities() {
 
 inline void initializeGameState() {
     g->gameState->updateTimer = 0;
-    g->renderData->gameCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
 
+    g->renderData->gameCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
     g->renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
+    g->renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
+    g->renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
     gameRegisterKey(g->gameState, g->input, MOVE_UP, 'w');
     gameRegisterKey(g->gameState, g->input, MOVE_RIGHT, 'a');
@@ -86,11 +89,15 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 
     // World is simulated every 1/60 seconds
     // https://gafferongames.com/post/fix_your_timestep/
+
     while (g->gameState->updateTimer >= UPDATE_DELAY) {
+
         g->gameState->updateTimer -= UPDATE_DELAY;
 
         g->input->mouseWorldPos = g->renderData->gameCamera.getMousePosInWorld(
             g->input->mousePos, g->appState->screenSize);
+        g->input->mouseUIpos =
+            g->renderData->uiCamera.getMousePosInWorld(g->input->mousePos, g->appState->screenSize);
 
         if (g->input->mouseInWindow && g->input->mLeftDown) {
             auto pos = g->input->mouseWorldPos;
@@ -105,26 +112,12 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         }
 
         if (!pickerShown) {
-            draw_tile_ui(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
-                         g->input->mouseWorldPos * TILESIZE);
-            draw_tile_ui(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
+            ui_drawTile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
+                        g->input->mouseWorldPos * TILESIZE);
+            ui_drawTile(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
         }
 
         simulate();
-    }
-
-    if (!pickerShown) g->gameState->tileManager->renderBack(g->renderData);
-    if (!pickerShown) g->gameState->entityManager->render();
-    if (!pickerShown) g->gameState->tileManager->renderFront(g->renderData);
-
-    if (pickerShown) {
-        for (int i = 0; i < MAX_TRANSFORMS - 1; i++) {
-            int x = i % 40, y = i / 40;
-
-            int worldPosX = i * 16 % WORLD_SIZE_x;
-            int worldPosY = i * 16 / WORLD_SIZE_x * 16;
-            draw_tile(g->renderData, x, y, WORLD_ATLAS, {worldPosX, worldPosY});
-        }
     }
 
     local_persist bool just_loaded = false;
@@ -143,20 +136,36 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     if (actionJustPressed(g->gameState, g->input, LAYER_BACK)) {
         SDL_Log("Back layer");
         selectedLayer = 0;
-    }
-
-    if (actionJustPressed(g->gameState, g->input, LAYER_FRONT)) {
+    } else if (actionJustPressed(g->gameState, g->input, LAYER_FRONT)) {
         SDL_Log("Front layer");
         selectedLayer = 1;
     }
 
     if (!pickerShown) {
-        draw_ui_text(g->renderData, {20, 190}, 0.1, "TEST");
-        draw_ui_text(g->renderData, {50, 50}, 0.2, "TEST");
-        draw_ui_text_formatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
-        draw_ui_text_formatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
-                               selectedTile.x, selectedTile.y, selectedLayer);
+        g->gameState->tileManager->renderBack(g->renderData);
+        g->gameState->entityManager->render();
+        g->gameState->tileManager->renderFront(g->renderData);
+
+        ui_drawText(g->renderData, {20, 190}, 0.1, "TEST");
+        ui_drawText(g->renderData, {50, 50}, 0.2, "TEST");
+        ui_drawTextFormatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
+        ui_drawTextFormatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
+                             selectedTile.x, selectedTile.y, selectedLayer);
     }
+
+    if (pickerShown) { drawTilePicker(WORLD_ATLAS, (int)1440, 40); }
+}
+
+void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
+    for (int i = 0; i < maxTiles; i++) {
+        int x = i % tilesPerRow, y = i / tilesPerRow;
+
+        int worldPosX = i * TILESIZE % WORLD_SIZE_x;
+        int worldPosY = i * TILESIZE / WORLD_SIZE_x * TILESIZE;
+        ui_drawTile(g->renderData, x, y, textureAtlas, {worldPosX, worldPosY});
+    }
+
+    ui_drawTile(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseUIpos * TILESIZE);
 }
 
 void simulate() {
@@ -177,13 +186,40 @@ void simulate() {
         // SDL_Log("The component is a TransformComponent.");
         auto pos = transformComponent->pos;
 
-        if (actionDown(g->gameState, g->input, MOVE_UP)) { pos.y -= speed; }
-        if (actionDown(g->gameState, g->input, MOVE_DOWN)) { pos.y += speed; }
-        if (actionDown(g->gameState, g->input, MOVE_RIGHT)) { pos.x -= speed; }
-        if (actionDown(g->gameState, g->input, MOVE_LEFT)) { pos.x += speed; }
+        if (actionDown(g->gameState, g->input, MOVE_UP)) {
+            if (pickerShown) {
+                g->renderData->uiCamera.pos.y -= 16;
+            } else {
+                pos.y -= speed;
+            }
+        }
+        if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
+            if (pickerShown) {
+                g->renderData->uiCamera.pos.y += 16;
+            } else {
+                pos.y += speed;
+            }
+        }
+        if (actionDown(g->gameState, g->input, MOVE_RIGHT)) {
+            if (pickerShown) {
+                g->renderData->uiCamera.pos.x -= 16;
+            } else {
+                pos.x -= speed;
+            }
+        }
+        if (actionDown(g->gameState, g->input, MOVE_LEFT)) {
+            if (pickerShown) {
+                g->renderData->uiCamera.pos.x += 16;
+            } else {
+                pos.x += speed;
+            }
+        }
 
         if (actionDown(g->gameState, g->input, TILE_1)) { pickerShown = true; }
-        if (actionDown(g->gameState, g->input, TILE_2)) { pickerShown = false; }
+        if (actionDown(g->gameState, g->input, TILE_2)) {
+            g->renderData->uiCamera.pos = g->renderData->gameCamera.pos; // TODO: ???
+            pickerShown = false;
+        }
         if (actionDown(g->gameState, g->input, TILE_3)) {
             selectedTile.x = 0, selectedTile.y = 9;
             selectedTile.atlasIdx = WORLD_ATLAS;

@@ -27,4 +27,4 @@ enum TileID {
 };
 
 Sprite get_sprite(SpriteID spriteID);
-Sprite get_tile(u8 x, u8 y, u8 atlasIdx);
+Sprite getTile(u8 x, u8 y, u8 atlasIdx);

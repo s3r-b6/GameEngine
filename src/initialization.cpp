@@ -226,7 +226,7 @@ void close(GLContext *glContext, ProgramState *appState) {
     SDL_Quit();
 }
 
-void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
+void printProgramLog(uint program, BumpAllocator *tempStorage) {
     // Make sure name is shader
     if (!glIsProgram(program)) {
         SDL_Log("Name %d is not a program", program);
@@ -239,13 +239,13 @@ void printProgramLog(GLuint program, BumpAllocator *transientStorage) {
     // Get info string length
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
-    char *infoLog = reinterpret_cast<char *>(transientStorage->alloc(maxLength));
+    char *infoLog = reinterpret_cast<char *>(tempStorage->alloc(maxLength));
 
     glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
     if (infoLogLength > 0) SDL_Log("%s", infoLog);
 }
 
-void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
+void printShaderLog(uint shader, BumpAllocator *tempStorage) {
     // Make sure name is shader
     if (!glIsShader(shader)) {
         SDL_Log("Name %d is not a shader", shader);
@@ -257,7 +257,7 @@ void printShaderLog(GLuint shader, BumpAllocator *transientStorage) {
     int maxLength = 0;
 
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-    char *infoLog = reinterpret_cast<char *>(transientStorage->alloc(maxLength));
+    char *infoLog = reinterpret_cast<char *>(tempStorage->alloc(maxLength));
 
     glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
     if (infoLogLength > 0) { SDL_Log("%s", infoLog); }

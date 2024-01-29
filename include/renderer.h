@@ -48,6 +48,7 @@ struct RenderData {
     float clearColor[3];
 
     OrthographicCamera gameCamera;
+    OrthographicCamera uiCamera;
 };
 
 // Struct that holds all data relevant to the renderer
@@ -63,13 +64,13 @@ struct GLContext {
 };
 
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx);
-void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size);
-void draw_tile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);
+void drawSprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size);
+void drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);
 
-void render_ui(glm::mat4x4 proj, GlobalState *g);
 void render(GlobalState *g);
+void ui_render(glm::mat4x4 proj, GlobalState *g, glm::vec2 screenSize);
 
-void draw_ui_text_formatted(RenderData *renderData, vec2 pos, float fontSize, const char *text,
+void ui_drawTextFormatted(RenderData *renderData, vec2 pos, float fontSize, const char *text,
                             ...);
-void draw_ui_text(RenderData *renderData, vec2 pos, float fontSize, const char *text);
-void draw_tile_ui(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);
+void ui_drawText(RenderData *renderData, vec2 pos, float fontSize, const char *text);
+void ui_drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);

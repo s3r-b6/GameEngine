@@ -43,7 +43,7 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTe
     return true;
 }
 
-void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size) {
+void drawSprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size) {
     Sprite sp = get_sprite(spriteID);
 
     Transform t = {
@@ -58,8 +58,8 @@ void draw_sprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::
     renderData->transforms[renderData->transformCount++] = t;
 }
 
-void draw_tile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
-    Sprite sp = get_tile(x, y, atlasIdx);
+void drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
+    Sprite sp = getTile(x, y, atlasIdx);
 
     Transform t = {
         .atlasOffset = sp.atlasOffset,
@@ -115,15 +115,18 @@ void render(GlobalState *g) {
 
     g->renderData->transformCount = 0;
 
-    render_ui(mat, g);
+    ui_render(mat, g, screenSize);
 
     SDL_GL_SwapWindow(g->appState->window);
 }
 
-void render_ui(glm::mat4x4 proj, GlobalState *g) {
+void ui_render(glm::mat4x4 proj, GlobalState *g, glm::vec2 screenSize) {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glm::mat4x4 mat = g->renderData->uiCamera.getProjectionMatrix(screenSize.x, screenSize.y);
+    glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
                     sizeof(Transform) * g->renderData->uiTransformCount,
@@ -135,8 +138,7 @@ void render_ui(glm::mat4x4 proj, GlobalState *g) {
     glEnable(GL_DEPTH_TEST);
 }
 
-void draw_ui_text_formatted(RenderData *renderData, vec2 pos, float fontSize, const char *text,
-                            ...) {
+void ui_drawTextFormatted(RenderData *renderData, vec2 pos, float fontSize, const char *text, ...) {
     va_list args;
     va_start(args, text);
 
@@ -149,10 +151,10 @@ void draw_ui_text_formatted(RenderData *renderData, vec2 pos, float fontSize, co
     vsnprintf(&result[0], size, text, args);
 
     const char *char_ptr = result.c_str();
-    draw_ui_text(renderData, pos, fontSize, char_ptr);
+    ui_drawText(renderData, pos, fontSize, char_ptr);
 }
 
-void draw_ui_text(RenderData *renderData, vec2 pos, float fontSize, const char *text) {
+void ui_drawText(RenderData *renderData, vec2 pos, float fontSize, const char *text) {
     if (!text) { return; }
 
     vec2 origin = pos;
@@ -176,8 +178,8 @@ void draw_ui_text(RenderData *renderData, vec2 pos, float fontSize, const char *
     }
 }
 
-void draw_tile_ui(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
-    Sprite sp = get_tile(x, y, atlasIdx);
+void ui_drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
+    Sprite sp = getTile(x, y, atlasIdx);
 
     Transform t = {
         .atlasOffset = sp.atlasOffset,

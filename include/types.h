@@ -9,7 +9,7 @@
 
 #define MAX_TEXTURES 8
 #define UPDATE_DELAY 1. / 60.
-#define MAX_TRANSFORMS 1024
+#define MAX_TRANSFORMS 2048
 
 #define WORLD_SIZE_x 640
 #define WORLD_SIZE_y 360
