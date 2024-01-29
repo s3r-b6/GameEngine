@@ -99,13 +99,13 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         g->input->mouseUIpos =
             g->renderData->uiCamera.getMousePosInWorld(g->input->mousePos, g->appState->screenSize);
 
-        if (g->input->mouseInWindow && g->input->mLeftDown) {
+        if (!pickerShown && g->input->mouseInWindow && g->input->mLeftDown) {
             auto pos = g->input->mouseWorldPos;
             g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedLayer);
             //  SDL_Log("Placing tile at %d %d", pos.x, pos.y);
         }
 
-        if (g->input->mouseInWindow && g->input->mRightDown) {
+        if (!pickerShown && g->input->mouseInWindow && g->input->mRightDown) {
             auto pos = g->input->mouseWorldPos;
             g->gameState->tileManager->removeTile(pos.x, pos.y);
             // SDL_Log("Removing tile at %d %d", pos.x, pos.y);
@@ -182,52 +182,52 @@ void simulate() {
         transformComponent = std::dynamic_pointer_cast<TransformComponent>(component);
     }
 
-    if (transformComponent) {
-        // SDL_Log("The component is a TransformComponent.");
-        auto pos = transformComponent->pos;
-
-        if (actionDown(g->gameState, g->input, MOVE_UP)) {
-            if (pickerShown) {
-                g->renderData->uiCamera.pos.y -= 16;
-            } else {
-                pos.y -= speed;
-            }
-        }
-        if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
-            if (pickerShown) {
-                g->renderData->uiCamera.pos.y += 16;
-            } else {
-                pos.y += speed;
-            }
-        }
-        if (actionDown(g->gameState, g->input, MOVE_RIGHT)) {
-            if (pickerShown) {
-                g->renderData->uiCamera.pos.x -= 16;
-            } else {
-                pos.x -= speed;
-            }
-        }
-        if (actionDown(g->gameState, g->input, MOVE_LEFT)) {
-            if (pickerShown) {
-                g->renderData->uiCamera.pos.x += 16;
-            } else {
-                pos.x += speed;
-            }
-        }
-
-        if (actionDown(g->gameState, g->input, TILE_1)) { pickerShown = true; }
+    if (pickerShown) {
         if (actionDown(g->gameState, g->input, TILE_2)) {
             g->renderData->uiCamera.pos = g->renderData->gameCamera.pos; // TODO: ???
             pickerShown = false;
         }
-        if (actionDown(g->gameState, g->input, TILE_3)) {
-            selectedTile.x = 0, selectedTile.y = 9;
+
+        if (g->input->mouseInWindow && g->input->mLeftDown) {
+            auto mousePos = g->input->mouseUIpos;
+            selectedTile = {(u8)mousePos.x, (u8)mousePos.y};
             selectedTile.atlasIdx = WORLD_ATLAS;
+            SDL_Log("%d %d", selectedTile.x, selectedTile.y);
         }
 
-        transformComponent->setPos(pos.x, pos.y);
+        if (actionJustPressed(g->gameState, g->input, MOVE_UP)) {
+            g->renderData->uiCamera.pos.y -= 16;
+        } else if (actionJustPressed(g->gameState, g->input, MOVE_DOWN)) {
+            g->renderData->uiCamera.pos.y += 16;
+        }
+        if (actionJustPressed(g->gameState, g->input, MOVE_RIGHT)) {
+            g->renderData->uiCamera.pos.x -= 16;
+        } else if (actionJustPressed(g->gameState, g->input, MOVE_LEFT)) {
+            g->renderData->uiCamera.pos.x += 16;
+        }
     } else {
-        SDL_Log("The component is not a TransformComponent.");
+        if (actionDown(g->gameState, g->input, TILE_1)) { pickerShown = true; }
+
+        if (transformComponent) {
+            // SDL_Log("The component is a TransformComponent.");
+            auto pos = transformComponent->pos;
+
+            if (actionDown(g->gameState, g->input, MOVE_UP)) {
+                pos.y -= speed;
+            } else if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
+                pos.y += speed;
+            }
+
+            if (actionDown(g->gameState, g->input, MOVE_RIGHT)) {
+                pos.x -= speed;
+            } else if (actionDown(g->gameState, g->input, MOVE_LEFT)) {
+                pos.x += speed;
+            }
+
+            transformComponent->setPos(pos.x, pos.y);
+        } else {
+            SDL_Log("The component is not a TransformComponent.");
+        }
     }
 
     g->gameState->entityManager->update();
