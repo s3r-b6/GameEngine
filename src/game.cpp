@@ -56,9 +56,9 @@ inline void initializeGameState() {
 
     loadEntities();
 
-    selectedTile.atlasIdx = WORLD_ATLAS;
-    selectedTile.x = 0;
-    selectedTile.y = 0;
+    selection.selectedTile1.atlasIdx = WORLD_ATLAS;
+    selection.selectedTile1.x = 0;
+    selection.selectedTile1.y = 0;
 
     if (g->gameState->tileManager->deserialize()) {
         SDL_Log("Found previous world.data, loading the map");
@@ -104,11 +104,18 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         ui_drawText(g->renderData, {50, 50}, 0.2, "TEST");
         ui_drawTextFormatted(g->renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
         ui_drawTextFormatted(g->renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
-                             selectedTile.x, selectedTile.y, selectedWorldLayer);
-
-        ui_drawTile(g->renderData, selectedTile.x, selectedTile.y, selectedTile.atlasIdx,
-                    g->input->mouseWorldPos * TILESIZE);
-        ui_drawTile(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
+                             selection.selectedTile1.x, selection.selectedTile1.y,
+                             selectedWorldLayer);
+        if (selection.selectedTile2.atlasIdx) {
+            ui_drawTileGroup(g->renderData, {selection.selectedTile1.x, selection.selectedTile1.y},
+                             {selection.selectedTile2.x, selection.selectedTile2.y},
+                             selection.selectedTile1.atlasIdx, g->input->mouseWorldPos * TILESIZE);
+            ui_drawTile(g->renderData, {39, 35}, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
+        } else {
+            ui_drawTile(g->renderData, {selection.selectedTile1.x, selection.selectedTile1.y},
+                        selection.selectedTile1.atlasIdx, g->input->mouseWorldPos * TILESIZE);
+            ui_drawTile(g->renderData, {39, 35}, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
+        }
     }
 
     if (pickerShown) { drawTilePicker(WORLD_ATLAS, (int)1440, 40); }
@@ -124,10 +131,10 @@ void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
 
         int worldPosX = i * TILESIZE % WORLD_SIZE_x;
         int worldPosY = i * TILESIZE / WORLD_SIZE_x * TILESIZE;
-        ui_drawTile(g->renderData, x, y, textureAtlas, {worldPosX, worldPosY});
+        ui_drawTile(g->renderData, {x, y}, textureAtlas, {worldPosX, worldPosY});
     }
 
-    ui_drawTile(g->renderData, 39, 35, WORLD_ATLAS, g->input->mouseUIpos * TILESIZE);
+    ui_drawTile(g->renderData, {39, 35}, WORLD_ATLAS, g->input->mouseUIpos * TILESIZE);
 }
 
 void simulate() {
@@ -150,7 +157,6 @@ void simulate() {
 
             if (actionDown(g->gameState, g->input, MOVE_UP)) {
                 pos.y -= playerSpeed;
-                SDL_Log("Moving up. FRAME: %lu", frame);
             } else if (actionDown(g->gameState, g->input, MOVE_DOWN)) {
                 pos.y += playerSpeed;
             }
@@ -172,11 +178,18 @@ void simulate() {
 void handleInput() {
     if (!pickerShown) {
         if (g->input->lMouseDown()) {
-            auto pos = g->input->mouseWorldPos;
-            g->gameState->tileManager->setTile(pos.x, pos.y, selectedTile, selectedWorldLayer);
+            if (selection.selectedTile2.atlasIdx) {
+                g->gameState->tileManager->setTiles(g->input->mouseWorldPos,
+                                                    selection.selectedTile1,
+                                                    selection.selectedTile2, selectedWorldLayer);
+            } else {
+                auto pos = g->input->mouseWorldPos;
+                g->gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
+                                                   selectedWorldLayer);
+            }
         } else if (g->input->rMouseDown()) {
             auto pos = g->input->mouseWorldPos;
-            g->gameState->tileManager->removeTile(pos.x, pos.y);
+            g->gameState->tileManager->removeTile(pos.x, pos.y, selectedWorldLayer);
         }
 
         if (actionJustPressed(g->gameState, g->input, SAVE_WORLD)) {
@@ -204,9 +217,23 @@ void handleInput() {
 
         if (g->input->lMouseJustPressed()) {
             auto mousePos = g->input->mouseUIpos;
-            selectedTile = {(u8)mousePos.x, (u8)mousePos.y};
-            selectedTile.atlasIdx = WORLD_ATLAS;
-            SDL_Log("SELECTED TILE: %d %d", selectedTile.x, selectedTile.y);
+            selection.selectedTile1 = {(u8)mousePos.x, (u8)mousePos.y};
+            selection.selectedTile1.atlasIdx = WORLD_ATLAS;
+            SDL_Log("SELECTED TILE1: %d %d", selection.selectedTile1.x, selection.selectedTile1.y);
+        } else if (g->input->lMouseJustReleased()) {
+            auto mousePos = g->input->mouseUIpos;
+
+            auto selected1 = selection.selectedTile1;
+
+            if (selected1.x != (u8)mousePos.x || selected1.y != (u8)mousePos.y) {
+                selection.selectedTile2.x = mousePos.x;
+                selection.selectedTile2.y = mousePos.y;
+                selection.selectedTile2.atlasIdx = WORLD_ATLAS;
+            } else {
+                selection.selectedTile2 = {0};
+            }
+
+            SDL_Log("SELECTED TILE2: %d %d", selection.selectedTile2.x, selection.selectedTile2.y);
         }
 
         if (actionDown(g->gameState, g->input, MOVE_UP)) {

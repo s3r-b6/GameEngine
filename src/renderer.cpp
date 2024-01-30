@@ -178,8 +178,44 @@ void ui_drawText(RenderData *renderData, vec2 pos, float fontSize, const char *t
     }
 }
 
-void ui_drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
-    Sprite sp = getTile(x, y, atlasIdx);
+void drawTileGroup(RenderData *renderData, glm::vec2 tile1, glm::vec2 tile2, u8 atlasIdx,
+                   glm::ivec2 pos) {
+    int xDiff = tile2.x - tile1.x + 1;
+    int ySpan = tile2.y - tile1.y + 1;
+
+    Sprite sp = getTile(tile1.x, tile1.y, atlasIdx);
+    Transform t = {
+        .atlasOffset = sp.atlasOffset,
+        .spriteSize = {xDiff * 16, ySpan * 16},
+        .pos = pos,
+        .size = {xDiff * 16, ySpan * 16},
+
+        .atlasIdx = sp.atlasIdx,
+    };
+
+    renderData->transforms[renderData->transformCount++] = t;
+}
+
+void ui_drawTileGroup(RenderData *renderData, glm::vec2 tile1, glm::vec2 tile2, u8 atlasIdx,
+                      glm::ivec2 pos) {
+    int xDiff = tile2.x - tile1.x + 1;
+    int ySpan = tile2.y - tile1.y + 1;
+
+    Sprite sp = getTile(tile1.x, tile1.y, atlasIdx);
+    Transform t = {
+        .atlasOffset = sp.atlasOffset,
+        .spriteSize = {xDiff * 16, ySpan * 16},
+        .pos = pos,
+        .size = {xDiff * 16, ySpan * 16},
+
+        .atlasIdx = sp.atlasIdx,
+    };
+
+    renderData->uiTransforms[renderData->uiTransformCount++] = t;
+}
+
+void ui_drawTile(RenderData *renderData, glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
+    Sprite sp = getTile(tile.x, tile.y, atlasIdx);
 
     Transform t = {
         .atlasOffset = sp.atlasOffset,

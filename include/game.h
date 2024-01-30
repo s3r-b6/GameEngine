@@ -75,7 +75,12 @@ struct Tile {
     }
 };
 
-global Tile selectedTile = {0};
+struct TileSelection {
+    Tile selectedTile1;
+    Tile selectedTile2;
+};
+
+global TileSelection selection = {0};
 
 struct TileManager {
     static constexpr int size = WORLD_SIZE_x * WORLD_SIZE_y;
@@ -158,9 +163,12 @@ struct TileManager {
         }
     }
 
-    void removeTile(int x, int y) {
-        worldGridLayer0[(y * WORLD_SIZE_x) + x].atlasIdx = 0;
-        worldGridLayer1[(y * WORLD_SIZE_x) + x].atlasIdx = 0;
+    void removeTile(int x, int y, int selectedLayer) {
+        if (selectedLayer == 0) {
+            worldGridLayer0[(y * WORLD_SIZE_x) + x].atlasIdx = 0;
+        } else {
+            worldGridLayer1[(y * WORLD_SIZE_x) + x].atlasIdx = 0;
+        }
     }
     void setTile(int x, int y, Tile t, u8 layer) {
         Tile tile = {};
@@ -171,6 +179,24 @@ struct TileManager {
             worldGridLayer0[(y * WORLD_SIZE_x) + x] = tile;
         } else {
             worldGridLayer1[(y * WORLD_SIZE_x) + x] = tile;
+        }
+    }
+
+    void setTiles(glm::vec2 pos, Tile t1, Tile t2, u8 layer) {
+        for (int x = 0; x <= t2.x - t1.x; x++) {
+            for (int y = 0; y <= t2.y - t1.y; y++) {
+                Tile tile = {};
+                tile.x = t1.x + x, tile.y = t1.y + y;
+                tile.atlasIdx = t1.atlasIdx;
+
+                int xPos = pos.x + x, yPos = pos.y + y;
+
+                if (layer == 0) {
+                    worldGridLayer0[(yPos * WORLD_SIZE_x) + xPos] = tile;
+                } else {
+                    worldGridLayer1[(yPos * WORLD_SIZE_x) + xPos] = tile;
+                }
+            }
         }
     }
 };

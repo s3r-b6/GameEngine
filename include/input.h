@@ -33,17 +33,20 @@ struct Input {
     const u8 *keyboardState;
 
     inline bool lMouseJustPressed() { return mouseInWindow && mouseState[0] && !prevMouseState[0]; }
+    inline bool lMouseJustReleased() {
+        return mouseInWindow && !mouseState[0] && prevMouseState[0];
+    }
 
-    inline bool rMouseJustPressed() { return mouseInWindow && mouseState[1] && !prevMouseState[1]; }
-    inline bool mMouseJustPressed() { return mouseInWindow && mouseState[2] && !prevMouseState[2]; }
+    inline bool mMouseJustPressed() { return mouseInWindow && mouseState[1] && !prevMouseState[1]; }
+    inline bool rMouseJustPressed() { return mouseInWindow && mouseState[2] && !prevMouseState[2]; }
 
     inline bool lMouseDown() { return mouseInWindow && mouseState[0]; }
-    inline bool rMouseDown() { return mouseInWindow && mouseState[1]; }
-    inline bool mMouseDown() { return mouseInWindow && mouseState[2]; }
+    inline bool mMouseDown() { return mouseInWindow && mouseState[1]; }
+    inline bool rMouseDown() { return mouseInWindow && mouseState[2]; }
 
     inline bool lMouseUp() { return mouseInWindow && !mouseState[0]; }
-    inline bool rMouseUp() { return mouseInWindow && !mouseState[1]; }
-    inline bool mMouseUp() { return mouseInWindow && !mouseState[2]; }
+    inline bool mMouseUp() { return mouseInWindow && !mouseState[1]; }
+    inline bool rMouseUp() { return mouseInWindow && !mouseState[2]; }
 
     inline bool keyIsUp(SDL_Keycode kc) { return !keyboardState[SDL_GetScancodeFromKey(kc)]; }
     inline bool keyIsDown(SDL_Keycode kc) { return keyboardState[SDL_GetScancodeFromKey(kc)]; }
