@@ -1,8 +1,14 @@
 # This should run from inside ./build
 if [[ $(pwd) != *"build" ]]; then
-	echo "Running from wrong directory!"
-	echo "Should be running from ./build..."
-	exit 1
+    echo "Not running from build directory."
+    echo "Attempting to change directory to build..."
+
+    if cd build; then
+        echo "Successfully changed to build directory."
+    else
+        echo "Failed to change to build directory. Aborting script."
+        exit 1
+    fi
 fi
 
 include=(-I../deps/)

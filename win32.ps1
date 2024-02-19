@@ -20,13 +20,21 @@ $flags = (
     "-pipe"
 )
 
+# TODO: check this... I am running linux and don't have pwsh
 $current_directory = Get-Location
 
-if ($current_directory -notlike "*\build")
-{
-    Write-Host "Running from wrong directory $current_directory"
-    Write-Host "Should be running from .\build..."
-    exit 1
+if ($current_directory -notlike "*\build") {
+    Write-Host "Not running from build directory."
+    Write-Host "Attempting to change directory to build..."
+
+    $build_directory = Join-Path $current_directory "build"
+    if (Test-Path $build_directory) {
+        Set-Location $build_directory
+        Write-Host "Successfully changed to build directory."
+    } else {
+        Write-Host "Failed to change to build directory. Aborting script."
+        exit 1
+    }
 }
 
 if (-not (Test-Path ".\SDL2.dll"))
