@@ -1,4 +1,5 @@
 # This script should be run from inside the .\build directory
+#
 $include = ( "-I..\deps\",
     "-I..\deps\glad\",
     "-I..\deps\freetype2\",
@@ -10,24 +11,6 @@ $include = ( "-I..\deps\",
 $libs = (
     "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2",
     "-lfreetype"
-)
-
-$sources_main = (
-    "..\src\main.cpp",
-    "..\src\win32_platform.cpp",
-    "..\src\initialization.cpp",
-    "..\src\assets.cpp",
-    "../src/fonts.cpp",
-    "..\src\renderer.cpp",
-    "..\deps\glad\glad.c"
-)
-
-$sources_game = (
-    "..\src\assets.cpp",
-    "..\src\renderer.cpp",
-    "../src/fonts.cpp",
-    "..\src\win32_platform.cpp",
-    "..\deps\glad\glad.c"
 )
 
 $flags = (
@@ -69,7 +52,7 @@ if ($gamesrc_stamp -gt $gameobj_stamp)
     Write-Host "Game.cpp file is newer. Recompiling..."
     Remove-Item .\game_* -ErrorAction SilentlyContinue 
     Remove-Item .\game.dll -ErrorAction SilentlyContinue 
-    g++ -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\game.cpp $sources_game
+    g++ -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\build_game.cpp
     Write-Host "Renaming game_$timestamp.dll to game.dll"
     Rename-Item -Path ".\game_$timestamp.dll" -NewName ".\game.dll"
 } else
@@ -82,7 +65,7 @@ if (-not (Get-Process -Name "game" -ErrorAction SilentlyContinue))
     Write-Host "Game is not running"
     Write-Host "Compiling main.cpp..."
     Remove-Item .\game.exe -ErrorAction SilentlyContinue 
-    g++ $include $libs $flags -o game.exe $sources_main
+    g++ $include $libs $flags -o game.exe ../src/build_engine.cpp
 } else
 {
     Write-Host "Game is running, skipping main.cpp..."
