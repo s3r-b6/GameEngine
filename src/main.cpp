@@ -9,6 +9,7 @@
 #include "./input.h"
 
 #include "./fonts.h"
+#include "renderer.h"
 
 // NOTE: g is the GlobalState object
 

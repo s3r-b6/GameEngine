@@ -43,6 +43,8 @@ struct GlobalState;
 struct GameState;
 struct KeyState;
 
+struct OrthographicCamera;
+
 // KeyCodes
 #include "SDL2/SDL_keycode.h"
 

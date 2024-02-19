@@ -11,9 +11,6 @@ struct GlobalState {
     Input *input;
 };
 
-// global BumpAllocator *permStorage = (BumpAllocator *)new BumpAllocator(MB(10));
-// global BumpAllocator *tempStorage = (BumpAllocator *)new BumpAllocator(MB(10));
-
 global BumpAllocator *permStorage;
 global BumpAllocator *tempStorage;
 

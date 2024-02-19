@@ -1,10 +1,13 @@
 #pragma once
 
-#include "./platform.h"
-#include "./renderer.h"
-#include "./types.h"
-#include "SDL2/SDL_keyboard.h"
 #include <cstdio>
+
+#include "SDL2/SDL_keyboard.h"
+
+#include "./platform.h"
+#include "./types.h"
+
+#include "./game_render.h"
 
 struct EntityManager;
 struct TileManager;

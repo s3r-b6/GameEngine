@@ -7,11 +7,11 @@
 #include "./engine_lib.h"
 #include "./globals.h"
 
-#include "./entities.h"
-#include "./input.h"
+#include "./game_render.h"
 #include "./renderer.h"
 
-// NOTE: g is the GlobalState object
+#include "./entities.h"
+#include "./input.h"
 
 global double updateTimer;
 global u64 frame;

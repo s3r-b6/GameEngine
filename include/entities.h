@@ -5,9 +5,9 @@
 
 #include "SDL2/SDL_log.h"
 
-#include "./assets.h"
-#include "./renderer.h"
 #include "./types.h"
+
+#include "./game_render.h"
 
 #include "./globals.h"
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./assets.h"
 #include "./types.h"
 
 #include <glad.h>
@@ -24,8 +23,24 @@ struct OrthographicCamera {
     vec2 pos;
     vec2 dimensions;
 
-    mat4x4 getProjectionMatrix(int width, int height);
-    ivec2 getMousePosInWorld(ivec2 mousePos, ivec2 screenSize);
+    mat4x4 getProjectionMatrix(int width, int height) {
+        float left = pos.x - dimensions.x / 2.0;
+        float right = pos.x + dimensions.x / 2.0;
+        float top = pos.y - dimensions.y / 2.0;
+        float bottom = pos.y + dimensions.y / 2.0;
+
+        return glm::ortho(left, right, bottom, top);
+    }
+
+    ivec2 getMousePosInWorld(ivec2 mousePos, ivec2 screenSize) {
+        int xPos = (float)mousePos.x / (float)screenSize.x * dimensions.x;
+        xPos += -dimensions.x / 2.0f + pos.x;
+
+        int yPos = (float)mousePos.y / (float)screenSize.y * dimensions.y;
+        yPos += -dimensions.y / 2.0f + pos.y;
+
+        return ivec2(xPos, yPos) / TILESIZE;
+    }
 };
 
 struct Glyph {
@@ -64,14 +79,5 @@ struct GLContext {
 };
 
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx);
-void drawSprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::vec2 size);
-void drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos);
-
 void render(GlobalState *g);
 void ui_render(glm::mat4x4 proj, GlobalState *g, glm::vec2 screenSize);
-
-void ui_drawTextFormatted(RenderData *renderData, vec2 pos, float fontSize, const char *text, ...);
-void ui_drawText(RenderData *renderData, vec2 pos, float fontSize, const char *text);
-void ui_drawTileGroup(RenderData *renderData, glm::vec2 tile1, glm::vec2 tile2, u8 atlasIdx,
-                      glm::ivec2 pos);
-void ui_drawTile(RenderData *renderData, glm::vec2 tile, u8 atlasIdx, glm::vec2 pos);
