@@ -42,7 +42,7 @@ struct ColliderComponent : EntityComponentBase {
         bool collX = transform->pos.x + transform->size.x >= otherPos.x &&
                      otherPos.x + otherSize.x >= transform->pos.x;
         bool collY = transform->pos.y + transform->size.y >= otherPos.y &&
-                     otherPos.y + otherSize.y >= transform->pos.x;
+                     otherPos.y + otherSize.y >= transform->pos.y;
 
         return collX && collY;
     }
