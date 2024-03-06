@@ -11,6 +11,7 @@
 #include "./game_render.h"
 
 #include "./globals.h"
+#include "engine_lib.h"
 
 using std::shared_ptr;
 using std::vector;
@@ -37,10 +38,10 @@ struct TransformComponent : EntityComponentBase {
 
 // AABB collisions
 struct ColliderComponent : EntityComponentBase {
-    shared_ptr<TransformComponent> transform;
+    TransformComponent *transform;
     glm::vec2 size;
 
-    ColliderComponent(shared_ptr<TransformComponent> t, glm::vec2 s) {
+    ColliderComponent(TransformComponent *t, glm::vec2 s) {
         transform = t;
         size = s;
     }
@@ -67,15 +68,14 @@ struct ColliderComponent : EntityComponentBase {
 // TODO: Maybe look into a Messaging System
 struct SpriteRenderer : EntityComponentBase {
     SpriteID sprite;
-    shared_ptr<TransformComponent> transformComponent;
+    TransformComponent *transformComponent;
 
     RenderData *renderData;
 
     SpriteRenderer(RenderData *renderDataIn, SpriteID spriteIn, glm::vec2 sizeIn,
-                   shared_ptr<TransformComponent> transform) {
+                   TransformComponent *transform) {
         sprite = spriteIn;
         transformComponent = transform;
-
         renderData = renderDataIn;
     }
 
@@ -87,11 +87,25 @@ struct SpriteRenderer : EntityComponentBase {
 };
 
 struct Entity {
-    vector<shared_ptr<EntityComponentBase>> components;
+    bool initialized = false;
+    vector<EntityComponentBase *> components;
 
-    template <typename T> shared_ptr<T> findComponent() {
+    bool clear() {
+        if (!initialized) { crash("Tried to clear an uninitialized component"); }
+
+        for (auto c : components) {
+            free(c);
+        }
+
+        components.clear();
+        initialized = false;
+
+        return true;
+    }
+
+    template <typename T> T *findComponent() {
         for (const auto &component : components) {
-            shared_ptr<T> castedComponent = std::dynamic_pointer_cast<T>(component);
+            T *castedComponent = dynamic_cast<T *>(component);
             if (castedComponent) { return castedComponent; }
         }
 
@@ -113,13 +127,13 @@ struct Entity {
 
 struct EntityManager {
     // Like a hashmap but allows for repeated keys
-    std::multimap<char *, shared_ptr<Entity>> entities;
+    std::multimap<char *, Entity *> entities;
 
-    void addEntity(char *name, shared_ptr<Entity> entity) {
-        entities.insert(std::pair<char *, shared_ptr<Entity>>(name, entity));
+    void addEntity(char *name, Entity *entity) {
+        entities.insert(std::pair<char *, Entity *>(name, entity));
     }
 
-    shared_ptr<Entity> querySingleEntity(char *name) {
+    Entity *querySingleEntity(char *name) {
         auto it = entities.find(name);
         if (it != entities.end()) return it->second;
 
@@ -127,8 +141,8 @@ struct EntityManager {
         return nullptr;
     }
 
-    std::vector<shared_ptr<Entity>> queryEntities(char *name) {
-        vector<shared_ptr<Entity>> result;
+    std::vector<Entity *> queryEntities(char *name) {
+        vector<Entity *> result;
 
         auto range = entities.equal_range(name);
         for (auto it = range.first; it != range.second; ++it)

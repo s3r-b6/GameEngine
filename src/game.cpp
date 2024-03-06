@@ -28,10 +28,10 @@ global GameState *gameState;
 global Input *input;
 global TileSelection selection;
 
-global std::shared_ptr<Entity> player;
-global std::shared_ptr<TransformComponent> transform;
-global std::shared_ptr<SpriteRenderer> spriteRenderer;
-global std::shared_ptr<ColliderComponent> collider;
+global Entity *player;
+global TransformComponent *transform;
+global SpriteRenderer *spriteRenderer;
+global ColliderComponent *collider;
 
 global bool helpShown = false;
 
@@ -132,11 +132,10 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 // component and an entity manager for an specific entity (maybe ID?)
 void loadEntities() {
     if (gameState->entityManager->entities.size() == 0) {
-        player = std::make_shared<Entity>();
-        transform = std::make_shared<TransformComponent>(glm::vec2(0, 0), glm::vec2(16, 32));
-        spriteRenderer =
-            std::make_shared<SpriteRenderer>(renderData, Player, glm::vec2(16, 32), transform);
-        collider = std::make_shared<ColliderComponent>(transform, glm::vec2(16, 20));
+        player = new Entity();
+        transform = new TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
+        spriteRenderer = new SpriteRenderer(renderData, Player, glm::vec2(16, 32), transform);
+        collider = new ColliderComponent(transform, glm::vec2(16, 20));
 
         player->components.push_back(transform);
         player->components.push_back(spriteRenderer);
