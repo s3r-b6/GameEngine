@@ -2,7 +2,7 @@
 local is_windows = package.config:sub(1, 1) == '\\'
 
 if is_windows then
-	vim.keymap.set('n', "<F5>", ":!./win32.ps1<CR>")
+	vim.keymap.set('n', ",c", ":!./win32.ps1<CR>", { desc = "Compile" })
 else
-	vim.keymap.set('n', "<F5>", ":!./linux.sh<CR>")
+	vim.keymap.set('n', ",c", ":!./linux.sh<CR>", { desc = "Compile" })
 end

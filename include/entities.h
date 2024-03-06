@@ -24,13 +24,36 @@ struct EntityComponentBase {
 };
 
 struct TransformComponent : EntityComponentBase {
-    glm::vec2 pos;
+    glm::vec2 pos, size;
 
-    explicit TransformComponent(glm::vec2 posIn) { pos = posIn; }
+    TransformComponent(glm::vec2 posIn, glm::vec2 sizeIn) { pos = posIn, size = sizeIn; }
 
-    void setPos(float x, float y) {
-        pos = {x, y};
-        // SDL_Log("New pos: %f %f", pos.x, pos.y);
+    void setPos(glm::vec2 posIn) { pos = posIn; }
+    void setSize(glm::vec2 sizeIn) { size = sizeIn; }
+};
+
+// AABB collisions
+struct ColliderComponent : EntityComponentBase {
+    shared_ptr<TransformComponent> transform;
+
+    explicit ColliderComponent(shared_ptr<TransformComponent> t) { transform = t; }
+
+    bool check_collision(glm::vec2 otherPos, glm::vec2 otherSize) {
+        bool collX = transform->pos.x + transform->size.x >= otherPos.x &&
+                     otherPos.x + otherSize.x >= transform->pos.x;
+        bool collY = transform->pos.y + transform->size.y >= otherPos.y &&
+                     otherPos.y + otherSize.y >= transform->pos.x;
+
+        return collX && collY;
+    }
+
+    bool check_collision(TransformComponent *other) {
+        bool collX = transform->pos.x + transform->size.x >= other->pos.x &&
+                     other->pos.x + other->size.x >= transform->pos.x;
+        bool collY = transform->pos.y + transform->size.y >= other->pos.y &&
+                     other->pos.y + other->size.y >= transform->pos.x;
+
+        return collX && collY;
     }
 };
 
@@ -41,23 +64,18 @@ struct SpriteRenderer : EntityComponentBase {
 
     RenderData *renderData;
 
-    glm::vec2 size;
-
     SpriteRenderer(RenderData *renderDataIn, SpriteID spriteIn, glm::vec2 sizeIn,
                    shared_ptr<TransformComponent> transform) {
         sprite = spriteIn;
         transformComponent = transform;
 
         renderData = renderDataIn;
-
-        size = sizeIn;
     }
 
     void render() override {
-        // SDL_Log("Trying to render at %f %f, spriteID %d, size %f %f",
-        //         transformComponent->pos.x, transformComponent->pos.y, sprite,
-        //         size.x, size.y);
-        drawSprite(renderData, sprite, transformComponent->pos, size);
+        // SDL_Log("Trying to render at %f %f, spriteID %d, size %f %f", transformComponent->pos.x,
+        // transformComponent->pos.y, sprite, size.x, size.y);
+        drawSprite(renderData, sprite, transformComponent->pos, transformComponent->size);
     }
 };
 

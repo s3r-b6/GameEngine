@@ -27,16 +27,26 @@ global RenderData *renderData;
 global GameState *gameState;
 global Input *input;
 
+global std::shared_ptr<Entity> player;
+global std::shared_ptr<TransformComponent> transform;
+global std::shared_ptr<SpriteRenderer> spriteRenderer;
+global std::shared_ptr<ColliderComponent> collider;
+
+// TODO: This is a placeholder
+// I should Implement a way of asking an entity for a specific type of
+// component and an entity manager for an specific entity (maybe ID?)
 void loadEntities() {
     if (gameState->entityManager->entities.size() == 0) {
-        auto playerEntity = std::make_shared<Entity>();
-        auto transformComponent = std::make_shared<TransformComponent>(glm::vec2(0, 0));
-        auto spriteRenderer = std::make_shared<SpriteRenderer>(
-            renderData, Player, glm::vec2(16, 32), transformComponent);
+        player = std::make_shared<Entity>();
+        transform = std::make_shared<TransformComponent>(glm::vec2(0, 0), glm::vec2(16, 32));
+        spriteRenderer =
+            std::make_shared<SpriteRenderer>(renderData, Player, glm::vec2(16, 32), transform);
+        collider = std::make_shared<ColliderComponent>(transform);
 
-        playerEntity->components.push_back(transformComponent);
-        playerEntity->components.push_back(spriteRenderer);
-        gameState->entityManager->entities.push_back(playerEntity);
+        player->components.push_back(transform);
+        player->components.push_back(spriteRenderer);
+        player->components.push_back(collider);
+        gameState->entityManager->entities.push_back(player);
     }
 }
 
@@ -113,6 +123,10 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 
         ui_drawText(renderData, {20, 190}, 0.1, "TEST");
         ui_drawText(renderData, {50, 50}, 0.2, "TEST");
+
+        ui_drawTextFormatted(renderData, {300, 250}, 0.3, "playerPos:{%.2f, %.2f}",
+                             transform->pos.x, transform->pos.y);
+
         ui_drawTextFormatted(renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
         ui_drawTextFormatted(renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
                              selection.selectedTile1.x, selection.selectedTile1.y,
@@ -167,40 +181,38 @@ void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
 }
 
 void simulate() {
-    local_persist std::shared_ptr<Entity> entity;
-    local_persist std::shared_ptr<EntityComponentBase> component;
-    local_persist std::shared_ptr<TransformComponent> transformComponent;
+    if (!player) { crash("ERROR getting the player"); }
+    if (!transform) { crash("ERROR getting the transform"); }
+    if (!collider) { crash("ERROR getting the collider"); }
 
-    // TODO: This is a placeholder
-    // I should Implement a way of asking an entity for a specific type of
-    // component and an entity manager for an specific entity (maybe ID?)
-    if (!entity) {
-        entity = gameState->entityManager->entities.at(0);
-        component = entity->components.at(0);
-        transformComponent = std::dynamic_pointer_cast<TransformComponent>(component);
-    }
+    if (pickerShown) return;
 
-    if (!pickerShown) {
-        if (transformComponent) {
-            auto pos = transformComponent->pos;
+    for (int i = 0; i < gameState->tileManager->size; i++) {
+        int x = i % WORLD_SIZE_x;
+        int y = i / WORLD_SIZE_x;
 
-            if (actionDown(gameState, input, MOVE_UP)) {
-                pos.y -= playerSpeed;
-            } else if (actionDown(gameState, input, MOVE_DOWN)) {
-                pos.y += playerSpeed;
-            }
+        auto tile = gameState->tileManager->worldGridLayer1[i];
 
-            if (actionDown(gameState, input, MOVE_RIGHT)) {
-                pos.x -= playerSpeed;
-            } else if (actionDown(gameState, input, MOVE_LEFT)) {
-                pos.x += playerSpeed;
-            }
-
-            transformComponent->setPos(pos.x, pos.y);
-        } else {
-            SDL_Log("The component is not a TransformComponent.");
+        if (!tile.atlasIdx) { continue; }
+        if (collider->check_collision({x * TILESIZE, y * TILESIZE}, {16, 16})) {
+            SDL_Log("Collision at %d %d", x, y);
         }
     }
+
+    auto pos = transform->pos;
+    if (actionDown(gameState, input, MOVE_UP)) {
+        pos.y -= playerSpeed;
+    } else if (actionDown(gameState, input, MOVE_DOWN)) {
+        pos.y += playerSpeed;
+    }
+
+    if (actionDown(gameState, input, MOVE_RIGHT)) {
+        pos.x -= playerSpeed;
+    } else if (actionDown(gameState, input, MOVE_LEFT)) {
+        pos.x += playerSpeed;
+    }
+    transform->setPos({pos.x, pos.y});
+
     gameState->entityManager->update();
 }
 
@@ -282,6 +294,7 @@ void handleInput() {
                         selection.selectedTile1.y, selection.selectedTile2.x,
                         selection.selectedTile2.y);
             } else {
+                selection.selectedTile1.atlasIdx = WORLD_ATLAS;
                 selection.selectedTile2 = {0};
                 SDL_Log("SELECTED TILE: {%d %d}", selection.selectedTile1.x,
                         selection.selectedTile1.y);
@@ -293,9 +306,9 @@ void handleInput() {
         } else if (actionDown(gameState, input, MOVE_DOWN)) {
             renderData->uiCamera.pos.y += 16;
         }
-        if (actionDown(gameState, input, MOVE_RIGHT)) {
+        if (!pickerShown && actionDown(gameState, input, MOVE_RIGHT)) {
             renderData->uiCamera.pos.x -= 16;
-        } else if (actionDown(gameState, input, MOVE_LEFT)) {
+        } else if (!pickerShown && actionDown(gameState, input, MOVE_LEFT)) {
             renderData->uiCamera.pos.x += 16;
         }
     } else {
