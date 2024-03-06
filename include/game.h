@@ -15,10 +15,10 @@ struct TileManager;
 enum GameAction {
     UNKNOWN,
 
-    MOVE_UP,
-    MOVE_DOWN,
-    MOVE_LEFT,
-    MOVE_RIGHT,
+    MOVE_U,
+    MOVE_D,
+    MOVE_L,
+    MOVE_R,
     QUIT,
 
     TILE_1,
@@ -33,19 +33,6 @@ enum GameAction {
     RELOAD_WORLD,
 
     GAME_ACTION_COUNT,
-};
-
-struct GameState {
-    bool initialized;
-    SDL_Scancode gameBinds[GAME_ACTION_COUNT] = {};
-    bool actionsTriggered[GAME_ACTION_COUNT] = {false};
-
-    EntityManager *entityManager;
-    TileManager *tileManager;
-
-    inline void gameRegisterKey(GameAction action, SDL_Keycode kc) {
-        gameBinds[action] = SDL_GetScancodeFromKey(kc);
-    }
 };
 
 struct Tile {
@@ -83,7 +70,20 @@ struct TileSelection {
     Tile selectedTile2;
 };
 
-global TileSelection selection = {0};
+struct GameState {
+    bool initialized;
+    SDL_Scancode gameBinds[GAME_ACTION_COUNT] = {};
+    bool actionsTriggered[GAME_ACTION_COUNT] = {false};
+
+    EntityManager *entityManager;
+    TileManager *tileManager;
+
+    TileSelection selection = {0};
+
+    inline void gameRegisterKey(GameAction action, SDL_Keycode kc) {
+        gameBinds[action] = SDL_GetScancodeFromKey(kc);
+    }
+};
 
 struct TileManager {
     static constexpr int size = WORLD_SIZE_x * WORLD_SIZE_y;

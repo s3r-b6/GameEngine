@@ -35,14 +35,18 @@ struct TransformComponent : EntityComponentBase {
 // AABB collisions
 struct ColliderComponent : EntityComponentBase {
     shared_ptr<TransformComponent> transform;
+    glm::vec2 size;
 
-    explicit ColliderComponent(shared_ptr<TransformComponent> t) { transform = t; }
+    ColliderComponent(shared_ptr<TransformComponent> t, glm::vec2 s) {
+        transform = t;
+        size = s;
+    }
 
-    bool check_collision(glm::vec2 otherPos, glm::vec2 otherSize) {
-        bool collX = transform->pos.x + transform->size.x >= otherPos.x &&
-                     otherPos.x + otherSize.x >= transform->pos.x;
-        bool collY = transform->pos.y + transform->size.y >= otherPos.y &&
-                     otherPos.y + otherSize.y >= transform->pos.y;
+    bool checkCollisions(glm::vec2 otherPos, glm::vec2 otherSize) {
+        bool collX =
+            transform->pos.x + size.x >= otherPos.x && otherPos.x + otherSize.x >= transform->pos.x;
+        bool collY =
+            transform->pos.y + size.y >= otherPos.y && otherPos.y + otherSize.y >= transform->pos.y;
 
         return collX && collY;
     }

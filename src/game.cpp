@@ -26,6 +26,7 @@ global GLContext *glContext;
 global RenderData *renderData;
 global GameState *gameState;
 global Input *input;
+global TileSelection selection;
 
 global std::shared_ptr<Entity> player;
 global std::shared_ptr<TransformComponent> transform;
@@ -41,7 +42,7 @@ void loadEntities() {
         transform = std::make_shared<TransformComponent>(glm::vec2(0, 0), glm::vec2(16, 32));
         spriteRenderer =
             std::make_shared<SpriteRenderer>(renderData, Player, glm::vec2(16, 32), transform);
-        collider = std::make_shared<ColliderComponent>(transform);
+        collider = std::make_shared<ColliderComponent>(transform, glm::vec2(16, 20));
 
         player->components.push_back(transform);
         player->components.push_back(spriteRenderer);
@@ -56,10 +57,10 @@ inline void initializeGameState() {
     renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
-    gameState->gameRegisterKey(MOVE_UP, 'w');
-    gameState->gameRegisterKey(MOVE_RIGHT, 'a');
-    gameState->gameRegisterKey(MOVE_DOWN, 's');
-    gameState->gameRegisterKey(MOVE_LEFT, 'd');
+    gameState->gameRegisterKey(MOVE_U, 'w');
+    gameState->gameRegisterKey(MOVE_R, 'a');
+    gameState->gameRegisterKey(MOVE_D, 's');
+    gameState->gameRegisterKey(MOVE_L, 'd');
     gameState->gameRegisterKey(TILE_1, '1');
     gameState->gameRegisterKey(TILE_2, '2');
     gameState->gameRegisterKey(TILE_3, '3');
@@ -97,6 +98,22 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         gameState = g->gameState;
         glContext = g->glContext;
         input = g->input;
+        selection = gameState->selection;
+
+        // Reload the entities and the components of the player...
+        // This is really dumb, but I have still to think about the EntityManager
+        if (gameState->initialized) {
+            player = gameState->entityManager->entities.at(0);
+
+            auto comp = player->components.at(0);
+            transform = std::dynamic_pointer_cast<TransformComponent>(comp);
+
+            comp = player->components.at(1);
+            spriteRenderer = std::dynamic_pointer_cast<SpriteRenderer>(comp);
+
+            comp = player->components.at(2);
+            collider = std::dynamic_pointer_cast<ColliderComponent>(comp);
+        }
     }
 
     if (!gameState->initialized) initializeGameState();
@@ -136,11 +153,12 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
                              {selection.selectedTile2.x, selection.selectedTile2.y},
                              selection.selectedTile1.atlasIdx, input->mouseWorldPos * TILESIZE);
             ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseWorldPos * TILESIZE);
-        } else {
+        } else if (selection.selectedTile1.atlasIdx) {
             ui_drawTile(renderData, {selection.selectedTile1.x, selection.selectedTile1.y},
                         selection.selectedTile1.atlasIdx, input->mouseWorldPos * TILESIZE);
-            ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseWorldPos * TILESIZE);
         }
+
+        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseWorldPos * TILESIZE);
     }
 
     if (pickerShown) { drawTilePicker(WORLD_ATLAS, (int)1440, 40); }
@@ -180,6 +198,21 @@ void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
     ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseUIpos * TILESIZE);
 }
 
+// I don't think I like this
+bool checkTileCollisions() {
+    for (int i = 0; i < gameState->tileManager->size; i++) {
+        int x = i % WORLD_SIZE_x;
+        int y = i / WORLD_SIZE_x;
+
+        auto tile = gameState->tileManager->worldGridLayer1[i];
+        if (!tile.atlasIdx) continue;
+
+        if (collider->checkCollisions({x * TILESIZE, y * TILESIZE}, {16, 16})) return true;
+    }
+
+    return false;
+}
+
 void simulate() {
     if (!player) { crash("ERROR getting the player"); }
     if (!transform) { crash("ERROR getting the transform"); }
@@ -187,31 +220,28 @@ void simulate() {
 
     if (pickerShown) return;
 
-    for (int i = 0; i < gameState->tileManager->size; i++) {
-        int x = i % WORLD_SIZE_x;
-        int y = i / WORLD_SIZE_x;
-
-        auto tile = gameState->tileManager->worldGridLayer1[i];
-
-        if (!tile.atlasIdx) { continue; }
-        if (collider->check_collision({x * TILESIZE, y * TILESIZE}, {16, 16})) {
-            SDL_Log("Collision at %d %d", x, y);
-        }
+    auto oldPos = transform->pos;
+    auto newPos = &transform->pos;
+    if (actionDown(gameState, input, MOVE_U)) {
+        newPos->y -= playerSpeed;
+    } else if (actionDown(gameState, input, MOVE_D)) {
+        newPos->y += playerSpeed;
     }
 
-    auto pos = transform->pos;
-    if (actionDown(gameState, input, MOVE_UP)) {
-        pos.y -= playerSpeed;
-    } else if (actionDown(gameState, input, MOVE_DOWN)) {
-        pos.y += playerSpeed;
+    // TODO: This is the dumbest way to allow for movement when it is not possible in 1 direction.
+    // this is horrible
+    if (checkTileCollisions()) { transform->setPos(oldPos); };
+    oldPos = transform->pos;
+
+    if (actionDown(gameState, input, MOVE_R)) {
+        newPos->x -= playerSpeed;
+    } else if (actionDown(gameState, input, MOVE_L)) {
+        newPos->x += playerSpeed;
     }
 
-    if (actionDown(gameState, input, MOVE_RIGHT)) {
-        pos.x -= playerSpeed;
-    } else if (actionDown(gameState, input, MOVE_LEFT)) {
-        pos.x += playerSpeed;
-    }
-    transform->setPos({pos.x, pos.y});
+    // TODO: This might be too naive (maybe somehow the player can end stuck forever inside a
+    // collision?
+    if (checkTileCollisions()) { transform->setPos(oldPos); };
 
     gameState->entityManager->update();
 }
@@ -224,7 +254,7 @@ void handleInput() {
             if (selection.selectedTile2.atlasIdx) {
                 gameState->tileManager->setTiles(input->mouseWorldPos, selection.selectedTile1,
                                                  selection.selectedTile2, selectedWorldLayer);
-            } else {
+            } else if (selection.selectedTile1.atlasIdx) {
                 auto pos = input->mouseWorldPos;
                 gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
                                                 selectedWorldLayer);
@@ -301,14 +331,14 @@ void handleInput() {
             }
         }
 
-        if (actionDown(gameState, input, MOVE_UP)) {
+        if (actionDown(gameState, input, MOVE_U)) {
             renderData->uiCamera.pos.y -= 16;
-        } else if (actionDown(gameState, input, MOVE_DOWN)) {
+        } else if (actionDown(gameState, input, MOVE_D)) {
             renderData->uiCamera.pos.y += 16;
         }
-        if (!pickerShown && actionDown(gameState, input, MOVE_RIGHT)) {
+        if (!pickerShown && actionDown(gameState, input, MOVE_R)) {
             renderData->uiCamera.pos.x -= 16;
-        } else if (!pickerShown && actionDown(gameState, input, MOVE_LEFT)) {
+        } else if (!pickerShown && actionDown(gameState, input, MOVE_L)) {
             renderData->uiCamera.pos.x += 16;
         }
     } else {
