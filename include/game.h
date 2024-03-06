@@ -213,3 +213,5 @@ void drawTilePicker();
 void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow);
 void handleInput();
 void simulate();
+
+void initializeGameState();

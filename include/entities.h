@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -22,6 +23,8 @@ struct EntityComponentBase {
     virtual void update() {}
     virtual void render() {}
 };
+
+struct BadComponent : EntityComponentBase {};
 
 struct TransformComponent : EntityComponentBase {
     glm::vec2 pos, size;
@@ -86,32 +89,66 @@ struct SpriteRenderer : EntityComponentBase {
 struct Entity {
     vector<shared_ptr<EntityComponentBase>> components;
 
-    void render() {
+    template <typename T> shared_ptr<T> findComponent() {
         for (const auto &component : components) {
-            component->render();
+            shared_ptr<T> castedComponent = std::dynamic_pointer_cast<T>(component);
+            if (castedComponent) { return castedComponent; }
         }
+
+        // Way too generic, might have to improve this
+        SDL_Log("Entity failed to find a component");
+        return nullptr;
+    }
+
+    void render() {
+        for (const auto &component : components)
+            component->render();
     }
 
     void update() {
-        for (const auto &component : components) {
+        for (const auto &component : components)
             component->update();
-        }
     }
 };
 
-// EntityManager class with a vector of shared pointers to Entity
 struct EntityManager {
-    vector<shared_ptr<Entity>> entities;
+    // Like a hashmap but allows for repeated keys
+    std::multimap<char *, shared_ptr<Entity>> entities;
+
+    void addEntity(char *name, shared_ptr<Entity> entity) {
+        entities.insert(std::pair<char *, shared_ptr<Entity>>(name, entity));
+    }
+
+    shared_ptr<Entity> querySingleEntity(char *name) {
+        auto it = entities.find(name);
+        if (it != entities.end()) return it->second;
+
+        SDL_Log("EntityManager failed to fint an entity '%s'", name);
+        return nullptr;
+    }
+
+    std::vector<shared_ptr<Entity>> queryEntities(char *name) {
+        vector<shared_ptr<Entity>> result;
+
+        auto range = entities.equal_range(name);
+        for (auto it = range.first; it != range.second; ++it)
+            result.push_back(it->second);
+
+        if (result.size() == 0)
+            SDL_Log("EntityManager returned empty vector querying for entities '%s'", name);
+
+        return result;
+    }
 
     void update() {
         for (const auto &entity : entities) {
-            entity->update();
+            entity.second->update();
         }
     }
 
     void render() {
         for (const auto &entity : entities) {
-            entity->render();
+            entity.second->render();
         }
     }
 };

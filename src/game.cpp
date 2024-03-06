@@ -33,56 +33,6 @@ global std::shared_ptr<TransformComponent> transform;
 global std::shared_ptr<SpriteRenderer> spriteRenderer;
 global std::shared_ptr<ColliderComponent> collider;
 
-// TODO: This is a placeholder
-// I should Implement a way of asking an entity for a specific type of
-// component and an entity manager for an specific entity (maybe ID?)
-void loadEntities() {
-    if (gameState->entityManager->entities.size() == 0) {
-        player = std::make_shared<Entity>();
-        transform = std::make_shared<TransformComponent>(glm::vec2(0, 0), glm::vec2(16, 32));
-        spriteRenderer =
-            std::make_shared<SpriteRenderer>(renderData, Player, glm::vec2(16, 32), transform);
-        collider = std::make_shared<ColliderComponent>(transform, glm::vec2(16, 20));
-
-        player->components.push_back(transform);
-        player->components.push_back(spriteRenderer);
-        player->components.push_back(collider);
-        gameState->entityManager->entities.push_back(player);
-    }
-}
-
-inline void initializeGameState() {
-    renderData->gameCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
-    renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
-    renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
-    renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
-
-    gameState->gameRegisterKey(MOVE_U, 'w');
-    gameState->gameRegisterKey(MOVE_R, 'a');
-    gameState->gameRegisterKey(MOVE_D, 's');
-    gameState->gameRegisterKey(MOVE_L, 'd');
-    gameState->gameRegisterKey(TILE_1, '1');
-    gameState->gameRegisterKey(TILE_2, '2');
-    gameState->gameRegisterKey(TILE_3, '3');
-    gameState->gameRegisterKey(LAYER_FRONT, 'f');
-    gameState->gameRegisterKey(LAYER_BACK, 'b');
-    gameState->gameRegisterKey(SAVE_WORLD, '8');
-    gameState->gameRegisterKey(DELETE_WORLD, '9');
-    gameState->gameRegisterKey(RELOAD_WORLD, '0');
-
-    loadEntities();
-
-    selection.selectedTile1.atlasIdx = WORLD_ATLAS;
-    selection.selectedTile1.x = 0;
-    selection.selectedTile1.y = 0;
-
-    if (gameState->tileManager->deserialize()) {
-        SDL_Log("Found previous world.data, loading the map");
-    }
-
-    gameState->initialized = true;
-}
-
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, float dt) {
     int fps = 1.f / dt;
@@ -100,19 +50,12 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         input = g->input;
         selection = gameState->selection;
 
-        // Reload the entities and the components of the player...
-        // This is really dumb, but I have still to think about the EntityManager
         if (gameState->initialized) {
-            player = gameState->entityManager->entities.at(0);
+            player = gameState->entityManager->querySingleEntity("player");
 
-            auto comp = player->components.at(0);
-            transform = std::dynamic_pointer_cast<TransformComponent>(comp);
-
-            comp = player->components.at(1);
-            spriteRenderer = std::dynamic_pointer_cast<SpriteRenderer>(comp);
-
-            comp = player->components.at(2);
-            collider = std::dynamic_pointer_cast<ColliderComponent>(comp);
+            transform = player->findComponent<TransformComponent>();
+            spriteRenderer = player->findComponent<SpriteRenderer>();
+            collider = player->findComponent<ColliderComponent>();
         }
     }
 
@@ -166,6 +109,56 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     releaseActions(gameState, input);
 
     frame += 1;
+}
+
+// TODO: This is a placeholder
+// I should Implement a way of asking an entity for a specific type of
+// component and an entity manager for an specific entity (maybe ID?)
+void loadEntities() {
+    if (gameState->entityManager->entities.size() == 0) {
+        player = std::make_shared<Entity>();
+        transform = std::make_shared<TransformComponent>(glm::vec2(0, 0), glm::vec2(16, 32));
+        spriteRenderer =
+            std::make_shared<SpriteRenderer>(renderData, Player, glm::vec2(16, 32), transform);
+        collider = std::make_shared<ColliderComponent>(transform, glm::vec2(16, 20));
+
+        player->components.push_back(transform);
+        player->components.push_back(spriteRenderer);
+        player->components.push_back(collider);
+        gameState->entityManager->addEntity("player", player);
+    }
+}
+
+inline void initializeGameState() {
+    renderData->gameCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
+    renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
+    renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
+    renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
+
+    gameState->gameRegisterKey(MOVE_U, 'w');
+    gameState->gameRegisterKey(MOVE_R, 'a');
+    gameState->gameRegisterKey(MOVE_D, 's');
+    gameState->gameRegisterKey(MOVE_L, 'd');
+    gameState->gameRegisterKey(TILE_1, '1');
+    gameState->gameRegisterKey(TILE_2, '2');
+    gameState->gameRegisterKey(TILE_3, '3');
+    gameState->gameRegisterKey(LAYER_FRONT, 'f');
+    gameState->gameRegisterKey(LAYER_BACK, 'b');
+    gameState->gameRegisterKey(SAVE_WORLD, '8');
+    gameState->gameRegisterKey(DELETE_WORLD, '9');
+    gameState->gameRegisterKey(RELOAD_WORLD, '0');
+
+    loadEntities();
+
+    selection.selectedTile1.atlasIdx = WORLD_ATLAS;
+    selection.selectedTile1.x = 0;
+    selection.selectedTile1.y = 0;
+
+    if (gameState->tileManager->deserialize()) {
+        SDL_Log("Found previous world.data, loading the map");
+    }
+
+    gameState->initialized = true;
 }
 
 // TODO: This can be obviously improved by drawing a single quad the size of the tilemap instead of
