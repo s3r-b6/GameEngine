@@ -15,6 +15,8 @@ struct TileManager;
 enum GameAction {
     UNKNOWN,
 
+    HELP,
+
     MOVE_U,
     MOVE_D,
     MOVE_L,

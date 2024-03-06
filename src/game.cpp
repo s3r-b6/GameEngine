@@ -33,6 +33,8 @@ global std::shared_ptr<TransformComponent> transform;
 global std::shared_ptr<SpriteRenderer> spriteRenderer;
 global std::shared_ptr<ColliderComponent> collider;
 
+global bool helpShown = false;
+
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, float dt) {
     int fps = 1.f / dt;
@@ -76,21 +78,35 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         simulate();
     }
 
+    if (helpShown) {
+        // This is a placeholder...
+        ui_drawTextFormatted(renderData, {20, 25}, 0.3, "%s: %c", "HELP", '/');
+        ui_drawTextFormatted(renderData, {20, 50}, 0.3, "%s: %c", "MOVE_UP", 'w');
+        ui_drawTextFormatted(renderData, {20, 75}, 0.3, "%s: %c", "MOVE_RIGHT", 'a');
+        ui_drawTextFormatted(renderData, {20, 100}, 0.3, "%s: %c", "MOVE_DOWN", 's');
+        ui_drawTextFormatted(renderData, {20, 125}, 0.3, "%s: %c", "MOVE_LEFT", 'd');
+        ui_drawTextFormatted(renderData, {20, 150}, 0.3, "%s: %c", "TILE_1", '1');
+        ui_drawTextFormatted(renderData, {20, 175}, 0.3, "%s: %c", "TILE_2", '2');
+        ui_drawTextFormatted(renderData, {20, 200}, 0.3, "%s: %c", "TILE_3", '3');
+        ui_drawTextFormatted(renderData, {20, 225}, 0.3, "%s: %c", "LAYER_FRONT", 'f');
+        ui_drawTextFormatted(renderData, {20, 250}, 0.3, "%s: %c", "LAYER_BACK", 'b');
+        ui_drawTextFormatted(renderData, {20, 275}, 0.3, "%s: %c", "SAVE_WORLD", '8');
+        ui_drawTextFormatted(renderData, {20, 300}, 0.3, "%s: %c", "DELETE_WORLD", '9');
+        ui_drawTextFormatted(renderData, {20, 325}, 0.3, "%s: %c", "RELOAD_WORLD", '0');
+    }
+
     if (!pickerShown) {
         gameState->tileManager->renderBack(renderData);
         gameState->entityManager->render();
         gameState->tileManager->renderFront(renderData);
 
-        ui_drawText(renderData, {20, 190}, 0.1, "TEST");
-        ui_drawText(renderData, {50, 50}, 0.2, "TEST");
-
-        ui_drawTextFormatted(renderData, {300, 250}, 0.3, "playerPos:{%.2f, %.2f}",
-                             transform->pos.x, transform->pos.y);
-
-        ui_drawTextFormatted(renderData, {300, 50}, 0.3, "FPS:%d DT:%f", fps, dt);
-        ui_drawTextFormatted(renderData, {200, 85}, 0.3, "Tile:{ %d, %d } Layer: %d",
+        ui_drawTextFormatted(renderData, {420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
+        ui_drawTextFormatted(renderData, {420, 30}, 0.2, "playerPos:{%.2f, %.2f}", transform->pos.x,
+                             transform->pos.y);
+        ui_drawTextFormatted(renderData, {420, 45}, 0.2, "Tile:{ %d, %d } Layer: %d",
                              selection.selectedTile1.x, selection.selectedTile1.y,
                              selectedWorldLayer);
+
         if (selection.selectedTile2.atlasIdx) {
             ui_drawTileGroup(renderData, {selection.selectedTile1.x, selection.selectedTile1.y},
                              {selection.selectedTile2.x, selection.selectedTile2.y},
@@ -135,6 +151,7 @@ inline void initializeGameState() {
     renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
+    gameState->gameRegisterKey(HELP, '/');
     gameState->gameRegisterKey(MOVE_U, 'w');
     gameState->gameRegisterKey(MOVE_R, 'a');
     gameState->gameRegisterKey(MOVE_D, 's');
@@ -242,6 +259,8 @@ void simulate() {
 // TODO: This is terrible. Instead I should have some kind of "action mode". F.ex., in UI
 // mode, check for all UI actions, and so on
 void handleInput() {
+    if (actionJustPressed(gameState, input, HELP)) { helpShown = !helpShown; }
+
     if (!pickerShown) {
         if (input->lMouseDown()) {
             if (selection.selectedTile2.atlasIdx) {
