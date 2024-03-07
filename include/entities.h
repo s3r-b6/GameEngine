@@ -68,15 +68,15 @@ struct ColliderComponent : EntityComponentBase {
 };
 
 struct AnimatedSpriteRenderer : EntityComponentBase {
+    bool active = true;
     AnimatedSpriteID sprite;
     TransformComponent *transformComponent;
-    int fps, maxFrames;
-    float *deltaTime;
+
+    int fps, maxFrames, currFrame;
+    float *deltaTime, timer;
 
     RenderData *renderData;
     SpriteID idleSprite = INVALID;
-
-    bool active = true;
 
     AnimatedSpriteRenderer(RenderData *renderDataIn, AnimatedSpriteID spriteIn, glm::vec2 sizeIn,
                            TransformComponent *transform, int fpsIn, float *dt, int framesIn,
@@ -88,25 +88,24 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
         deltaTime = dt;
         maxFrames = framesIn;
         idleSprite = idleSpriteIn;
+
+        timer = fps / TARGET_FPS;
+        currFrame = 0;
     }
 
     inline void setAnimatedSprite(AnimatedSpriteID spriteIn) { sprite = spriteIn; }
     inline void setActive(bool newState) { active = newState; }
 
     void render() override {
-        local_persist float timer;
-        local_persist int curr_frame;
-        if (!timer) { timer = fps / TARGET_FPS; }
-        if (!curr_frame) { curr_frame = 0; }
         timer -= *deltaTime;
 
         if (timer <= 0) {
-            if (++curr_frame >= maxFrames) curr_frame = 0;
+            if (++currFrame >= maxFrames) currFrame = 0;
             timer = fps / TARGET_FPS;
         }
         if (active) {
             drawAnimatedSprite(renderData, sprite, transformComponent->pos,
-                               transformComponent->size, curr_frame);
+                               transformComponent->size, currFrame);
         } else if (idleSprite != INVALID) {
             drawSprite(renderData, idleSprite, transformComponent->pos, transformComponent->size);
         } else {
