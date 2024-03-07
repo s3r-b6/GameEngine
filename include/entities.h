@@ -18,9 +18,6 @@
 using std::shared_ptr;
 using std::vector;
 
-// TODO: I'd like to use the bump allocators also here, but I have to think
-// about how to handle it
-
 struct EntityComponentBase {
     virtual ~EntityComponentBase() = default;
     virtual void update() {}
@@ -68,43 +65,46 @@ struct ColliderComponent : EntityComponentBase {
 };
 
 struct AnimatedSpriteRenderer : EntityComponentBase {
-    bool active = true;
-    AnimatedSpriteID sprite;
+    RenderData *renderData;
     TransformComponent *transformComponent;
 
-    int fps, maxFrames, currFrame;
-    float *deltaTime, timer;
+    bool animating = true;
 
-    RenderData *renderData;
+    AnimatedSpriteID animatedSprite;
     SpriteID idleSprite = INVALID;
+
+    int spritesPerSecond, maxFrames, currFrame;
+    float *deltaTime, timer;
 
     AnimatedSpriteRenderer(RenderData *renderDataIn, AnimatedSpriteID spriteIn, glm::vec2 sizeIn,
                            TransformComponent *transform, int fpsIn, float *dt, int framesIn,
                            SpriteID idleSpriteIn) {
-        sprite = spriteIn;
         transformComponent = transform;
         renderData = renderDataIn;
-        fps = fpsIn;
-        deltaTime = dt;
+
+        spritesPerSecond = fpsIn;
         maxFrames = framesIn;
+        animatedSprite = spriteIn;
         idleSprite = idleSpriteIn;
 
-        timer = fps / TARGET_FPS;
+        deltaTime = dt; // This is a reference to the float* dt global
+
+        timer = spritesPerSecond / TARGET_FPS;
         currFrame = 0;
     }
 
-    inline void setAnimatedSprite(AnimatedSpriteID spriteIn) { sprite = spriteIn; }
-    inline void setActive(bool newState) { active = newState; }
+    inline void setAnimatedSprite(AnimatedSpriteID spriteIn) { animatedSprite = spriteIn; }
+    inline void setActive(bool newState) { animating = newState; }
 
     void render() override {
         timer -= *deltaTime;
 
         if (timer <= 0) {
             if (++currFrame >= maxFrames) currFrame = 0;
-            timer = fps / TARGET_FPS;
+            timer = spritesPerSecond / TARGET_FPS;
         }
-        if (active) {
-            drawAnimatedSprite(renderData, sprite, transformComponent->pos,
+        if (animating) {
+            drawAnimatedSprite(renderData, animatedSprite, transformComponent->pos,
                                transformComponent->size, currFrame);
         } else if (idleSprite != INVALID) {
             drawSprite(renderData, idleSprite, transformComponent->pos, transformComponent->size);
@@ -139,9 +139,8 @@ struct Entity {
     bool clear() {
         if (!initialized) { crash("Tried to clear an uninitialized component"); }
 
-        for (auto c : components) {
+        for (auto c : components)
             free(c);
-        }
 
         components.clear();
         initialized = false;
@@ -171,14 +170,16 @@ struct Entity {
     }
 };
 
-// This is kind of cool, but I am not sure how to handle reutilizing entities
 struct EntityManager {
     std::vector<Entity *> entities;
     std::stack<u32> freeEntities;
 
     void init(u32 poolsize) {
+        // TODO: c++ vectors have a method to shrink... would be interesting
         entities = std::vector<Entity *>();
         freeEntities = std::stack<u32>();
+
+        entities.reserve(poolsize);
 
         for (u32 i = 0; i < poolsize; i++) {
             entities.push_back(new Entity());

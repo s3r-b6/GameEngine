@@ -87,6 +87,7 @@ struct GameState {
     }
 };
 
+// TODO: This is really bad. Should store n chunks instead of n individual tiles
 struct TileManager {
     static constexpr int size = WORLD_SIZE_x * WORLD_SIZE_y;
     Tile worldGridLayer0[size] = {0};
