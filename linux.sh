@@ -28,38 +28,19 @@ include+=(-lGL)
 
 flags=(-pipe -Wno-write-strings -D_REENTRANT)
 
-gamesrc_stamp=$(stat -c %Y ../src/game.cpp)
-gameobj_stamp=0  
-
-if [ -f "./game.so" ]; then
-    gameobj_stamp=$(stat -c %Y ./game.so)
-fi
-
-gamehdr_stamp=$(stat -c %Y ../include/game.h)
-assets_stamp=$(stat -c %Y ../src/assets.cpp)
-renderer_stamp=$(stat -c %Y ../src/renderer.cpp)
-
 echo "Trying to recompile game.cpp"
 # This is a bit naive, but for now is OKish
-if [ "$gamesrc_stamp" -gt "$gameobj_stamp"  ] ||
-   [ "$renderer_stamp" -gt "$gameobj_stamp" ] ||
-   [ "$gamehdr_stamp" -gt "$gameobj_stamp" ] ||
-   [ "$assets_stamp" -gt "$gameobj_stamp" ]; 
-then
-    timestamp=$(date '+%s')
-    echo "Game.cpp file is newer. Recompiling..."
-    echo "Compiling game_$timestamp.so..."
-    g++ -fPIC "${include[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/build_game.cpp
-    echo "Renaming game_$timestamp.so to game.so"
-    mv "./game_$timestamp.so" ./game.so
-else 
-    echo "Game.cpp file is not newer. No need to recompile."
-fi
+timestamp=$(date '+%s')
+echo "Recompiling game.cpp..."
+echo "Compiling game_$timestamp.so..."
+g++ -fPIC -g "${include[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/build_game.cpp
+echo "Renaming game_$timestamp.so to game.so"
+mv "./game_$timestamp.so" ./game.so
 
 if not pgrep game > /dev/null; then
     echo "Game is not running"
     echo "Compiling main.cpp..."
-    g++ "${include[@]}" "${flags[@]}" -o game.out ../src/build_engine.cpp
+    g++ -g "${include[@]}" "${flags[@]}" -o game.out ../src/build_engine.cpp
 else 
     echo "Game is running, skipping main.cpp..."
 fi
