@@ -14,6 +14,13 @@ struct Sprite {
     u8 atlasIdx;
 };
 
+enum AnimatedSpriteID {
+    PlayerD_Walk,
+    PlayerR_Walk,
+    PlayerL_Walk,
+    PlayerU_Walk,
+};
+
 enum SpriteID {
     Player,
     Chest,
@@ -26,5 +33,6 @@ enum TileID {
     TILE_COUNT,
 };
 
-Sprite get_sprite(SpriteID spriteID);
 Sprite getTile(u8 x, u8 y, u8 atlasIdx);
+Sprite get_sprite(SpriteID spriteID);
+Sprite get_animated_sprite(AnimatedSpriteID animatedSprite, int frame);

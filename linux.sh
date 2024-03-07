@@ -1,4 +1,6 @@
-# This should run from inside ./build
+#!/bin/bash 
+
+#This should run from inside ./build
 if [[ $(pwd) != *"build" ]]; then
     echo "Not running from build directory."
     echo "Attempting to change directory to build..."
@@ -31,13 +33,13 @@ flags=(-pipe -Wno-write-strings -D_REENTRANT)
 echo "Trying to recompile game.cpp"
 # This is a bit naive, but for now is OKish
 timestamp=$(date '+%s')
-echo "Recompiling game.cpp..."
+echo "Recompiling game logic..."
 echo "Compiling game_$timestamp.so..."
 g++ -fPIC -g "${include[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/build_game.cpp
 echo "Renaming game_$timestamp.so to game.so"
 mv "./game_$timestamp.so" ./game.so
 
-if not pgrep game > /dev/null; then
+if ! pgrep game > /dev/null; then
     echo "Game is not running"
     echo "Compiling main.cpp..."
     g++ -g "${include[@]}" "${flags[@]}" -o game.out ../src/build_engine.cpp

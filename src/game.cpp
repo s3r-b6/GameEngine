@@ -4,7 +4,6 @@
 
 #include "./game.h"
 
-#include "./engine_lib.h"
 #include "./globals.h"
 
 #include "./game_render.h"
@@ -12,6 +11,7 @@
 
 #include "./entities.h"
 #include "./input.h"
+#include "assets.h"
 
 global double updateTimer;
 global u64 frame;
@@ -31,14 +31,16 @@ global TileSelection selection;
 global u32 player_id;
 global Entity *player;
 global TransformComponent *transform;
-global SpriteRenderer *spriteRenderer;
+global AnimatedSpriteRenderer *spriteRenderer;
 global ColliderComponent *collider;
 
+global float deltaTime;
 global bool helpShown = false;
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, float dt) {
     int fps = 1.f / dt;
+    deltaTime = dt;
 
     // Since this is compiled as a separate dll, it holds its own static data
     if (g != globalStateIn) {
@@ -56,7 +58,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         if (gameState->initialized) {
             player = gameState->entityManager->entities[player_id];
             transform = player->findComponent<TransformComponent>();
-            spriteRenderer = player->findComponent<SpriteRenderer>();
+            spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
             collider = player->findComponent<ColliderComponent>();
         }
     }
@@ -132,7 +134,8 @@ void loadEntities() {
     player = gameState->entityManager->entities[player_id];
 
     transform = new TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
-    spriteRenderer = new SpriteRenderer(renderData, Player, glm::vec2(16, 32), transform);
+    spriteRenderer = new AnimatedSpriteRenderer(renderData, PlayerD_Walk, glm::vec2(16, 32),
+                                                transform, 12, &deltaTime, 4);
     collider = new ColliderComponent(transform, glm::vec2(16, 20));
 
     player->components.push_back(transform);

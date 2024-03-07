@@ -112,6 +112,22 @@ void drawSprite(RenderData *renderData, SpriteID spriteID, glm::vec2 pos, glm::v
     renderData->transforms[renderData->transformCount++] = t;
 }
 
+void drawAnimatedSprite(RenderData *renderData, AnimatedSpriteID spriteID, glm::vec2 pos,
+                        glm::vec2 size, int frame) {
+    Sprite sp = get_animated_sprite(spriteID, frame);
+
+    Transform t = {
+        .atlasOffset = sp.atlasOffset,
+        .spriteSize = sp.spriteSize,
+        .pos = pos,
+        .size = size,
+
+        .atlasIdx = sp.atlasIdx,
+    };
+
+    renderData->transforms[renderData->transformCount++] = t;
+}
+
 void drawTile(RenderData *renderData, u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
     Sprite sp = getTile(x, y, atlasIdx);
 

@@ -8,7 +8,8 @@
 #define local_persist static
 
 #define MAX_TEXTURES 8
-#define UPDATE_DELAY 1. / 60.
+#define TARGET_FPS 60.
+#define UPDATE_DELAY 1. / TARGET_FPS
 #define MAX_TRANSFORMS 2048
 
 #define WORLD_SIZE_x 640

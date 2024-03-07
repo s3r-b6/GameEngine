@@ -12,6 +12,7 @@
 #include "./game_render.h"
 
 #include "./globals.h"
+#include "assets.h"
 #include "engine_lib.h"
 
 using std::shared_ptr;
@@ -66,6 +67,41 @@ struct ColliderComponent : EntityComponentBase {
     }
 };
 
+struct AnimatedSpriteRenderer : EntityComponentBase {
+    AnimatedSpriteID sprite;
+    TransformComponent *transformComponent;
+    int fps, maxFrames;
+    float *deltaTime;
+
+    RenderData *renderData;
+
+    AnimatedSpriteRenderer(RenderData *renderDataIn, AnimatedSpriteID spriteIn, glm::vec2 sizeIn,
+                           TransformComponent *transform, int fpsIn, float *dt, int framesIn) {
+        sprite = spriteIn;
+        transformComponent = transform;
+        renderData = renderDataIn;
+        fps = fpsIn;
+        deltaTime = dt;
+        maxFrames = framesIn;
+    }
+
+    void render() override {
+        local_persist float timer;
+        local_persist int curr_frame;
+        if (!timer) { timer = fps / TARGET_FPS; }
+        if (!curr_frame) { curr_frame = 0; }
+        timer -= *deltaTime;
+
+        if (timer <= 0) {
+            if (++curr_frame >= maxFrames) curr_frame = 0;
+            timer = fps / TARGET_FPS;
+        }
+
+        drawAnimatedSprite(renderData, sprite, transformComponent->pos, transformComponent->size,
+                           curr_frame);
+    }
+};
+
 struct SpriteRenderer : EntityComponentBase {
     SpriteID sprite;
     TransformComponent *transformComponent;
@@ -80,8 +116,6 @@ struct SpriteRenderer : EntityComponentBase {
     }
 
     void render() override {
-        // SDL_Log("Trying to render at %f %f, spriteID %d, size %f %f", transformComponent->pos.x,
-        // transformComponent->pos.y, sprite, size.x, size.y);
         drawSprite(renderData, sprite, transformComponent->pos, transformComponent->size);
     }
 };
