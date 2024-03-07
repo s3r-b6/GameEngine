@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <stack>
 #include <vector>
 
 #include "SDL2/SDL_log.h"
@@ -65,7 +66,6 @@ struct ColliderComponent : EntityComponentBase {
     }
 };
 
-// TODO: Maybe look into a Messaging System
 struct SpriteRenderer : EntityComponentBase {
     SpriteID sprite;
     TransformComponent *transformComponent;
@@ -125,44 +125,69 @@ struct Entity {
     }
 };
 
+// This is kind of cool, but I am not sure how to handle reutilizing entities
 struct EntityManager {
-    // Like a hashmap but allows for repeated keys
-    std::multimap<char *, Entity *> entities;
+    std::vector<Entity *> entities;
+    std::stack<u32> freeEntities;
 
-    void addEntity(char *name, Entity *entity) {
-        entities.insert(std::pair<char *, Entity *>(name, entity));
+    void init(u32 poolsize) {
+        entities = std::vector<Entity *>();
+        freeEntities = std::stack<u32>();
+
+        for (u32 i = 0; i < poolsize; i++) {
+            entities.push_back(new Entity());
+            freeEntities.push(i);
+        }
     }
 
-    Entity *querySingleEntity(char *name) {
-        auto it = entities.find(name);
-        if (it != entities.end()) return it->second;
+    // This assumes that when you ask for an ID it is going to be initialized
+    // right then. This should be OK
+    u32 getUninitializedID() {
+        if (freeEntities.size() == 0) {
+            crash("Could not find a free entity");
+            return 0;
+        }
 
-        SDL_Log("EntityManager failed to fint an entity '%s'", name);
-        return nullptr;
+        u32 id = freeEntities.top();
+        entities[id]->initialized = true;
+        freeEntities.pop();
+        return id;
     }
 
-    std::vector<Entity *> queryEntities(char *name) {
-        vector<Entity *> result;
+    // Might fail if the id is not valid...
+    bool freeEntity(u32 id) {
+        entities[id]->clear();
+        freeEntities.push(id);
+        return true;
+    }
 
-        auto range = entities.equal_range(name);
-        for (auto it = range.first; it != range.second; ++it)
-            result.push_back(it->second);
+    // This is slower than freeing by ID, but might be useful?...
+    bool freeEntity(Entity *entity_ptr) {
+        int max = entities.size();
+        for (u32 i = 0; i < max; i++) {
+            Entity *original_ptr = entities[i];
+            if (original_ptr == entity_ptr) {
+                original_ptr->clear();
+                freeEntities.push(i);
+                return true;
+            }
+        }
 
-        if (result.size() == 0)
-            SDL_Log("EntityManager returned empty vector querying for entities '%s'", name);
-
-        return result;
+        crash("Could not find the entity to be cleared by address");
+        return false;
     }
 
     void update() {
-        for (const auto &entity : entities) {
-            entity.second->update();
+        for (auto &entity : entities) {
+            if (!entity->initialized) continue;
+            entity->update();
         }
     }
 
     void render() {
-        for (const auto &entity : entities) {
-            entity.second->render();
+        for (auto &entity : entities) {
+            if (!entity->initialized) continue;
+            entity->render();
         }
     }
 };

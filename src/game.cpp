@@ -28,6 +28,7 @@ global GameState *gameState;
 global Input *input;
 global TileSelection selection;
 
+global u32 player_id;
 global Entity *player;
 global TransformComponent *transform;
 global SpriteRenderer *spriteRenderer;
@@ -53,8 +54,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         selection = gameState->selection;
 
         if (gameState->initialized) {
-            player = gameState->entityManager->querySingleEntity("player");
-
+            player = gameState->entityManager->entities[player_id];
             transform = player->findComponent<TransformComponent>();
             spriteRenderer = player->findComponent<SpriteRenderer>();
             collider = player->findComponent<ColliderComponent>();
@@ -127,21 +127,17 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     frame += 1;
 }
 
-// TODO: This is a placeholder
-// I should Implement a way of asking an entity for a specific type of
-// component and an entity manager for an specific entity (maybe ID?)
 void loadEntities() {
-    if (gameState->entityManager->entities.size() == 0) {
-        player = new Entity();
-        transform = new TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
-        spriteRenderer = new SpriteRenderer(renderData, Player, glm::vec2(16, 32), transform);
-        collider = new ColliderComponent(transform, glm::vec2(16, 20));
+    player_id = gameState->entityManager->getUninitializedID();
+    player = gameState->entityManager->entities[player_id];
 
-        player->components.push_back(transform);
-        player->components.push_back(spriteRenderer);
-        player->components.push_back(collider);
-        gameState->entityManager->addEntity("player", player);
-    }
+    transform = new TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
+    spriteRenderer = new SpriteRenderer(renderData, Player, glm::vec2(16, 32), transform);
+    collider = new ColliderComponent(transform, glm::vec2(16, 20));
+
+    player->components.push_back(transform);
+    player->components.push_back(spriteRenderer);
+    player->components.push_back(collider);
 }
 
 inline void initializeGameState() {
@@ -164,6 +160,7 @@ inline void initializeGameState() {
     gameState->gameRegisterKey(DELETE_WORLD, '9');
     gameState->gameRegisterKey(RELOAD_WORLD, '0');
 
+    gameState->entityManager->init(2048);
     loadEntities();
 
     selection.selectedTile1.atlasIdx = WORLD_ATLAS;
