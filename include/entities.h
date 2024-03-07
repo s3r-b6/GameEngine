@@ -74,16 +74,24 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
     float *deltaTime;
 
     RenderData *renderData;
+    SpriteID idleSprite = INVALID;
+
+    bool active = true;
 
     AnimatedSpriteRenderer(RenderData *renderDataIn, AnimatedSpriteID spriteIn, glm::vec2 sizeIn,
-                           TransformComponent *transform, int fpsIn, float *dt, int framesIn) {
+                           TransformComponent *transform, int fpsIn, float *dt, int framesIn,
+                           SpriteID idleSpriteIn) {
         sprite = spriteIn;
         transformComponent = transform;
         renderData = renderDataIn;
         fps = fpsIn;
         deltaTime = dt;
         maxFrames = framesIn;
+        idleSprite = idleSpriteIn;
     }
+
+    inline void setAnimatedSprite(AnimatedSpriteID spriteIn) { sprite = spriteIn; }
+    inline void setActive(bool newState) { active = newState; }
 
     void render() override {
         local_persist float timer;
@@ -96,9 +104,14 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
             if (++curr_frame >= maxFrames) curr_frame = 0;
             timer = fps / TARGET_FPS;
         }
-
-        drawAnimatedSprite(renderData, sprite, transformComponent->pos, transformComponent->size,
-                           curr_frame);
+        if (active) {
+            drawAnimatedSprite(renderData, sprite, transformComponent->pos,
+                               transformComponent->size, curr_frame);
+        } else if (idleSprite != INVALID) {
+            drawSprite(renderData, idleSprite, transformComponent->pos, transformComponent->size);
+        } else {
+            crash("AnimatedSpriteRenderer does not know what to draw");
+        }
     }
 };
 

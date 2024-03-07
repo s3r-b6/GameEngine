@@ -135,7 +135,7 @@ void loadEntities() {
 
     transform = new TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
     spriteRenderer = new AnimatedSpriteRenderer(renderData, PlayerD_Walk, glm::vec2(16, 32),
-                                                transform, 12, &deltaTime, 4);
+                                                transform, 12, &deltaTime, 4, Player);
     collider = new ColliderComponent(transform, glm::vec2(16, 20));
 
     player->components.push_back(transform);
@@ -231,27 +231,45 @@ void simulate() {
 
     auto oldPos = transform->pos;
     auto newPos = &transform->pos;
+
+    bool moved = false;
     if (actionDown(gameState, input, MOVE_U)) {
         newPos->y -= playerSpeed;
+        spriteRenderer->setAnimatedSprite(PlayerU_Walk);
+        moved = true;
     } else if (actionDown(gameState, input, MOVE_D)) {
         newPos->y += playerSpeed;
+        spriteRenderer->setAnimatedSprite(PlayerD_Walk);
+        moved = true;
     }
 
     // TODO: This is the dumbest way to allow for movement when it is not possible in 1 direction.
-    // this is horrible
-    if (checkTileCollisions()) { transform->setPos(oldPos); };
+    // this is horrible.
+    // also: this might be too naive (maybe somehow the player can end stuck forever inside a
+    // collision?)
+    if (moved && checkTileCollisions()) {
+        transform->setPos(oldPos);
+        moved = false;
+    }
+
     oldPos = transform->pos;
 
     if (actionDown(gameState, input, MOVE_R)) {
         newPos->x -= playerSpeed;
+        spriteRenderer->setAnimatedSprite(PlayerR_Walk);
+        moved = true;
     } else if (actionDown(gameState, input, MOVE_L)) {
         newPos->x += playerSpeed;
+        spriteRenderer->setAnimatedSprite(PlayerL_Walk);
+        moved = true;
     }
 
-    // TODO: This might be too naive (maybe somehow the player can end stuck forever inside a
-    // collision?
-    if (checkTileCollisions()) { transform->setPos(oldPos); };
+    if (moved && checkTileCollisions()) {
+        transform->setPos(oldPos);
+        moved = false;
+    }
 
+    spriteRenderer->setActive(moved);
     gameState->entityManager->update();
 }
 

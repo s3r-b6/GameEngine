@@ -22,6 +22,7 @@ enum AnimatedSpriteID {
 };
 
 enum SpriteID {
+    INVALID,
     Player,
     Chest,
     SPRITE_COUNT,

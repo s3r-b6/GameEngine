@@ -20,7 +20,7 @@ Sprite get_animated_sprite(AnimatedSpriteID animatedSprite, int frame) {
     case PlayerR_Walk: {
         sprite.atlasIdx = CHAR_ATLAS;
         sprite.spriteSize = {16, 32};
-        sprite.atlasOffset = {1 + (16 * (frame % 4)), 37};
+        sprite.atlasOffset = {1 + (16 * (frame % 4)), 101};
         break;
     };
     case PlayerU_Walk: {
@@ -32,7 +32,7 @@ Sprite get_animated_sprite(AnimatedSpriteID animatedSprite, int frame) {
     case PlayerL_Walk: {
         sprite.atlasIdx = CHAR_ATLAS;
         sprite.spriteSize = {16, 32};
-        sprite.atlasOffset = {1 + (16 * (frame % 4)), 101};
+        sprite.atlasOffset = {1 + (16 * (frame % 4)), 37};
         break;
     };
 
