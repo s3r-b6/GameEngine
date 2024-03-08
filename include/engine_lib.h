@@ -19,7 +19,10 @@ struct ProgramState {
     SDL_GLContext glContext;
 };
 
-void log(const std::string filename, const std::uint_fast32_t line, const char *msg, ...) {
+#define log(_msg, ...) _log(__FILE__, __LINE__, _msg);
+#define crash(_msg, ...) _log(__FILE__, __LINE__, _msg);
+
+void _log(const std::string filename, const std::uint_fast32_t line, const char *msg, ...) {
     va_list args;
     va_start(args, msg);
 
@@ -35,7 +38,7 @@ void log(const std::string filename, const std::uint_fast32_t line, const char *
     printf("  ==> %s\n", result.c_str());
 }
 
-void crash(const std::string filename, const std::uint_fast32_t line, const char *errorMsg, ...) {
+void _crash(const std::string filename, const std::uint_fast32_t line, const char *errorMsg, ...) {
     va_list args;
     va_start(args, errorMsg);
 

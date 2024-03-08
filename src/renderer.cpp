@@ -8,7 +8,7 @@
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
-#include "../deps/stb_image.h"
+#include "./stb_image.h"
 #endif
 
 // TODO: This should use a map or something similar, so one texture can be freed

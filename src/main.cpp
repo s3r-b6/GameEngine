@@ -21,12 +21,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 int main(int argc, char *args[])
 #endif
 {
-    permStorage = new BumpAllocator(MB(10));
-    tempStorage = new BumpAllocator(MB(10));
-
-    if (!(g = initialize(permStorage, tempStorage))) {
-        crash(__FILE__, __LINE__, "Failed to initialize the engine.");
-    }
+    permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(10));
+    if (!(g = initialize(permStorage, tempStorage))) { crash("Failed to initialize the engine."); }
 
     u64 now = SDL_GetPerformanceCounter(), last = 0;
     double dt = 0;
@@ -62,7 +58,7 @@ int main(int argc, char *args[])
         g->input->prevMouseState[2] = g->input->mouseState[2];
     }
 
-    close(g->glContext, g->appState);
+    close(g->glContext, g->appState, g->alState);
     plat_freeDynamicLib(gameSO);
     plat_deleteFile(loadedgameSharedObject);
     return 0;
@@ -137,26 +133,26 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     if (currentTimestamp <= lastModTimestamp) return;
 
     if (gameSO) {
-        if (!plat_freeDynamicLib(gameSO)) crash(__FILE__, __LINE__, "Failed to free game.so");
+        if (!plat_freeDynamicLib(gameSO)) crash("Failed to free game.so");
 
         gameSO = nullptr;
-        log(__FILE__, __LINE__, "Freed gameSO");
+        log("Freed gameSO");
     }
 
     while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
         if (g->appState->running) platform_sleep(10);
     }
-    log(__FILE__, __LINE__, "Copied game.so to game_load.so");
+    log("Copied game.so to game_load.so");
 
     if (!(gameSO = plat_loadDynamicLib(loadedgameSharedObject))) {
-        crash(__FILE__, __LINE__, "Failed to load game_load.so");
+        crash("Failed to load game_load.so");
     }
 
-    log(__FILE__, __LINE__, "Loaded dynamic library game_load.so");
+    log("Loaded dynamic library game_load.so");
     if (!(updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame"))) {
-        crash(__FILE__, __LINE__, "Failed to load updateGame function");
+        crash("Failed to load updateGame function");
     }
 
-    log(__FILE__, __LINE__, "Loaded dynamic function updateGame");
+    log("Loaded dynamic function updateGame");
     lastModTimestamp = currentTimestamp;
 }

@@ -22,13 +22,15 @@ include+=(-I../deps/glad/)
 include+=(-I../deps/linux/) 
 include+=(-I../deps/linux/SDL2)
 include+=(-I../deps/openal-soft/include/AL)
+include+=(-I../deps/freealut/include/AL)
 include+=(-I../include)
 
-include+=(-L/lib)
+include+=(-L../lib)
 include+=(-lfreetype)
 include+=(-lSDL2)
 include+=(-lGL)
 include+=(-lopenal)
+include+=(-lalut)
 
 flags=(-pipe -Wno-write-strings -D_REENTRANT)
 

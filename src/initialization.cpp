@@ -2,6 +2,7 @@
 // This code is subject to the MIT license.
 
 #include "./initialization.h"
+#include "./audio.h"
 #include "./engine_lib.h"
 #include "./entities.h"
 #include "./game.h"
@@ -9,12 +10,12 @@
 #include "./input.h"
 #include "./renderer.h"
 
-#include "./alext.h"
+#include <al.h>
+#include <alc.h>
+#include <alut.h>
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
-
-// TODO: Make logs different based on severity...
 
 GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
     // GlobalState just stitches together all pointers
@@ -26,6 +27,7 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
         g->renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
         g->input = (Input *)permStorage->alloc(sizeof(Input));
         g->glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
+        g->alState = (ALState *)permStorage->alloc(sizeof(ALState));
 
         if (!g->appState || !g->renderData || !g->gameState || !g->input) {
             log(__FILE__, __LINE__, "ERROR: Failed to alloc globalState");
@@ -74,6 +76,11 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
     SDL_SetWindowResizable(g->appState->window, SDL_FALSE);
     SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
     SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
+
+    if (!initOpenAL(g->alState)) {
+        log(__FILE__, __LINE__, "ERROR: Failed to initialize OpenAL");
+        return nullptr;
+    }
 
     SDL_StartTextInput();
 
@@ -226,12 +233,17 @@ inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData 
     return true;
 }
 
-void close(GLContext *glContext, ProgramState *appState) {
-    SDL_StopTextInput();
+void close(GLContext *glContext, ProgramState *appState, ALState *alState) {
+    log(__FILE__, __LINE__, "Closing OpenAL");
+    exitOpenAL(alState);
 
+    log(__FILE__, __LINE__, "Closing SDL resources");
+    SDL_StopTextInput();
     glDeleteProgram(glContext->programID);
     SDL_DestroyWindow(appState->window);
     appState->window = NULL;
+
+    log(__FILE__, __LINE__, "Quitting");
     SDL_Quit();
 }
 
@@ -272,4 +284,121 @@ void printShaderLog(uint shader, BumpAllocator *tempStorage) {
     if (infoLogLength > 0) { log(__FILE__, __LINE__, "%s", infoLog); }
 }
 
-bool initOpenAL() { return false; }
+// TODO: Fix this
+// rn: mostly yanked from: https://github.com/ffainelli/openal-example/tree/master
+bool displayErrorsAL(const std::string &filename, const std::uint_fast32_t line) {
+    ALenum error = alGetError();
+
+    if (error == AL_NO_ERROR) return true;
+
+    switch (error) {
+    case AL_INVALID_NAME:
+        _log(filename, line, "AL_INVALID_NAME: a bad name (ID) was passed to an OpenAL function");
+        break;
+    case AL_INVALID_ENUM:
+        _log(filename, line,
+             "AL_INVALID_ENUM: an invalid enum value was passed to an OpenAL function");
+        break;
+    case AL_INVALID_VALUE:
+        _log(filename, line, "AL_INVALID_VALUE: an invalid value was passed to an OpenAL function");
+        break;
+    case AL_INVALID_OPERATION:
+        _log(filename, line, "AL_INVALID_OPERATION: the requested operation is not valid");
+        break;
+    case AL_OUT_OF_MEMORY:
+        _log(filename, line,
+             "AL_OUT_OF_MEMORY: the requested operation resulted in OpenAL running out of "
+             "memory");
+        break;
+    default:
+        _log(filename, line, "UNKNOWN AL ERROR: ", error);
+    }
+    return false;
+}
+
+bool initOpenAL(ALState *alState) {
+    WavFile wavFile = {};
+
+    alState->enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
+    if (alState->enumeration == AL_FALSE) fprintf(stderr, "enumeration extension not available\n");
+
+    const ALCchar *defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+    alState->device = alcOpenDevice(defaultDeviceName);
+
+    if (!alState->device) {
+        log(__FILE__, __LINE__, "unable to open default device\n");
+        return false;
+    }
+
+    alState->context = alcCreateContext(alState->device, NULL);
+    if (!alcMakeContextCurrent(alState->context)) {
+        log(__FILE__, __LINE__, "failed to make default context\n");
+        return false;
+    }
+    displayErrorsAL(__FILE__, __LINE__);
+
+    log(__FILE__, __LINE__, "Device: %s", alcGetString(alState->device, ALC_DEVICE_SPECIFIER));
+    displayErrorsAL(__FILE__, __LINE__);
+
+    /* set orientation */
+    alListener3f(AL_POSITION, 0, 0, 1.0f);
+    displayErrorsAL(__FILE__, __LINE__);
+    alListener3f(AL_VELOCITY, 0, 0, 0);
+    displayErrorsAL(__FILE__, __LINE__);
+    alListenerfv(AL_ORIENTATION, alState->listenerOri);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alGenSources((ALuint)1, &alState->source);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alSourcef(alState->source, AL_PITCH, 1);
+    displayErrorsAL(__FILE__, __LINE__);
+    alSourcef(alState->source, AL_GAIN, 1);
+    displayErrorsAL(__FILE__, __LINE__);
+    alSource3f(alState->source, AL_POSITION, 0, 0, 0);
+    displayErrorsAL(__FILE__, __LINE__);
+    alSource3f(alState->source, AL_VELOCITY, 0, 0, 0);
+    displayErrorsAL(__FILE__, __LINE__);
+    alSourcei(alState->source, AL_LOOPING, AL_FALSE);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alGenBuffers(1, &alState->buffer);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    signed char filename[64];
+    const char *originalFilename = "../assets/audio/test.wav";
+
+    strncpy((char *)filename, originalFilename, 64);
+    filename[64 - 1] = '\0';
+
+    alutLoadWAVFile(filename, &wavFile.format, &wavFile.data, &wavFile.size, &wavFile.freq,
+                    &wavFile.loop);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alBufferData(alState->buffer, wavFile.format, wavFile.data, wavFile.size, wavFile.freq);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alSourcei(alState->source, AL_BUFFER, alState->buffer);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alSourcePlay(alState->source);
+    displayErrorsAL(__FILE__, __LINE__);
+
+    alGetSourcei(alState->source, AL_SOURCE_STATE, &alState->source_state);
+    displayErrorsAL(__FILE__, __LINE__);
+    while (alState->source_state == AL_PLAYING) {
+        alGetSourcei(alState->source, AL_SOURCE_STATE, &alState->source_state);
+        displayErrorsAL(__FILE__, __LINE__);
+    }
+
+    return true;
+}
+
+void exitOpenAL(ALState *alState) {
+    alDeleteSources(1, &alState->source);
+    alDeleteBuffers(1, &alState->buffer);
+    alState->device = alcGetContextsDevice(alState->context);
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(alState->context);
+    alcCloseDevice(alState->device);
+}

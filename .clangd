@@ -1,9 +1,11 @@
 CompileFlags:
   Add:
     - "-I../include/"
+    - "-I../deps/"
     - "-I../deps/glad/"
     - "-I../deps/freetype2/"
     - "-I../deps/openal-soft/include/AL"
+    - "-I../deps/freealut/include/AL"
     - "-I../deps/win32/"
     - "-I../deps/linux/"
     - "-L../lib/"

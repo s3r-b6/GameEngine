@@ -171,7 +171,7 @@ inline void initializeGameState() {
     selection.selectedTile1.y = 0;
 
     if (gameState->tileManager->deserialize()) {
-        log(__FILE__, __LINE__, "Found previous world.data, loading the map", __FILE__, __LINE__);
+        log("Found previous world.data, loading the map", __FILE__, __LINE__);
     }
 
     gameState->initialized = true;
@@ -223,9 +223,9 @@ bool checkTileCollisions() {
 }
 
 void simulate() {
-    if (!player) { crash(__FILE__, __LINE__, "ERROR getting the player"); }
-    if (!transform) { crash(__FILE__, __LINE__, "ERROR getting the transform"); }
-    if (!collider) { crash(__FILE__, __LINE__, "ERROR getting the collider"); }
+    if (!player) { crash("ERROR getting the player"); }
+    if (!transform) { crash("ERROR getting the transform"); }
+    if (!collider) { crash("ERROR getting the collider"); }
 
     if (pickerShown) return;
 
@@ -302,10 +302,10 @@ void handleInput() {
         }
 
         if (actionJustPressed(gameState, input, LAYER_BACK)) {
-            log(__FILE__, __LINE__, "Back layer", __FILE__, __LINE__);
+            log("Back layer", __FILE__, __LINE__);
             selectedWorldLayer = 0;
         } else if (actionJustPressed(gameState, input, LAYER_FRONT)) {
-            log(__FILE__, __LINE__, "Front layer", __FILE__, __LINE__);
+            log("Front layer", __FILE__, __LINE__);
             selectedWorldLayer = 1;
         }
     }
@@ -349,14 +349,13 @@ void handleInput() {
                 selection.selectedTile2.atlasIdx = WORLD_ATLAS;
                 selection.selectedTile1.atlasIdx = WORLD_ATLAS;
 
-                log(__FILE__, __LINE__, "SELECTED TILES: 1{%d %d} 2{%d %d}",
-                    selection.selectedTile1.x, selection.selectedTile1.y, selection.selectedTile2.x,
+                log("SELECTED TILES: 1{%d %d} 2{%d %d}", selection.selectedTile1.x,
+                    selection.selectedTile1.y, selection.selectedTile2.x,
                     selection.selectedTile2.y);
             } else {
                 selection.selectedTile1.atlasIdx = WORLD_ATLAS;
                 selection.selectedTile2 = {0};
-                log(__FILE__, __LINE__, "SELECTED TILE: {%d %d}", selection.selectedTile1.x,
-                    selection.selectedTile1.y);
+                log("SELECTED TILE: {%d %d}", selection.selectedTile1.x, selection.selectedTile1.y);
             }
         }
 

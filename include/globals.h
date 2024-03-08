@@ -9,6 +9,7 @@ struct GlobalState {
     ProgramState *appState;
     GameState *gameState;
     Input *input;
+    ALState *alState;
 };
 
 global BumpAllocator *permStorage;

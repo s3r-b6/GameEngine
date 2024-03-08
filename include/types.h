@@ -43,6 +43,7 @@ struct Input;
 struct GlobalState;
 struct GameState;
 struct KeyState;
+struct ALState;
 
 struct OrthographicCamera;
 
