@@ -37,7 +37,7 @@ Sprite get_animated_sprite(AnimatedSpriteID animatedSprite, int frame) {
     };
 
     default: {
-        crash("Could not find that animated sprite");
+        crash(__FILE__, __LINE__, "Could not find that animated sprite");
         break;
     }
     }

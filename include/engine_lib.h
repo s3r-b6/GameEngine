@@ -5,6 +5,8 @@
 #include "SDL2/SDL_log.h"
 #include "SDL2/SDL_video.h"
 
+#include <string>
+
 // Struct that holds all the data relevant to program execution.
 //  \bool running -> Marks if the program should continue to run the main loop
 //  \ivec2  screenSize -> Current screenSize
@@ -17,8 +19,37 @@ struct ProgramState {
     SDL_GLContext glContext;
 };
 
-inline void crash(char *errorMsg) {
-    SDL_Log("ERROR: %s", errorMsg);
+void log(const std::string filename, const std::uint_fast32_t line, const char *msg, ...) {
+    va_list args;
+    va_start(args, msg);
+
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    int size = vsnprintf(nullptr, 0, msg, argsCopy) + 1;
+    va_end(argsCopy);
+
+    std::string result(size, '\0');
+    vsnprintf(&result[0], size, msg, args);
+
+    printf("[ INFO ] (%s : %lu)\n", filename.c_str(), line);
+    printf("  ==> %s\n", result.c_str());
+}
+
+void crash(const std::string filename, const std::uint_fast32_t line, const char *errorMsg, ...) {
+    va_list args;
+    va_start(args, errorMsg);
+
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    int size = vsnprintf(nullptr, 0, errorMsg, argsCopy) + 1;
+    va_end(argsCopy);
+
+    std::string result(size, '\0');
+    vsnprintf(&result[0], size, errorMsg, args);
+
+    printf("[ FATAL ERROR: ] %s, %lu\n", filename.c_str(), line);
+    printf("  ==> %s\n", result.c_str());
+
     int *ptr = NULL;
     *ptr = 42;
 }

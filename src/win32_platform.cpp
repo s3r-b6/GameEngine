@@ -9,19 +9,19 @@
 
 void *plat_loadDynamicLib(char *dll) {
     HMODULE result = LoadLibraryA(dll);
-    if (!result) SDL_Log("Failed to load dll");
+    if (!result) log(__FILE__, __LINE__, "Failed to load dll");
     return result;
 }
 
 void *plat_loadDynamicFun(void *dll, char *funName) {
     FARPROC proc = GetProcAddress((HMODULE)dll, funName);
-    if (!proc) SDL_Log("Failed to load dynamic function");
+    if (!proc) log(__FILE__, __LINE__, "Failed to load dynamic function");
     return (void *)proc;
 }
 
 bool plat_freeDynamicLib(void *dll) {
     BOOL freeResult = FreeLibrary((HMODULE)dll);
-    if (!freeResult) SDL_Log("Failed to free dynamic library");
+    if (!freeResult) log(__FILE__, __LINE__, "Failed to free dynamic library");
     return (bool)freeResult;
 }
 
@@ -34,12 +34,14 @@ u64 plat_getFileTimestamp(char *fileName) {
                        FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile == INVALID_HANDLE_VALUE) {
-        SDL_Log("Failed to open file for %s. Error code: %lu\n", fileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to open file for %s. Error code: %lu\n", fileName,
+            GetLastError());
         return 0;
     }
 
     if (!GetFileTime(hFile, NULL, NULL, &ftLastWriteTime)) {
-        SDL_Log("Failed to get file time for %s. Error code: %lu\n", fileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to get file time for %s. Error code: %lu\n", fileName,
+            GetLastError());
         CloseHandle(hFile);
         return 0;
     }
@@ -59,13 +61,15 @@ char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator) 
                               FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile == INVALID_HANDLE_VALUE) {
-        SDL_Log("Failed to open file for reading: %s. Error: %lu", fileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to open file for reading: %s. Error: %lu", fileName,
+            GetLastError());
         return nullptr;
     }
 
     LARGE_INTEGER fileSizeLarge;
     if (!GetFileSizeEx(hFile, &fileSizeLarge)) {
-        SDL_Log("Failed to get file size for %s. Error: %lu", fileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to get file size for %s. Error: %lu", fileName,
+            GetLastError());
         CloseHandle(hFile);
         return nullptr;
     }
@@ -74,7 +78,7 @@ char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator) 
     char *memory = (char *)allocator->alloc(*fileSize + 1); // Allocate memory
     DWORD bytesRead;
     if (!ReadFile(hFile, memory, *fileSize, &bytesRead, NULL)) {
-        SDL_Log("Failed to read file: %s. Error: %lu", fileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to read file: %s. Error: %lu", fileName, GetLastError());
         CloseHandle(hFile);
         return nullptr;
     }
@@ -94,20 +98,23 @@ bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) 
         CreateFile(newFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile2 == INVALID_HANDLE_VALUE) {
-        SDL_Log("Failed to open file for writing: %s. Error: %lu", newFileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to open file for writing: %s. Error: %lu", newFileName,
+            GetLastError());
         return false;
     }
 
     DWORD bytesWritten;
     if (!WriteFile(hFile2, fileContent, fileSize, &bytesWritten, NULL)) {
-        SDL_Log("Failed to write to file: %s. Error: %lu", newFileName, GetLastError());
+        log(__FILE__, __LINE__, "Failed to write to file: %s. Error: %lu", newFileName,
+            GetLastError());
         CloseHandle(hFile2);
         return false;
     }
     CloseHandle(hFile2);
 
     if (bytesWritten != fileSize) {
-        SDL_Log("Failed to copy %s to %s. Incomplete write operation.", fileName, newFileName);
+        log(__FILE__, __LINE__, "Failed to copy %s to %s. Incomplete write operation.", fileName,
+            newFileName);
         return false;
     }
 
@@ -116,10 +123,10 @@ bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) 
 
 bool plat_deleteFile(char *fileName) {
     if (DeleteFileA(fileName)) {
-        SDL_Log("File '%s' deleted successfully.\n", fileName);
+        log(__FILE__, __LINE__, "File '%s' deleted successfully.\n", fileName);
         return true;
     } else {
-        SDL_Log("Error deleting file '%s'", fileName);
+        log(__FILE__, __LINE__, "Error deleting file '%s'", fileName);
         return false;
     }
 }

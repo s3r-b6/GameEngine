@@ -7,6 +7,7 @@
 #include "SDL2/SDL_log.h"
 
 #include "./types.h"
+#include "engine_lib.h"
 
 struct BumpAllocator {
     u32 size;
@@ -19,7 +20,7 @@ struct BumpAllocator {
         memory = reinterpret_cast<u8 *>(malloc(len));
 
         if (!memory) {
-            SDL_Log("ERROR: Failed to allocate memory for the bumpAllocator!");
+            crash(__FILE__, __LINE__, "ERROR: Failed to allocate memory for the bumpAllocator!");
             size = 0;
             return;
         }
@@ -34,7 +35,7 @@ struct BumpAllocator {
         size_t allignedSize = (len + 7) & ~7;
 
         if (used + allignedSize > size) {
-            SDL_Log("ERROR: Not enough space in BumpAllocator");
+            crash(__FILE__, __LINE__, "ERROR: Not enough space in BumpAllocator");
             return result;
         }
 

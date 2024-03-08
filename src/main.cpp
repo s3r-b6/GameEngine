@@ -25,8 +25,7 @@ int main(int argc, char *args[])
     tempStorage = new BumpAllocator(MB(10));
 
     if (!(g = initialize(permStorage, tempStorage))) {
-        SDL_Log("Failed to initialize the engine.");
-        return -1;
+        crash(__FILE__, __LINE__, "Failed to initialize the engine.");
     }
 
     u64 now = SDL_GetPerformanceCounter(), last = 0;
@@ -98,7 +97,7 @@ inline void handleSDLevents(SDL_Event *event) {
     case SDL_MOUSEMOTION: {
         if (g->input->mouseInWindow) {
             SDL_GetMouseState(&g->input->mousePos.x, &g->input->mousePos.y);
-            // SDL_Log("New mousePos: %d %d", g->input->mousePos.x,
+            // log(__FILE__, __LINE__,"New mousePos: %d %d", g->input->mousePos.x,
             // g->input->mousePos.y);
         }
 
@@ -138,24 +137,26 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     if (currentTimestamp <= lastModTimestamp) return;
 
     if (gameSO) {
-        if (!plat_freeDynamicLib(gameSO)) crash("Failed to free game.so");
+        if (!plat_freeDynamicLib(gameSO)) crash(__FILE__, __LINE__, "Failed to free game.so");
 
         gameSO = nullptr;
-        SDL_Log("Freed gameSO");
+        log(__FILE__, __LINE__, "Freed gameSO");
     }
 
     while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
         if (g->appState->running) platform_sleep(10);
     }
-    SDL_Log("Copied game.so to game_load.so");
+    log(__FILE__, __LINE__, "Copied game.so to game_load.so");
 
-    if (!(gameSO = plat_loadDynamicLib(loadedgameSharedObject)))
-        crash("Failed to load game_load.so");
+    if (!(gameSO = plat_loadDynamicLib(loadedgameSharedObject))) {
+        crash(__FILE__, __LINE__, "Failed to load game_load.so");
+    }
 
-    SDL_Log("Loaded dynamic library game_load.so");
-    if (!(updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame")))
-        crash("Failed to load updateGame function");
+    log(__FILE__, __LINE__, "Loaded dynamic library game_load.so");
+    if (!(updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame"))) {
+        crash(__FILE__, __LINE__, "Failed to load updateGame function");
+    }
 
-    SDL_Log("Loaded dynamic function updateGame");
+    log(__FILE__, __LINE__, "Loaded dynamic function updateGame");
     lastModTimestamp = currentTimestamp;
 }

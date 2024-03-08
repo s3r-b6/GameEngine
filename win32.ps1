@@ -1,5 +1,5 @@
 # This script should be run from inside the .\build directory
-#
+# TODO: Add and compile OpenAL, remove the timestamps from game.cpp
 $include = ( "-I..\deps\",
     "-I..\deps\glad\",
     "-I..\deps\freetype2\",

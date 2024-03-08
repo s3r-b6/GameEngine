@@ -109,7 +109,7 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
         } else if (idleSprite != INVALID) {
             drawSprite(renderData, idleSprite, transformComponent->pos, transformComponent->size);
         } else {
-            crash("AnimatedSpriteRenderer does not know what to draw");
+            crash(__FILE__, __LINE__, "AnimatedSpriteRenderer does not know what to draw");
         }
     }
 };
@@ -137,7 +137,9 @@ struct Entity {
     vector<EntityComponentBase *> components;
 
     bool clear() {
-        if (!initialized) { crash("Tried to clear an uninitialized component"); }
+        if (!initialized) {
+            crash(__FILE__, __LINE__, "Tried to clear an uninitialized component");
+        }
 
         for (auto c : components)
             free(c);
@@ -155,7 +157,7 @@ struct Entity {
         }
 
         // Way too generic, might have to improve this
-        SDL_Log("Entity failed to find a component");
+        log(__FILE__, __LINE__, "Entity failed to find a component");
         return nullptr;
     }
 
@@ -191,7 +193,7 @@ struct EntityManager {
     // right then. This should be OK
     u32 getUninitializedID() {
         if (freeEntities.size() == 0) {
-            crash("Could not find a free entity");
+            crash(__FILE__, __LINE__, "Could not find a free entity");
             return 0;
         }
 
@@ -220,7 +222,7 @@ struct EntityManager {
             }
         }
 
-        crash("Could not find the entity to be cleared by address");
+        crash(__FILE__, __LINE__, "Could not find the entity to be cleared by address");
         return false;
     }
 
