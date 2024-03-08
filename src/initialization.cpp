@@ -286,39 +286,7 @@ void printShaderLog(uint shader, BumpAllocator *tempStorage) {
 
 // TODO: Fix this
 // rn: mostly yanked from: https://github.com/ffainelli/openal-example/tree/master
-bool displayErrorsAL(const std::string &filename, const std::uint_fast32_t line) {
-    ALenum error = alGetError();
-
-    if (error == AL_NO_ERROR) return true;
-
-    switch (error) {
-    case AL_INVALID_NAME:
-        _log(filename, line, "AL_INVALID_NAME: a bad name (ID) was passed to an OpenAL function");
-        break;
-    case AL_INVALID_ENUM:
-        _log(filename, line,
-             "AL_INVALID_ENUM: an invalid enum value was passed to an OpenAL function");
-        break;
-    case AL_INVALID_VALUE:
-        _log(filename, line, "AL_INVALID_VALUE: an invalid value was passed to an OpenAL function");
-        break;
-    case AL_INVALID_OPERATION:
-        _log(filename, line, "AL_INVALID_OPERATION: the requested operation is not valid");
-        break;
-    case AL_OUT_OF_MEMORY:
-        _log(filename, line,
-             "AL_OUT_OF_MEMORY: the requested operation resulted in OpenAL running out of "
-             "memory");
-        break;
-    default:
-        _log(filename, line, "UNKNOWN AL ERROR: ", error);
-    }
-    return false;
-}
-
 bool initOpenAL(ALState *alState) {
-    WavFile wavFile = {};
-
     alState->enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
     if (alState->enumeration == AL_FALSE) fprintf(stderr, "enumeration extension not available\n");
 
@@ -364,32 +332,6 @@ bool initOpenAL(ALState *alState) {
 
     alGenBuffers(1, &alState->buffer);
     displayErrorsAL(__FILE__, __LINE__);
-
-    signed char filename[64];
-    const char *originalFilename = "../assets/audio/test.wav";
-
-    strncpy((char *)filename, originalFilename, 64);
-    filename[64 - 1] = '\0';
-
-    alutLoadWAVFile(filename, &wavFile.format, &wavFile.data, &wavFile.size, &wavFile.freq,
-                    &wavFile.loop);
-    displayErrorsAL(__FILE__, __LINE__);
-
-    alBufferData(alState->buffer, wavFile.format, wavFile.data, wavFile.size, wavFile.freq);
-    displayErrorsAL(__FILE__, __LINE__);
-
-    alSourcei(alState->source, AL_BUFFER, alState->buffer);
-    displayErrorsAL(__FILE__, __LINE__);
-
-    alSourcePlay(alState->source);
-    displayErrorsAL(__FILE__, __LINE__);
-
-    alGetSourcei(alState->source, AL_SOURCE_STATE, &alState->source_state);
-    displayErrorsAL(__FILE__, __LINE__);
-    while (alState->source_state == AL_PLAYING) {
-        alGetSourcei(alState->source, AL_SOURCE_STATE, &alState->source_state);
-        displayErrorsAL(__FILE__, __LINE__);
-    }
 
     return true;
 }

@@ -9,6 +9,7 @@
 #include "./input.h"
 
 #include "./fonts.h"
+#include "audio.h"
 #include "renderer.h"
 
 // NOTE: g is the GlobalState object
@@ -36,6 +37,10 @@ int main(int argc, char *args[])
     loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE3);
 
     SDL_Event event;
+
+    local_persist float audio_timer = 3.f;
+
+    WavFile *wav = loadAudio();
     while (g->appState->running) {
         SDL_ShowCursor(g->input->showCursor);
 
@@ -52,6 +57,12 @@ int main(int argc, char *args[])
         render(g);
         tempStorage->freeMemory();
         reloadGameLib(tempStorage);
+
+        audio_timer -= dt;
+        if (audio_timer <= 0.f) {
+            playAudio(g->alState, wav);
+            audio_timer = 3.f;
+        }
 
         g->input->prevMouseState[0] = g->input->mouseState[0];
         g->input->prevMouseState[1] = g->input->mouseState[1];
