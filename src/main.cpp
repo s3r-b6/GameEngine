@@ -54,6 +54,9 @@ int main(int argc, char *args[])
 
         updateGame_ptr(permStorage, tempStorage, g, dt);
         render(g);
+        ui_render(g);
+        SDL_GL_SwapWindow(g->appState->window);
+
         tempStorage->freeMemory();
         reloadGameLib(tempStorage);
 
@@ -137,6 +140,8 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist u64 lastModTimestamp;
 
     u64 currentTimestamp = plat_getFileTimestamp(gameSharedObject);
+    if (g->appState->running && currentTimestamp == 0) platform_sleep(350);
+
     if (currentTimestamp <= lastModTimestamp) return;
 
     if (gameSO) {
@@ -147,8 +152,9 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     }
 
     while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
-        if (g->appState->running) platform_sleep(10);
+        if (g->appState->running) platform_sleep(50);
     }
+
     log("Copied game.so to game_load.so");
 
     if (!(gameSO = plat_loadDynamicLib(loadedgameSharedObject))) {

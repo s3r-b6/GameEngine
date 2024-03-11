@@ -63,13 +63,11 @@ void render(GlobalState *g) {
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
 
     g->renderData->transformCount = 0;
-
-    ui_render(mat, g, screenSize);
-
-    SDL_GL_SwapWindow(g->appState->window);
 }
 
-void ui_render(glm::mat4x4 proj, GlobalState *g, glm::vec2 screenSize) {
+void ui_render(GlobalState *g) {
+    auto screenSize = g->appState->screenSize;
+
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

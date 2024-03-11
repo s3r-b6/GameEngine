@@ -10,9 +10,9 @@
 #include "./input.h"
 #include "./renderer.h"
 
-#include <al.h>
-#include <alc.h>
-#include <alut.h>
+#include "AL/al.h"
+#include "AL/alc.h"
+#include "AL/alut.h"
 
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination

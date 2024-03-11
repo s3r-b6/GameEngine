@@ -21,7 +21,6 @@ global Input *input;
 global TileSelection selection;
 
 global u32 player_id;
-global Entity *player;
 
 global double deltaTime;
 global bool helpShown = false;
@@ -43,9 +42,6 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         glContext = g->glContext;
         input = g->input;
         selection = gameState->selection;
-
-        // TODO: This fails because the player_id is not stored outside of the shared object
-        if (gameState->initialized) { player = gameState->entityManager->entities[player_id]; }
     }
 
     if (!gameState->initialized) initializeGameState();
@@ -121,7 +117,7 @@ bool checkTileCollisions(ColliderComponent *collider) {
 
 void setupPlayer() {
     player_id = gameState->entityManager->getUninitializedID();
-    player = gameState->entityManager->entities[player_id];
+    auto player = gameState->entityManager->entities[player_id];
 
     auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
         TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
@@ -144,6 +140,7 @@ void setupPlayer() {
     });
 
     auto move = [](u32 player_id) {
+        auto player = gameState->entityManager->entities[player_id];
         auto transform = player->findComponent<TransformComponent>();
         auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
         auto collider = player->findComponent<ColliderComponent>();
@@ -272,8 +269,6 @@ void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
 }
 
 void simulate() {
-    if (!player) { crash("ERROR getting the player"); }
-
     if (pickerShown) return;
 
     gameState->entityManager->update();

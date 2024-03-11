@@ -78,4 +78,4 @@ struct GLContext {
 
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx);
 void render(GlobalState *g);
-void ui_render(glm::mat4x4 proj, GlobalState *g, glm::vec2 screenSize);
+void ui_render(GlobalState *g);
