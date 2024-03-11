@@ -1,16 +1,11 @@
 #include "game_render.h"
 
-#include "globals.h"
 #include "renderer.h"
 #include "types.h"
 #include <string>
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <string>
-
-__attribute__((format(__printf__, 4, 5))) void
-ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize, const char *text...) {
+void ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize,
+                          const char *text...) {
     va_list args;
     va_start(args, text);
 
@@ -21,6 +16,7 @@ ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize, cons
 
     std::string result(size, '\0');
     vsnprintf(&result[0], size, text, args);
+    va_end(args);
 
     const char *char_ptr = result.c_str();
     ui_drawText(renderData, pos, fontSize, char_ptr);

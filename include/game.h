@@ -209,7 +209,7 @@ struct TileManager {
 
 extern "C" {
 EXPORT_FN void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage,
-                          GlobalState *globalStateIn, float dt);
+                          GlobalState *globalStateIn, double dt);
 void drawTilePicker();
 }
 

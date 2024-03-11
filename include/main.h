@@ -10,5 +10,5 @@ static update_game_type *updateGame_ptr;
 void render();
 void handleSDLevents(SDL_Event *event);
 void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage, GlobalState *globalStateIn,
-                float dt);
+                double dt);
 void reloadGameLib(BumpAllocator *transientStorage);

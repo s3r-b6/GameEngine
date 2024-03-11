@@ -1,18 +1,11 @@
 #pragma once
 
 #include <functional>
-#include <map>
 #include <stack>
-#include <vector>
 
+#include "globals.h"
 #include "input.h"
 #include "types.h"
-
-#include "assets.h"
-#include "engine_memory.h"
-#include "game.h"
-#include "game_render.h"
-#include "globals.h"
 
 struct EntityComponentBase {
     u32 entityID;
@@ -182,12 +175,12 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
     SpriteID idleSprite = INVALID;
 
     int spritesPerSecond, maxFrames, currFrame;
-    float *deltaTime, timer;
+    double *deltaTime, timer;
 
     TransformComponent *transform;
 
     AnimatedSpriteRenderer(u32 id, RenderData *renderDataIn, AnimatedSpriteID spriteIn,
-                           glm::vec2 sizeIn, int fpsIn, float *dt, int framesIn,
+                           glm::vec2 sizeIn, int fpsIn, double *dt, int framesIn,
                            SpriteID idleSpriteIn) {
         entityID = id;
 
@@ -210,10 +203,14 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
     void render() override {
         timer -= *deltaTime;
 
+        // log("timer: %f dt: %f", timer, *deltaTime);
         if (timer <= 0) {
+            // log("timer: %f sps: %d", timer, spritesPerSecond);
+            // log("cf: %d mf: %d", currFrame, maxFrames);
             if (++currFrame >= maxFrames) currFrame = 0;
             timer = spritesPerSecond / TARGET_FPS;
         }
+
         if (animating) {
             drawAnimatedSprite(renderData, animatedSprite, transform->pos, transform->size,
                                currFrame);

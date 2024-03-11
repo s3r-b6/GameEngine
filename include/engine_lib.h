@@ -1,12 +1,8 @@
 #pragma once
 
-#include "./types.h"
-
-#include "SDL2/SDL_log.h"
 #include "SDL2/SDL_video.h"
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "./types.h"
 #include <string>
 
 // Struct that holds all the data relevant to program execution.
@@ -25,9 +21,7 @@ struct ProgramState {
 #define crash(_msg...) _crash(__FILE__, __LINE__, _msg);
 
 #define DEBUG_FORMAT __attribute__((format(__printf__, 3, 4)))
-
 DEBUG_FORMAT void _log(const std::string &filename, const u64 line, const char *fmt...) {
-
     va_list args, argsCopy;
     va_start(args, fmt);
 

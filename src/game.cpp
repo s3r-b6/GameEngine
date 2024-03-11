@@ -1,17 +1,9 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
-#include "SDL2/SDL_log.h"
-
 #include "./game.h"
 
-#include "./globals.h"
-
-#include "./game_render.h"
-#include "./renderer.h"
-
 #include "./entities.h"
-#include "./input.h"
-#include "assets.h"
+#include "./renderer.h"
 
 global double updateTimer;
 global u64 frame;
@@ -31,11 +23,11 @@ global TileSelection selection;
 global u32 player_id;
 global Entity *player;
 
-global float deltaTime;
+global double deltaTime;
 global bool helpShown = false;
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
-                          GlobalState *globalStateIn, float dt) {
+                          GlobalState *globalStateIn, double dt) {
     int fps = 1.f / dt;
     deltaTime = dt;
 
