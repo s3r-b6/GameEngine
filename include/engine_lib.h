@@ -5,6 +5,8 @@
 #include "SDL2/SDL_log.h"
 #include "SDL2/SDL_video.h"
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <string>
 
 // Struct that holds all the data relevant to program execution.
@@ -19,39 +21,49 @@ struct ProgramState {
     SDL_GLContext glContext;
 };
 
-#define log(_msg, ...) _log(__FILE__, __LINE__, _msg);
-#define crash(_msg, ...) _log(__FILE__, __LINE__, _msg);
+#define log(_msg...) _log(__FILE__, __LINE__, _msg);
+#define crash(_msg...) _crash(__FILE__, __LINE__, _msg);
 
-void _log(const std::string filename, const std::uint_fast32_t line, const char *msg, ...) {
-    va_list args;
-    va_start(args, msg);
+#define DEBUG_FORMAT __attribute__((format(__printf__, 3, 4)))
 
-    va_list argsCopy;
+DEBUG_FORMAT inline void _log(const std::string &filename, const u64 line, const char *fmt...) {
+
+    va_list args, argsCopy;
+    va_start(args, fmt);
+
     va_copy(argsCopy, args);
-    int size = vsnprintf(nullptr, 0, msg, argsCopy) + 1;
+    int size = vsnprintf(nullptr, 0, fmt, argsCopy) + 1;
     va_end(argsCopy);
 
-    std::string result(size, '\0');
-    vsnprintf(&result[0], size, msg, args);
+    if (size < 0) { return; }
 
-    printf("[ INFO ] (%s : %lu)\n", filename.c_str(), line);
-    printf("  ==> %s\n", result.c_str());
+    std::string result(size, '\0');
+    vsnprintf(&result[0], size, fmt, args);
+
+    printf("[ \u001b[34mINFO %s : %lu \u001b[37m] ", filename.c_str(), line);
+    printf(" %s\n", result.c_str());
+
+    va_end(args);
 }
 
-void _crash(const std::string filename, const std::uint_fast32_t line, const char *errorMsg, ...) {
-    va_list args;
-    va_start(args, errorMsg);
+DEBUG_FORMAT inline void _crash(const std::string &filename, const std::uint_fast32_t line,
+                                const char *fmt...) {
+    va_list args, argsCopy;
+    va_start(args, fmt);
 
-    va_list argsCopy;
     va_copy(argsCopy, args);
-    int size = vsnprintf(nullptr, 0, errorMsg, argsCopy) + 1;
+    int size = vsnprintf(nullptr, 0, fmt, argsCopy) + 1;
     va_end(argsCopy);
 
-    std::string result(size, '\0');
-    vsnprintf(&result[0], size, errorMsg, args);
+    if (size < 0) { return; }
 
-    printf("[ FATAL ERROR: ] %s, %lu\n", filename.c_str(), line);
-    printf("  ==> %s\n", result.c_str());
+    std::string result(size, '\0');
+    vsnprintf(&result[0], size, fmt, args);
+
+    printf("[ \u001b[31mFATAL ERROR:  %s : %lu \u001b[37m] ", filename.c_str(), line);
+    printf(" %s\n", result.c_str());
+
+    va_end(args);
 
     int *ptr = NULL;
     *ptr = 42;

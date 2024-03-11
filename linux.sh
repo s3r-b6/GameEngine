@@ -32,7 +32,7 @@ include+=(-lGL)
 include+=(-lopenal)
 include+=(-lalut)
 
-flags=(-pipe -Wno-write-strings -D_REENTRANT)
+flags=(-pipe -Wno-write-strings -D_REENTRANT -Wno-deprecated-declarations)
 
 echo "Trying to recompile game.cpp"
 # This is a bit naive, but for now is OKish

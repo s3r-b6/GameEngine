@@ -10,10 +10,8 @@ using glm::mat4x4;
 using glm::vec2;
 
 struct Transform {
-    ivec2 atlasOffset;
-    ivec2 spriteSize;
-    vec2 pos;
-    vec2 size;
+    ivec2 atlasOffset, spriteSize;
+    vec2 pos, size;
 
     uint atlasIdx;
     uint padding[3];

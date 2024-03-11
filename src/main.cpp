@@ -40,7 +40,6 @@ int main(int argc, char *args[])
 
     local_persist float audio_timer = 3.f;
 
-    WavFile *wav = loadAudio();
     while (g->appState->running) {
         SDL_ShowCursor(g->input->showCursor);
 
@@ -59,10 +58,7 @@ int main(int argc, char *args[])
         reloadGameLib(tempStorage);
 
         audio_timer -= dt;
-        if (audio_timer <= 0.f) {
-            playAudio(g->alState, wav);
-            audio_timer = 3.f;
-        }
+        if (audio_timer <= 0.f) { audio_timer = 3.f; }
 
         g->input->prevMouseState[0] = g->input->mouseState[0];
         g->input->prevMouseState[1] = g->input->mouseState[1];

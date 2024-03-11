@@ -15,7 +15,7 @@ struct ALState {
     char *bufferData;
     ALCdevice *device;
     ALCcontext *context;
-    ALuint buffer, source;
+    ALuint buffer, bgBuffer, source, bgSource;
     ALfloat listenerOri[6] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f};
     ALCenum error;
     ALint source_state;
@@ -61,7 +61,7 @@ bool displayErrorsAL(const std::string &filename, const std::uint_fast32_t line)
 
 // TODO: just one wavFile
 global WavFile wavFile = {};
-WavFile *loadAudio(const char *originalFilename = "../assets/audio/test.wav") {
+WavFile *loadAudio(const char *originalFilename) {
     signed char filename[64];
 
     strncpy((char *)filename, originalFilename, 64);
@@ -74,7 +74,14 @@ WavFile *loadAudio(const char *originalFilename = "../assets/audio/test.wav") {
     return &wavFile;
 }
 
-void playAudio(ALState *alState, WavFile *wavFile) {
+void playBackground(ALState *alState, WavFile *wavFile) {
+    alBufferData(alState->buffer, wavFile->format, wavFile->data, wavFile->size, wavFile->freq);
+    alSourcei(alState->bgSource, AL_BUFFER, alState->bgBuffer);
+    alSourcei(alState->bgSource, AL_LOOPING, AL_TRUE);
+    alSourcePlay(alState->bgSource);
+}
+
+void playSoundEffects(ALState *alState, WavFile *wavFile) {
     alBufferData(alState->buffer, wavFile->format, wavFile->data, wavFile->size, wavFile->freq);
     alSourcei(alState->source, AL_BUFFER, alState->buffer);
     alSourcePlay(alState->source);

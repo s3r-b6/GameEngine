@@ -10,17 +10,17 @@
 #include "engine_lib.h"
 
 struct BumpAllocator {
-    u32 size;
-    u32 used;
+    u64 size;
+    u64 used;
     u8 *memory;
 
-    explicit BumpAllocator(u32 len) {
+    explicit BumpAllocator(u64 len) {
         size = len;
         used = 0;
         memory = reinterpret_cast<u8 *>(malloc(len));
 
         if (!memory) {
-            crash(__FILE__, __LINE__, "ERROR: Failed to allocate memory for the bumpAllocator!");
+            crash("ERROR: Failed to allocate memory for the bumpAllocator!");
             size = 0;
             return;
         }
@@ -35,11 +35,10 @@ struct BumpAllocator {
         size_t allignedSize = (len + 7) & ~7;
 
         if (used + allignedSize > size) {
-            crash(__FILE__, __LINE__, "ERROR: Not enough space in BumpAllocator");
+            crash("Not enough space in BumpAllocator");
             return result;
         }
 
-        size += allignedSize;
         result = memory + used;
         used += allignedSize;
 
