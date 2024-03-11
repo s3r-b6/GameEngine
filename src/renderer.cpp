@@ -76,6 +76,9 @@ void ui_render(GlobalState *g) {
                     sizeof(Transform) * g->renderData->uiTransformCount,
                     g->renderData->uiTransforms);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->uiTransformCount);
+
+    // 42 w/o help 193 with it
+    log("%d", g->renderData->uiTransformCount);
     g->renderData->uiTransformCount = 0;
 
     glDisable(GL_BLEND);
