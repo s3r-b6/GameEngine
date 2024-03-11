@@ -62,12 +62,12 @@ void load_font(char *filePath, int fontSize, RenderData *renderData, GLContext *
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, glContext->fontAtlasID);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, textureWidth, textureWidth, 0, GL_RED,
-                     GL_UNSIGNED_BYTE, (char *)textureBuffer);
-
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, textureWidth, textureWidth, 0, GL_RED,
+                     GL_UNSIGNED_BYTE, (char *)textureBuffer);
     }
 }

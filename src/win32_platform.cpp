@@ -1,7 +1,6 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
 
-#include "SDL2/SDL_log.h"
 #include <windows.h>
 
 #include "./engine_memory.h"

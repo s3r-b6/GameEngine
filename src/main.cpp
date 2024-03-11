@@ -38,7 +38,7 @@ int main(int argc, char *args[])
 
     SDL_Event event;
 
-    local_persist float audio_timer = 3.f;
+    local_persist float hotreload_timer = 3.f;
 
     while (g->appState->running) {
         SDL_ShowCursor(g->input->showCursor);
@@ -53,15 +53,18 @@ int main(int argc, char *args[])
         }
 
         updateGame_ptr(permStorage, tempStorage, g, dt);
-        render(g);
-        ui_render(g);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        render(g), ui_render(g);
         SDL_GL_SwapWindow(g->appState->window);
 
         tempStorage->freeMemory();
-        reloadGameLib(tempStorage);
 
-        audio_timer -= dt;
-        if (audio_timer <= 0.f) { audio_timer = 3.f; }
+        hotreload_timer -= dt;
+        if (hotreload_timer <= 0.f) {
+            reloadGameLib(tempStorage);
+            hotreload_timer = 3.f;
+        }
 
         g->input->prevMouseState[0] = g->input->mouseState[0];
         g->input->prevMouseState[1] = g->input->mouseState[1];

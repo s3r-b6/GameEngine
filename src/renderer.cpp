@@ -47,8 +47,6 @@ void render(GlobalState *g) {
     glClearColor(color[0], color[1], color[2], 1.f);
     glClearDepth(0.f);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glViewport(0, 0, screenSize.x, screenSize.y);
     glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
                                  static_cast<float>(screenSize.y)};
@@ -61,7 +59,6 @@ void render(GlobalState *g) {
                     g->renderData->transforms);
 
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
-
     g->renderData->transformCount = 0;
 }
 

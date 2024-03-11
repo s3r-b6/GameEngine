@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "SDL2/SDL_log.h"
-
 #include "./types.h"
 #include "engine_lib.h"
 
