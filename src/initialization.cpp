@@ -33,9 +33,10 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
         return nullptr;
     }
 
-    g->gameState->entityManager = (EntityManager *)permStorage->alloc(sizeof(EntityManager));
+    g->gameState->entityManager =
+        new (permStorage->alloc(sizeof(EntityManager))) EntityManager(1024, permStorage);
+
     g->gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
-    g->gameState->entityManager->init(32);
 
     if (!g->gameState->entityManager || !g->gameState->tileManager) {
         log("ERROR: Failed to alloc gameState");

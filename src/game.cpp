@@ -30,9 +30,6 @@ global TileSelection selection;
 
 global u32 player_id;
 global Entity *player;
-global TransformComponent *transform;
-global AnimatedSpriteRenderer *spriteRenderer;
-global ColliderComponent *collider;
 
 global float deltaTime;
 global bool helpShown = false;
@@ -55,12 +52,8 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         input = g->input;
         selection = gameState->selection;
 
-        if (gameState->initialized) {
-            player = gameState->entityManager->entities[player_id];
-            transform = player->findComponent<TransformComponent>();
-            spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
-            collider = player->findComponent<ColliderComponent>();
-        }
+        // TODO: This fails because the player_id is not stored outside of the shared object
+        if (gameState->initialized) { player = gameState->entityManager->entities[player_id]; }
     }
 
     if (!gameState->initialized) initializeGameState();
@@ -103,8 +96,6 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         gameState->tileManager->renderFront(renderData);
 
         ui_drawTextFormatted(renderData, {420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
-        ui_drawTextFormatted(renderData, {420, 30}, 0.2, "playerPos:{%.2f, %.2f}", transform->pos.x,
-                             transform->pos.y);
         ui_drawTextFormatted(renderData, {420, 45}, 0.2, "Tile:{ %d, %d } Layer: %d",
                              selection.selectedTile1.x, selection.selectedTile1.y,
                              selectedWorldLayer);
@@ -129,18 +120,28 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     frame += 1;
 }
 
-void loadEntities() {
+void setupPlayer() {
     player_id = gameState->entityManager->getUninitializedID();
     player = gameState->entityManager->entities[player_id];
 
-    transform = new TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
-    spriteRenderer = new AnimatedSpriteRenderer(renderData, PlayerD_Walk, glm::vec2(16, 32),
-                                                transform, 12, &deltaTime, 4, Player);
-    collider = new ColliderComponent(transform, glm::vec2(16, 20));
-
+    auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
+        TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
     player->components.push_back(transform);
+
+    auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
+        AnimatedSpriteRenderer(player_id, renderData, PlayerD_Walk, {16, 32}, 12, &deltaTime, 4,
+                               Player);
     player->components.push_back(spriteRenderer);
+
+    auto collider =
+        new (permStorage->alloc(sizeof(ColliderComponent))) ColliderComponent(player_id, {16, 20});
     player->components.push_back(collider);
+
+    auto inputController =
+        new (permStorage->alloc(sizeof(InputController))) InputController(player_id);
+    player->components.push_back(inputController);
+
+    // if (actionJustPressed(gameState, input, HELP)) { helpShown = !helpShown; }
 }
 
 inline void initializeGameState() {
@@ -163,8 +164,7 @@ inline void initializeGameState() {
     gameState->gameRegisterKey(DELETE_WORLD, '9');
     gameState->gameRegisterKey(RELOAD_WORLD, '0');
 
-    gameState->entityManager->init(2048);
-    loadEntities();
+    setupPlayer();
 
     selection.selectedTile1.atlasIdx = WORLD_ATLAS;
     selection.selectedTile1.x = 0;
@@ -207,8 +207,9 @@ void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
     ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseUIpos * TILESIZE);
 }
 
-// I don't think I like this
+// TODO: Restructure
 bool checkTileCollisions() {
+    return false;
     for (int i = 0; i < gameState->tileManager->size; i++) {
         int x = i % WORLD_SIZE_x;
         int y = i / WORLD_SIZE_x;
@@ -216,7 +217,7 @@ bool checkTileCollisions() {
         auto tile = gameState->tileManager->worldGridLayer1[i];
         if (!tile.atlasIdx) continue;
 
-        if (collider->checkCollisions({x * TILESIZE, y * TILESIZE}, {16, 16})) return true;
+        // if (collider->checkCollisions({x * TILESIZE, y * TILESIZE}, {16, 16})) return true;
     }
 
     return false;
@@ -224,10 +225,11 @@ bool checkTileCollisions() {
 
 void simulate() {
     if (!player) { crash("ERROR getting the player"); }
-    if (!transform) { crash("ERROR getting the transform"); }
-    if (!collider) { crash("ERROR getting the collider"); }
 
     if (pickerShown) return;
+
+    auto transform = player->findComponent<TransformComponent>();
+    auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
 
     auto oldPos = transform->pos;
     auto newPos = &transform->pos;
@@ -235,11 +237,11 @@ void simulate() {
     bool moved = false;
     if (actionDown(gameState, input, MOVE_U)) {
         newPos->y -= playerSpeed;
-        spriteRenderer->setAnimatedSprite(PlayerU_Walk);
+        spriteRenderer->animatedSprite = PlayerU_Walk;
         moved = true;
     } else if (actionDown(gameState, input, MOVE_D)) {
         newPos->y += playerSpeed;
-        spriteRenderer->setAnimatedSprite(PlayerD_Walk);
+        spriteRenderer->animatedSprite = PlayerD_Walk;
         moved = true;
     }
 
@@ -248,7 +250,7 @@ void simulate() {
     // also: this might be too naive (maybe somehow the player can end stuck forever inside a
     // collision?)
     if (moved && checkTileCollisions()) {
-        transform->setPos(oldPos);
+        transform->pos = oldPos;
         moved = false;
     }
 
@@ -256,27 +258,26 @@ void simulate() {
 
     if (actionDown(gameState, input, MOVE_R)) {
         newPos->x -= playerSpeed;
-        spriteRenderer->setAnimatedSprite(PlayerR_Walk);
+        spriteRenderer->animatedSprite = PlayerR_Walk;
         moved = true;
     } else if (actionDown(gameState, input, MOVE_L)) {
         newPos->x += playerSpeed;
-        spriteRenderer->setAnimatedSprite(PlayerL_Walk);
+        spriteRenderer->animatedSprite = PlayerL_Walk;
         moved = true;
     }
 
     if (moved && checkTileCollisions()) {
-        transform->setPos(oldPos);
+        transform->pos = oldPos;
         moved = false;
     }
 
-    spriteRenderer->setActive(moved);
+    spriteRenderer->animating = moved;
     gameState->entityManager->update();
 }
 
 // TODO: This is terrible. Instead I should have some kind of "action mode". F.ex., in UI
 // mode, check for all UI actions, and so on
 void handleInput() {
-    if (actionJustPressed(gameState, input, HELP)) { helpShown = !helpShown; }
 
     if (!pickerShown) {
         if (input->lMouseDown()) {
@@ -302,10 +303,10 @@ void handleInput() {
         }
 
         if (actionJustPressed(gameState, input, LAYER_BACK)) {
-            log("Back layer", __FILE__, __LINE__);
+            log("Back layer");
             selectedWorldLayer = 0;
         } else if (actionJustPressed(gameState, input, LAYER_FRONT)) {
-            log("Front layer", __FILE__, __LINE__);
+            log("Front layer");
             selectedWorldLayer = 1;
         }
     }
