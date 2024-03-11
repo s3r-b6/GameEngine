@@ -5,8 +5,12 @@
 #include "types.h"
 #include <string>
 
-void ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize, const char *text,
-                          ...) {
+#include <stdarg.h>
+#include <stdio.h>
+#include <string>
+
+__attribute__((format(__printf__, 4, 5))) void
+ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize, const char *text...) {
     va_list args;
     va_start(args, text);
 

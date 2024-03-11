@@ -26,7 +26,7 @@ struct ProgramState {
 
 #define DEBUG_FORMAT __attribute__((format(__printf__, 3, 4)))
 
-DEBUG_FORMAT inline void _log(const std::string &filename, const u64 line, const char *fmt...) {
+DEBUG_FORMAT void _log(const std::string &filename, const u64 line, const char *fmt...) {
 
     va_list args, argsCopy;
     va_start(args, fmt);

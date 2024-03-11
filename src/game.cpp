@@ -73,22 +73,14 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         simulate();
     }
 
-    if (helpShown) {
-        // This is a placeholder...
-        ui_drawTextFormatted(renderData, {20, 25}, 0.3, "%s: %c", "HELP", '/');
-        ui_drawTextFormatted(renderData, {20, 50}, 0.3, "%s: %c", "MOVE_UP", 'w');
-        ui_drawTextFormatted(renderData, {20, 75}, 0.3, "%s: %c", "MOVE_RIGHT", 'a');
-        ui_drawTextFormatted(renderData, {20, 100}, 0.3, "%s: %c", "MOVE_DOWN", 's');
-        ui_drawTextFormatted(renderData, {20, 125}, 0.3, "%s: %c", "MOVE_LEFT", 'd');
-        ui_drawTextFormatted(renderData, {20, 150}, 0.3, "%s: %c", "TILE_1", '1');
-        ui_drawTextFormatted(renderData, {20, 175}, 0.3, "%s: %c", "TILE_2", '2');
-        ui_drawTextFormatted(renderData, {20, 200}, 0.3, "%s: %c", "TILE_3", '3');
-        ui_drawTextFormatted(renderData, {20, 225}, 0.3, "%s: %c", "LAYER_FRONT", 'f');
-        ui_drawTextFormatted(renderData, {20, 250}, 0.3, "%s: %c", "LAYER_BACK", 'b');
-        ui_drawTextFormatted(renderData, {20, 275}, 0.3, "%s: %c", "SAVE_WORLD", '8');
-        ui_drawTextFormatted(renderData, {20, 300}, 0.3, "%s: %c", "DELETE_WORLD", '9');
-        ui_drawTextFormatted(renderData, {20, 325}, 0.3, "%s: %c", "RELOAD_WORLD", '0');
-    }
+    if (helpShown)
+        ui_drawTextFormatted(renderData, {20, 25}, 0.3,
+                             "%s: %c\n%s: %c\n%s: %c\n%s: %c\n%s: %c\n%s: %c\n%s: %c\n%s: %c\n%s: "
+                             "%c\n%s: %c\n%s: %c\n%s: %c\n%s: %c",
+                             "HELP", '/', "MOVE_UP", 'w', "MOVE_RIGHT", 'a', "MOVE_DOWN", 's',
+                             "MOVE_LEFT", 'd', "TILE_1", '1', "TILE_2", '2', "TILE_3", '3',
+                             "LAYER_FRONT", 'f', "LAYER_BACK", 'b', "SAVE_WORLD", '8',
+                             "DELETE_WORLD", '9', "RELOAD_WORLD", '0');
 
     if (!pickerShown) {
         gameState->tileManager->renderBack(renderData);
@@ -120,6 +112,21 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     frame += 1;
 }
 
+// TODO: I don't like this
+bool checkTileCollisions(ColliderComponent *collider) {
+    for (int i = 0; i < gameState->tileManager->size; i++) {
+        int x = i % WORLD_SIZE_x;
+        int y = i / WORLD_SIZE_x;
+
+        auto tile = gameState->tileManager->worldGridLayer1[i];
+        if (!tile.atlasIdx) continue;
+
+        if (collider->checkCollisions({x * TILESIZE, y * TILESIZE}, {16, 16})) return true;
+    }
+
+    return false;
+}
+
 void setupPlayer() {
     player_id = gameState->entityManager->getUninitializedID();
     player = gameState->entityManager->entities[player_id];
@@ -139,9 +146,84 @@ void setupPlayer() {
 
     auto inputController =
         new (permStorage->alloc(sizeof(InputController))) InputController(player_id);
-    player->components.push_back(inputController);
 
-    // if (actionJustPressed(gameState, input, HELP)) { helpShown = !helpShown; }
+    inputController->registerAction(HELP, '/', [](u32 player_id) {
+        if (actionJustPressed(gameState, input, HELP)) { helpShown = !helpShown; }
+    });
+
+    auto move = [](u32 player_id) {
+        auto transform = player->findComponent<TransformComponent>();
+        auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
+        auto collider = player->findComponent<ColliderComponent>();
+
+        auto oldPos = transform->pos;
+        auto newPos = &transform->pos;
+
+        bool moved = false;
+        if (actionDown(gameState, input, MOVE_U)) {
+            newPos->y -= playerSpeed;
+            spriteRenderer->animatedSprite = PlayerU_Walk;
+            moved = true;
+        } else if (actionDown(gameState, input, MOVE_D)) {
+            newPos->y += playerSpeed;
+            spriteRenderer->animatedSprite = PlayerD_Walk;
+            moved = true;
+        }
+
+        // TODO: This is the dumbest way to allow for movement when it is not possible in 1
+        // direction. this is horrible. also: this might be too naive (maybe somehow the player
+        // can end stuck forever inside a collision?)
+        if (moved && checkTileCollisions(collider)) {
+            transform->pos = oldPos;
+            moved = false;
+        }
+
+        oldPos = transform->pos;
+
+        if (actionDown(gameState, input, MOVE_R)) {
+            newPos->x -= playerSpeed;
+            spriteRenderer->animatedSprite = PlayerR_Walk;
+            moved = true;
+        } else if (actionDown(gameState, input, MOVE_L)) {
+            newPos->x += playerSpeed;
+            spriteRenderer->animatedSprite = PlayerL_Walk;
+            moved = true;
+        }
+
+        if (moved && checkTileCollisions(collider)) {
+            transform->pos = oldPos;
+            moved = false;
+        }
+
+        spriteRenderer->animating = moved;
+    };
+
+    GameAction movActions[] = {MOVE_U, MOVE_R, MOVE_D, MOVE_L};
+    char movKeys[] = {'w', 'a', 's', 'd'};
+    inputController->registerFunction(&movActions[0], &movKeys[0], 4, move);
+
+    GameAction tilePickerActions[] = {LAYER_FRONT, LAYER_BACK, SAVE_WORLD, RELOAD_WORLD,
+                                      DELETE_WORLD};
+    char tilePickerKeys[] = {'f', 'b', '8', '9', '0'};
+    inputController->registerFunction(tilePickerActions, tilePickerKeys, 5, [](u32) {
+        if (actionJustPressed(gameState, input, SAVE_WORLD)) {
+            gameState->tileManager->serialize();
+        } else if (actionJustPressed(gameState, input, RELOAD_WORLD)) {
+            gameState->tileManager->deserialize();
+        } else if (actionJustPressed(gameState, input, DELETE_WORLD)) {
+            gameState->tileManager->clear();
+        }
+
+        if (actionJustPressed(gameState, input, LAYER_BACK)) {
+            log("Back layer");
+            selectedWorldLayer = 0;
+        } else if (actionJustPressed(gameState, input, LAYER_FRONT)) {
+            log("Front layer");
+            selectedWorldLayer = 1;
+        }
+    });
+
+    player->components.push_back(inputController);
 }
 
 inline void initializeGameState() {
@@ -150,19 +232,9 @@ inline void initializeGameState() {
     renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
-    gameState->gameRegisterKey(HELP, '/');
-    gameState->gameRegisterKey(MOVE_U, 'w');
-    gameState->gameRegisterKey(MOVE_R, 'a');
-    gameState->gameRegisterKey(MOVE_D, 's');
-    gameState->gameRegisterKey(MOVE_L, 'd');
     gameState->gameRegisterKey(TILE_1, '1');
     gameState->gameRegisterKey(TILE_2, '2');
     gameState->gameRegisterKey(TILE_3, '3');
-    gameState->gameRegisterKey(LAYER_FRONT, 'f');
-    gameState->gameRegisterKey(LAYER_BACK, 'b');
-    gameState->gameRegisterKey(SAVE_WORLD, '8');
-    gameState->gameRegisterKey(DELETE_WORLD, '9');
-    gameState->gameRegisterKey(RELOAD_WORLD, '0');
 
     setupPlayer();
 
@@ -207,71 +279,11 @@ void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
     ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseUIpos * TILESIZE);
 }
 
-// TODO: Restructure
-bool checkTileCollisions() {
-    return false;
-    for (int i = 0; i < gameState->tileManager->size; i++) {
-        int x = i % WORLD_SIZE_x;
-        int y = i / WORLD_SIZE_x;
-
-        auto tile = gameState->tileManager->worldGridLayer1[i];
-        if (!tile.atlasIdx) continue;
-
-        // if (collider->checkCollisions({x * TILESIZE, y * TILESIZE}, {16, 16})) return true;
-    }
-
-    return false;
-}
-
 void simulate() {
     if (!player) { crash("ERROR getting the player"); }
 
     if (pickerShown) return;
 
-    auto transform = player->findComponent<TransformComponent>();
-    auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
-
-    auto oldPos = transform->pos;
-    auto newPos = &transform->pos;
-
-    bool moved = false;
-    if (actionDown(gameState, input, MOVE_U)) {
-        newPos->y -= playerSpeed;
-        spriteRenderer->animatedSprite = PlayerU_Walk;
-        moved = true;
-    } else if (actionDown(gameState, input, MOVE_D)) {
-        newPos->y += playerSpeed;
-        spriteRenderer->animatedSprite = PlayerD_Walk;
-        moved = true;
-    }
-
-    // TODO: This is the dumbest way to allow for movement when it is not possible in 1 direction.
-    // this is horrible.
-    // also: this might be too naive (maybe somehow the player can end stuck forever inside a
-    // collision?)
-    if (moved && checkTileCollisions()) {
-        transform->pos = oldPos;
-        moved = false;
-    }
-
-    oldPos = transform->pos;
-
-    if (actionDown(gameState, input, MOVE_R)) {
-        newPos->x -= playerSpeed;
-        spriteRenderer->animatedSprite = PlayerR_Walk;
-        moved = true;
-    } else if (actionDown(gameState, input, MOVE_L)) {
-        newPos->x += playerSpeed;
-        spriteRenderer->animatedSprite = PlayerL_Walk;
-        moved = true;
-    }
-
-    if (moved && checkTileCollisions()) {
-        transform->pos = oldPos;
-        moved = false;
-    }
-
-    spriteRenderer->animating = moved;
     gameState->entityManager->update();
 }
 
@@ -293,22 +305,6 @@ void handleInput() {
             auto pos = input->mouseWorldPos;
             gameState->tileManager->removeTile(pos.x, pos.y, selectedWorldLayer);
         }
-
-        if (actionJustPressed(gameState, input, SAVE_WORLD)) {
-            gameState->tileManager->serialize();
-        } else if (actionJustPressed(gameState, input, RELOAD_WORLD)) {
-            gameState->tileManager->deserialize();
-        } else if (actionJustPressed(gameState, input, DELETE_WORLD)) {
-            gameState->tileManager->clear();
-        }
-
-        if (actionJustPressed(gameState, input, LAYER_BACK)) {
-            log("Back layer");
-            selectedWorldLayer = 0;
-        } else if (actionJustPressed(gameState, input, LAYER_FRONT)) {
-            log("Front layer");
-            selectedWorldLayer = 1;
-        }
     }
 
     if (pickerShown) {
@@ -329,19 +325,15 @@ void handleInput() {
                 u8 minX, minY, maxX, maxY;
 
                 if (selected1.x < mousePos.x) {
-                    minX = selected1.x;
-                    maxX = mousePos.x;
+                    minX = selected1.x, maxX = mousePos.x;
                 } else {
-                    maxX = selected1.x;
-                    minX = mousePos.x;
+                    maxX = selected1.x, minX = mousePos.x;
                 }
 
                 if (selected1.y < mousePos.y) {
-                    minY = selected1.y;
-                    maxY = mousePos.y;
+                    minY = selected1.y, maxY = mousePos.y;
                 } else {
-                    maxY = selected1.y;
-                    minY = mousePos.y;
+                    maxY = selected1.y, minY = mousePos.y;
                 }
 
                 selection.selectedTile1 = {minX, minY};

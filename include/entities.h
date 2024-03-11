@@ -5,6 +5,7 @@
 #include <stack>
 #include <vector>
 
+#include "input.h"
 #include "types.h"
 
 #include "assets.h"
@@ -247,6 +248,22 @@ struct InputController : EntityComponentBase {
     InputController(u32 id) {
         entityID = id;
         inputActions = std::vector<std::function<void(u32)>>();
+    }
+
+    void registerFunction(GameAction *actions, char *keys, int nActions,
+                          std::function<void(u32)> fn) {
+        for (int i = 0; i < nActions; i++) {
+            auto action = actions[i];
+            auto key = keys[i];
+            g->gameState->gameRegisterKey(action, key);
+        }
+
+        inputActions.push_back(fn);
+    }
+
+    void registerAction(GameAction action, char key, std::function<void(u32)> fn) {
+        g->gameState->gameRegisterKey(action, key);
+        inputActions.push_back(fn);
     }
 
     void update() {
