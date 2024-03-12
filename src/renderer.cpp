@@ -11,11 +11,50 @@
 #include "./stb_image.h"
 #endif
 
+// The pixel data consists of *y scanlines of *x pixels,
+// with each pixel consisting of N interleaved 8-bit components:
+//  1           grey                 2           grey, alpha
+//  3           red, green, blue     4           red, green, blue, alpha
+void parse_png_data(u8 *data, int width, int height, int channels) {
+    local_persist u32 total_tiles = 0;
+    if (channels != 4) crash("oops");
+    // log("W%d H%d channels: %d", width, height, channels);
+
+    int x_tiles = width / 16, y_tiles = height / 16;
+    for (int i = 0; i < x_tiles * y_tiles; i++) {
+        bool is_empty = true;
+        for (int j = 0; j < 16 * 16; j++) {
+            int y = i / x_tiles * 16 + j / 16;
+            int x = i % x_tiles * 16 + j % 16;
+
+            if (x >= width || y >= height) continue;
+
+            u32 pixel_index = (y * width + x) * channels;
+            u8 r = data[pixel_index], g = data[pixel_index + 1];
+            u8 b = data[pixel_index + 2], a = data[pixel_index + 3];
+
+            if (a != 0) {
+                is_empty = false;
+                break;
+            }
+        }
+
+        if (!is_empty) {
+            // printf("tile { %d, %d } is non-empty\n", i % x_tiles, i / x_tiles);
+            total_tiles++;
+        }
+    }
+
+    log("total tiles after loading file: %d", total_tiles);
+}
+
 // TODO: This should use a map or something similar, so one texture can be freed
 // and then I can ask which slot is free and occupy it again and so on
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx) {
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx, bool createTiles) {
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
+
+    parse_png_data(data, width, height, channels);
 
     if (!data) {
         SDL_Log("Failed to load texture %s", texturePath);

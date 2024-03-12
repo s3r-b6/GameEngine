@@ -27,9 +27,11 @@ int plat_main() {
 
     // GL_TEXTURE0 is for the font
     load_font("../fonts/joystix.otf", 48, g->renderData, g->glContext, tempStorage);
-    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE1);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE2);
-    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE3);
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE1,
+                     false);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE2, true);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE3,
+                     true);
 
     SDL_Event event;
 

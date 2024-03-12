@@ -76,6 +76,6 @@ struct GLContext {
     u16 usedTextures = 0;
 };
 
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx);
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx, bool createTiles);
 void render(GlobalState *g);
 void ui_render(GlobalState *g);
