@@ -16,12 +16,7 @@
 
 global void *gameSO;
 
-#ifdef _WIN32
-int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-#elif __linux__
-int main(int argc, char *args[])
-#endif
-{
+int plat_main() {
     permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(10));
     if (!(g = initialize(permStorage, tempStorage))) { crash("Failed to initialize the engine."); }
 
@@ -54,8 +49,18 @@ int main(int argc, char *args[])
 
         updateGame_ptr(permStorage, tempStorage, g, dt);
 
+        auto screenSize = g->appState->screenSize;
+        auto color = g->renderData->clearColor;
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        render(g), ui_render(g);
+
+        glClearColor(color[0], color[1], color[2], 1.f);
+        glClearDepth(0.f);
+        glViewport(0, 0, screenSize.x, screenSize.y);
+
+        render(g);
+        glFinish();
+        ui_render(g);
         SDL_GL_SwapWindow(g->appState->window);
 
         tempStorage->freeMemory();

@@ -54,7 +54,7 @@ struct RenderData {
 
     Glyph glyphs[127];
 
-    int fontHeight;
+    int fontHeight = 0;
     int transformCount = 0;
     int uiTransformCount = 0;
 

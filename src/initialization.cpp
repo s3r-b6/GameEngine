@@ -338,6 +338,8 @@ bool initOpenAL(ALState *alState) {
 void exitOpenAL(ALState *alState) {
     alDeleteSources(1, &alState->source);
     alDeleteBuffers(1, &alState->buffer);
+    alDeleteSources(1, &alState->bgSource);
+    alDeleteBuffers(1, &alState->bgBuffer);
     alState->device = alcGetContextsDevice(alState->context);
     alcMakeContextCurrent(NULL);
     alcDestroyContext(alState->context);

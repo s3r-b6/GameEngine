@@ -31,7 +31,7 @@ void load_font(char *filePath, int fontSize, RenderData *renderData, GLContext *
             row += fontSize;
         }
 
-        long height = (fontFace->size->metrics.ascender - fontFace->size->metrics.descender) >> 6;
+        i32 height = (fontFace->size->metrics.ascender - fontFace->size->metrics.descender) >> 6;
         renderData->fontHeight = height > renderData->fontHeight ? height : renderData->fontHeight;
 
         for (unsigned int y = 0; y < fontFace->glyph->bitmap.rows; ++y) {
@@ -46,10 +46,7 @@ void load_font(char *filePath, int fontSize, RenderData *renderData, GLContext *
         glyph->size = {(int)fontFace->glyph->bitmap.width, (int)fontFace->glyph->bitmap.rows};
         glyph->advance = {(float)(fontFace->glyph->advance.x >> 6),
                           (float)(fontFace->glyph->advance.y >> 6)};
-        glyph->offset = {
-            (float)fontFace->glyph->bitmap_left,
-            (float)fontFace->glyph->bitmap_top,
-        };
+        glyph->offset = {(float)fontFace->glyph->bitmap_left, (float)fontFace->glyph->bitmap_top};
 
         col += fontFace->glyph->bitmap.width + padding;
     }

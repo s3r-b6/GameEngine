@@ -34,12 +34,13 @@ void ui_drawText(RenderData *renderData, glm::vec2 pos, float fontSize, const ch
         }
 
         Glyph glyph = renderData->glyphs[c];
-        Transform transform = {};
-        transform.pos.x = pos.x + glyph.offset.x * fontSize;
-        transform.pos.y = pos.y - glyph.offset.y * fontSize;
-        transform.atlasOffset = glyph.textureCoords;
-        transform.spriteSize = glyph.size;
-        transform.size = glm::vec2(glyph.size) * fontSize;
+        Transform transform = {
+            .atlasOffset = glyph.textureCoords,
+            .spriteSize = glyph.size,
+            .pos = {pos.x + glyph.offset.x * fontSize, pos.y - glyph.offset.y * fontSize},
+            .size = glm::vec2(glyph.size) * fontSize,
+            .atlasIdx = FONT_ATLAS,
+        };
 
         renderData->uiTransforms[renderData->uiTransformCount++] = transform;
         pos.x += glyph.advance.x * fontSize;

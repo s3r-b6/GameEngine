@@ -43,11 +43,6 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTe
 
 void render(GlobalState *g) {
     auto screenSize = g->appState->screenSize;
-    auto color = g->renderData->clearColor;
-    glClearColor(color[0], color[1], color[2], 1.f);
-    glClearDepth(0.f);
-
-    glViewport(0, 0, screenSize.x, screenSize.y);
     glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
                                  static_cast<float>(screenSize.y)};
     glUniform2fv(g->glContext->screenSizeID, 1, &floatScreenSize.x);
@@ -66,6 +61,7 @@ void ui_render(GlobalState *g) {
     auto screenSize = g->appState->screenSize;
 
     glDisable(GL_DEPTH_TEST);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -78,7 +74,7 @@ void ui_render(GlobalState *g) {
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->uiTransformCount);
 
     // 42 w/o help 193 with it
-    log("%d", g->renderData->uiTransformCount);
+    // log("%d", g->renderData->uiTransformCount);
     g->renderData->uiTransformCount = 0;
 
     glDisable(GL_BLEND);

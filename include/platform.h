@@ -4,10 +4,13 @@
 #include "./types.h"
 
 #ifdef __linux__
+#define plat_main() main(int argc, char *args[])
 #define EXPORT_FN
 #include <unistd.h>
 #define platform_sleep(ms) sleep(ms)
 #elif _WIN32
+#define plat_main()                                                                                \
+    __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 #define WIN32_LEAN_AND_MEAN
 #define EXPORT_FN __declspec(dllexport)
 #define platform_sleep(ms) Sleep(ms)
