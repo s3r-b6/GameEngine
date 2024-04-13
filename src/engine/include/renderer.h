@@ -58,7 +58,7 @@ struct RenderData {
     int transformCount = 0;
     int uiTransformCount = 0;
 
-    float clearColor[3];
+    glm::vec3 clearColor;
 
     OrthographicCamera gameCamera;
     OrthographicCamera uiCamera;
@@ -76,6 +76,7 @@ struct GLContext {
     u16 usedTextures = 0;
 };
 
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx, bool createTiles);
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx,
+                      bool createTiles);
 void render(GlobalState *g);
 void ui_render(GlobalState *g);

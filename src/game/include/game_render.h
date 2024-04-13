@@ -5,8 +5,8 @@
 #include "assets.h"
 #include "types.h"
 
-void ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize, const char *text,
-                          ...);
+void ui_drawTextFormatted(RenderData *renderData, glm::vec2 pos, float fontSize,
+                          const char *text...);
 void ui_drawText(RenderData *renderData, glm::vec2 pos, float fontSize, const char *text);
 void drawTileGroup(RenderData *renderData, glm::vec2 tile1, glm::vec2 tile2, u8 atlasIdx,
                    glm::ivec2 pos);

@@ -58,9 +58,7 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
     g->appState->window = NULL;
     g->appState->glContext = NULL;
 
-    g->renderData->clearColor[0] = 119.f / 255.f;
-    g->renderData->clearColor[1] = 33.f / 255.f;
-    g->renderData->clearColor[2] = 111.f / 255.f;
+    g->renderData->clearColor = {119.f / 255.f, 33.f / 255.f, 111.f / 255.f};
 
     if (!initOpenAL(g->alState)) {
         engine_log("ERROR: Failed to initialize OpenAL");
