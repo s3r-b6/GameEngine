@@ -22,7 +22,6 @@ global TileSelection selection;
 
 global u32 player_id;
 
-global double deltaTime;
 global bool helpShown = false;
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
@@ -102,14 +101,9 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 
 // TODO: I don't like this
 bool checkTileCollisions(ColliderComponent *collider) {
-    for (int i = 0; i < gameState->tileManager->size; i++) {
-        int x = i % WORLD_SIZE_x;
-        int y = i / WORLD_SIZE_x;
-
-        auto tile = gameState->tileManager->worldGridLayer1[i];
-        if (!tile.atlasIdx) continue;
-
-        if (collider->checkCollisions({x * TILESIZE, y * TILESIZE}, {16, 16})) return true;
+    for (auto coll : gameState->tileManager->collisions) {
+        if (collider->checkCollisions({coll.worldX * TILESIZE, coll.worldY * TILESIZE}, {16, 16}))
+            return true;
     }
 
     return false;
@@ -196,10 +190,13 @@ void setupPlayer() {
     char tilePickerKeys[] = {'f', 'b', '8', '9', '0'};
     inputController->registerFunction(tilePickerActions, tilePickerKeys, 5, [](u32) {
         if (actionJustPressed(gameState, input, SAVE_WORLD)) {
+            log("Saving world state");
             gameState->tileManager->serialize();
         } else if (actionJustPressed(gameState, input, RELOAD_WORLD)) {
+            log("Reloading world");
             gameState->tileManager->deserialize();
         } else if (actionJustPressed(gameState, input, DELETE_WORLD)) {
+            log("Clearing tile manager");
             gameState->tileManager->clear();
         }
 
@@ -232,7 +229,7 @@ inline void initializeGameState() {
     selection.selectedTile1.y = 0;
 
     if (gameState->tileManager->deserialize()) {
-        log("Found previous world.data, loading the map", __FILE__, __LINE__);
+        log("Found previous world.data, loading the map");
     }
 
     gameState->initialized = true;
@@ -274,19 +271,40 @@ void simulate() {
     gameState->entityManager->update();
 }
 
+struct GameInput {
+    enum InputMode {
+        INVALID,
+        UI_MODE,
+        GAME_MODE,
+        MODE_COUNT,
+    };
+
+    void registerModeSwitch(){
+    }
+};
+
 // TODO: This is terrible. Instead I should have some kind of "action mode". F.ex., in UI
 // mode, check for all UI actions, and so on
 void handleInput() {
-
     if (!pickerShown) {
         if (input->lMouseDown()) {
             if (selection.selectedTile2.atlasIdx) {
-                gameState->tileManager->setTiles(input->mouseWorldPos, selection.selectedTile1,
-                                                 selection.selectedTile2, selectedWorldLayer);
+                if (selectedWorldLayer == 0) {
+                    gameState->tileManager->setTiles(input->mouseWorldPos, selection.selectedTile1,
+                                                     selection.selectedTile2, selectedWorldLayer);
+                } else if (input->lMouseJustPressed()) {
+                    gameState->tileManager->setTiles(input->mouseWorldPos, selection.selectedTile1,
+                                                     selection.selectedTile2, selectedWorldLayer);
+                }
             } else if (selection.selectedTile1.atlasIdx) {
                 auto pos = input->mouseWorldPos;
-                gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
-                                                selectedWorldLayer);
+                if (selectedWorldLayer == 0) {
+                    gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
+                                                    selectedWorldLayer);
+                } else if (input->lMouseJustPressed()) {
+                    gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
+                                                    selectedWorldLayer);
+                }
             }
         } else if (input->rMouseDown()) {
             auto pos = input->mouseWorldPos;
