@@ -114,7 +114,7 @@ void setupPlayer() {
     auto player = gameState->entityManager->entities[player_id];
 
     auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
-        TransformComponent(glm::vec2(0, 0), glm::vec2(16, 32));
+        TransformComponent(glm::vec2(128, 128), glm::vec2(16, 32));
     player->components.push_back(transform);
 
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
@@ -190,21 +190,21 @@ void setupPlayer() {
     char tilePickerKeys[] = {'f', 'b', '8', '9', '0'};
     inputController->registerFunction(tilePickerActions, tilePickerKeys, 5, [](u32) {
         if (actionJustPressed(gameState, input, SAVE_WORLD)) {
-            log("Saving world state");
+            engine_log("Saving world state");
             gameState->tileManager->serialize();
         } else if (actionJustPressed(gameState, input, RELOAD_WORLD)) {
-            log("Reloading world");
+            engine_log("Reloading world");
             gameState->tileManager->deserialize();
         } else if (actionJustPressed(gameState, input, DELETE_WORLD)) {
-            log("Clearing tile manager");
+            engine_log("Clearing tile manager");
             gameState->tileManager->clear();
         }
 
         if (actionJustPressed(gameState, input, LAYER_BACK)) {
-            log("Back layer");
+            engine_log("Back layer");
             selectedWorldLayer = 0;
         } else if (actionJustPressed(gameState, input, LAYER_FRONT)) {
-            log("Front layer");
+            engine_log("Front layer");
             selectedWorldLayer = 1;
         }
     });
@@ -229,7 +229,7 @@ inline void initializeGameState() {
     selection.selectedTile1.y = 0;
 
     if (gameState->tileManager->deserialize()) {
-        log("Found previous world.data, loading the map");
+        engine_log("Found previous world.data, loading the map");
     }
 
     gameState->initialized = true;
@@ -279,8 +279,7 @@ struct GameInput {
         MODE_COUNT,
     };
 
-    void registerModeSwitch(){
-    }
+    void registerModeSwitch() {}
 };
 
 // TODO: This is terrible. Instead I should have some kind of "action mode". F.ex., in UI
@@ -347,13 +346,13 @@ void handleInput() {
                 selection.selectedTile2.atlasIdx = WORLD_ATLAS;
                 selection.selectedTile1.atlasIdx = WORLD_ATLAS;
 
-                log("SELECTED TILES: 1{%d %d} 2{%d %d}", selection.selectedTile1.x,
+                engine_log("SELECTED TILES: 1{%d %d} 2{%d %d}", selection.selectedTile1.x,
                     selection.selectedTile1.y, selection.selectedTile2.x,
                     selection.selectedTile2.y);
             } else {
                 selection.selectedTile1.atlasIdx = WORLD_ATLAS;
                 selection.selectedTile2 = {0};
-                log("SELECTED TILE: {%d %d}", selection.selectedTile1.x, selection.selectedTile1.y);
+                engine_log("SELECTED TILE: {%d %d}", selection.selectedTile1.x, selection.selectedTile1.y);
             }
         }
 

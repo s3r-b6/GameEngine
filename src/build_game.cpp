@@ -1,10 +1,10 @@
 #ifdef __linux__
-#include "linux_platform.cpp"
+#include "./engine/linux_platform.cpp"
 #elif _WIN32
-#include "win32_platform.cpp"
+#include "./engine/win32_platform.cpp"
 #endif
 
-#include "assets.cpp"
-#include "game_render.cpp"
+#include "./engine/assets.cpp"
+#include "./game/game_render.cpp"
 
-#include "game.cpp"
+#include "./game/game.cpp"

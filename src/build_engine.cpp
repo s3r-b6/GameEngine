@@ -1,14 +1,14 @@
 #ifdef __linux__
-#include "linux_platform.cpp"
+#include "./engine/linux_platform.cpp"
 #elif _WIN32
-#include "win32_platform.cpp"
+#include "./engine/win32_platform.cpp"
 #endif
 
 #include "glad.c"
 
-#include "assets.cpp"
-#include "fonts.cpp"
-#include "initialization.cpp"
-#include "renderer.cpp"
+#include "./engine/assets.cpp"
+#include "./engine/fonts.cpp"
+#include "./engine/initialization.cpp"
+#include "./engine/renderer.cpp"
 
-#include "main.cpp"
+#include "./engine/main.cpp"

@@ -45,7 +45,7 @@ void parse_png_data(u8 *data, int width, int height, int channels) {
         }
     }
 
-    log("total tiles after loading file: %d", total_tiles);
+    engine_log("total tiles after loading file: %d", total_tiles);
 }
 
 // TODO: This should use a map or something similar, so one texture can be freed

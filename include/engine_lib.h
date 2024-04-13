@@ -17,7 +17,7 @@ struct ProgramState {
     SDL_GLContext glContext;
 };
 
-#define log(_msg...) _log(__FILE__, __LINE__, _msg);
+#define engine_log(_msg...) _log(__FILE__, __LINE__, _msg);
 #define crash(_msg...) _crash(__FILE__, __LINE__, _msg);
 
 #define DEBUG_FORMAT __attribute__((format(__printf__, 3, 4)))
@@ -29,12 +29,15 @@ DEBUG_FORMAT void _log(const std::string &filename, const u64 line, const char *
     int size = vsnprintf(nullptr, 0, fmt, argsCopy) + 1;
     va_end(argsCopy);
 
-    if (size < 0) { return; }
+    if (size < 0) {
+        va_end(args);
+        return;
+    }
 
     std::string result(size, '\0');
     vsnprintf(&result[0], size, fmt, args);
 
-    printf("[ \u001b[34mINFO %s : %lu \u001b[37m] ", filename.c_str(), line);
+    printf("[ \u001b[34mINFO %s : %llu \u001b[37m] ", filename.c_str(), line);
     printf(" %s\n", result.c_str());
 
     va_end(args);

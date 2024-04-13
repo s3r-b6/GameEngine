@@ -39,7 +39,7 @@ struct Entity {
         }
 
         // Way too generic, might have to improve this
-        log("Entity failed to find a component %s", typeid(T).name());
+        engine_log("Entity failed to find a component %s", typeid(T).name());
 
         return nullptr;
     }
@@ -142,7 +142,7 @@ struct ColliderComponent : EntityComponentBase {
         entityID = player_id;
 
         auto e = g->gameState->entityManager->entities[entityID];
-        log("ID: %u || %zu", entityID, e->components.size());
+        engine_log("ID: %u || %zu", entityID, e->components.size());
         transform = e->findComponent<TransformComponent>();
 
         size = s;
@@ -232,7 +232,7 @@ struct SpriteRenderer : EntityComponentBase {
         sprite = spriteIn;
         renderData = renderDataIn;
         auto e = g->gameState->entityManager->entities[entityID];
-        log("ID: %u || %zu", entityID, e->components.size());
+        engine_log("ID: %u || %zu", entityID, e->components.size());
         transform = e->findComponent<TransformComponent>();
     }
 

@@ -14,7 +14,7 @@
 void *plat_loadDynamicLib(char *dlName) {
     void *sharedObject = dlopen(dlName, RTLD_NOW);
     if (!sharedObject) {
-        log("Failed to load dynamic library: %s", dlerror());
+        engine_log("Failed to load dynamic library: %s", dlerror());
         return nullptr;
     }
     return sharedObject;
@@ -23,7 +23,7 @@ void *plat_loadDynamicLib(char *dlName) {
 bool plat_freeDynamicLib(void *sharedObject) {
     int res = dlclose(sharedObject);
     if (res != 0) {
-        log("Failed to free dynamic library: %s", dlerror());
+        engine_log("Failed to free dynamic library: %s", dlerror());
         return false;
     }
     return true;
@@ -32,7 +32,7 @@ bool plat_freeDynamicLib(void *sharedObject) {
 void *plat_loadDynamicFun(void *sharedObject, char *funName) {
     void *function = dlsym(sharedObject, funName);
     if (!function) {
-        log("Failed to load dynamic function: %s", dlerror());
+        engine_log("Failed to load dynamic function: %s", dlerror());
         return nullptr;
     }
     return function;
@@ -42,7 +42,7 @@ u64 plat_getFileTimestamp(char *fileName) {
     int fd = open(fileName, O_RDONLY);
 
     if (fd == -1) {
-        log("Failed to open file descriptor for %s", fileName);
+        engine_log("Failed to open file descriptor for %s", fileName);
         return 0;
     }
 
@@ -58,7 +58,7 @@ char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator) 
     int fd = open(fileName, O_RDONLY);
 
     if (fd == -1) {
-        log("Failed to open file descriptor for %s", fileName);
+        engine_log("Failed to open file descriptor for %s", fileName);
         return nullptr;
     }
 
@@ -77,7 +77,7 @@ char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator) 
     memory[bytesRead] = 0;
 
     if (bytesRead != fSize) {
-        log("bytesRead does not match filesize for %s", fileName);
+        engine_log("bytesRead does not match filesize for %s", fileName);
         return nullptr;
     }
 
@@ -91,14 +91,14 @@ bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) 
 
     int fd2 = open(newFileName, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd2 == -1) {
-        log("Failed to open file descriptor for %s", newFileName);
+        engine_log("Failed to open file descriptor for %s", newFileName);
         return false;
     }
 
     int written = write(fd2, f1_ptr, fSize);
 
     if (written != fSize) {
-        log("Failed to copy %s to %s", fileName, newFileName);
+        engine_log("Failed to copy %s to %s", fileName, newFileName);
         return false;
     }
 
@@ -109,10 +109,10 @@ bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) 
 
 bool plat_deleteFile(char *fileName) {
     if (unlink(fileName) == 0) {
-        log("File '%s' deleted successfully.\n", fileName);
+        engine_log("File '%s' deleted successfully.\n", fileName);
         return true;
     } else {
-        log("Error deleting file");
+        engine_log("Error deleting file");
         return false;
     }
 }

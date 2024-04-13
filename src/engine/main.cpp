@@ -158,24 +158,24 @@ void reloadGameLib(BumpAllocator *tempStorage) {
         if (!plat_freeDynamicLib(gameSO)) crash("Failed to free game.so");
 
         gameSO = nullptr;
-        log("Freed gameSO");
+        engine_log("Freed gameSO");
     }
 
     while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
         if (g->appState->running) platform_sleep(50);
     }
 
-    log("Copied game.so to game_load.so");
+    engine_log("Copied game.so to game_load.so");
 
     if (!(gameSO = plat_loadDynamicLib(loadedgameSharedObject))) {
         crash("Failed to load game_load.so");
     }
 
-    log("Loaded dynamic library game_load.so");
+    engine_log("Loaded dynamic library game_load.so");
     if (!(updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame"))) {
         crash("Failed to load updateGame function");
     }
 
-    log("Loaded dynamic function updateGame");
+    engine_log("Loaded dynamic function updateGame");
     lastModTimestamp = currentTimestamp;
 }

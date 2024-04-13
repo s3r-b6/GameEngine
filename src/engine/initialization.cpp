@@ -29,7 +29,7 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
     g->alState = (ALState *)permStorage->alloc(sizeof(ALState));
 
     if (!g->appState || !g->renderData || !g->gameState || !g->input) {
-        log("ERROR: Failed to alloc globalState");
+        engine_log("ERROR: Failed to alloc globalState");
         return nullptr;
     }
 
@@ -39,7 +39,7 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
     g->gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
 
     if (!g->gameState->entityManager || !g->gameState->tileManager) {
-        log("ERROR: Failed to alloc gameState");
+        engine_log("ERROR: Failed to alloc gameState");
         return nullptr;
     }
 
@@ -62,12 +62,12 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
     g->renderData->clearColor[2] = 111.f / 255.f;
 
     if (!initOpenAL(g->alState)) {
-        log("ERROR: Failed to initialize OpenAL");
+        engine_log("ERROR: Failed to initialize OpenAL");
         return nullptr;
     }
 
     if (!initSDLandGL(tempStorage, g->appState, g->glContext, g->renderData)) {
-        log("ERROR: Failed to initialize SDL or OpenGL!");
+        engine_log("ERROR: Failed to initialize SDL or OpenGL!");
         return nullptr;
     }
 
@@ -91,7 +91,7 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
                          RenderData *renderData) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+        engine_log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
         return false;
     }
 
@@ -105,13 +105,13 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
         appState->screenSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     if (!window) {
-        log("Window could not be created! SDL Error: %s\n", SDL_GetError());
+        engine_log("Window could not be created! SDL Error: %s\n", SDL_GetError());
         return false;
     }
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if (!context) {
-        log("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
+        engine_log("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
         return false;
     }
 
@@ -120,25 +120,25 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
 
     // Initialize glew, set VSync, OpenGL
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-        log("Error initializing glad!\n");
+        engine_log("Error initializing glad!\n");
         return false;
     }
 
     // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
     if (SDL_GL_SetSwapInterval(-1) < 0) {
-        log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
+        engine_log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
             "SDL Error: %s\n",
             SDL_GetError());
 
         if (SDL_GL_SetSwapInterval(1) < 0) {
-            log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
+            engine_log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
             return false;
         }
     }
 
     // Initialize OpenGL
     if (!initGL(tempStorage, glContext, renderData)) {
-        log("Unable to initialize OpenGL!");
+        engine_log("Unable to initialize OpenGL!");
         return false;
     }
 
@@ -152,8 +152,8 @@ inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData 
     char *vertSource = plat_readFile(SHADER_SRC("vert.glsl"), &vertSourceSize, tempStorage);
     char *fragSource = plat_readFile(SHADER_SRC("frag.glsl"), &fragSourceSize, tempStorage);
 
-    if (!vertSource) { log("Failed to read vertex shader sources"); }
-    if (!fragSource) { log("Failed to read fragment shader sources"); }
+    if (!vertSource) { engine_log("Failed to read vertex shader sources"); }
+    if (!fragSource) { engine_log("Failed to read fragment shader sources"); }
     if (!vertSource || !fragSource) return false;
 
     GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -173,12 +173,12 @@ inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData 
     glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &fShaderCompiled);
 
     if (vShaderCompiled != GL_TRUE) {
-        log("Unable to compile vertex shader %d!\n", vertexShaderID);
+        engine_log("Unable to compile vertex shader %d!\n", vertexShaderID);
         printShaderLog(vertexShaderID, tempStorage);
     }
 
     if (fShaderCompiled != GL_TRUE) {
-        log("Unable to compile fragment shader %d!\n", fragmentShaderID);
+        engine_log("Unable to compile fragment shader %d!\n", fragmentShaderID);
         printShaderLog(fragmentShaderID, tempStorage);
     }
 
@@ -192,7 +192,7 @@ inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData 
     GLint programSuccess = GL_TRUE;
     glGetProgramiv(glContext->programID, GL_LINK_STATUS, &programSuccess);
     if (programSuccess != GL_TRUE) {
-        log("Error linking program %d!\n", glContext->programID);
+        engine_log("Error linking program %d!\n", glContext->programID);
         printProgramLog(glContext->programID, tempStorage);
         return false;
     }
@@ -231,23 +231,23 @@ inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData 
 }
 
 void close(GLContext *glContext, ProgramState *appState, ALState *alState) {
-    log("Closing OpenAL");
+    engine_log("Closing OpenAL");
     exitOpenAL(alState);
 
-    log("Closing SDL resources");
+    engine_log("Closing SDL resources");
     SDL_StopTextInput();
     glDeleteProgram(glContext->programID);
     SDL_DestroyWindow(appState->window);
     appState->window = NULL;
 
-    log("Quitting");
+    engine_log("Quitting");
     SDL_Quit();
 }
 
 void printProgramLog(uint program, BumpAllocator *tempStorage) {
     // Make sure name is shader
     if (!glIsProgram(program)) {
-        log("Name %d is not a program", program);
+        engine_log("Name %d is not a program", program);
         return;
     }
 
@@ -260,13 +260,13 @@ void printProgramLog(uint program, BumpAllocator *tempStorage) {
     char *infoLog = reinterpret_cast<char *>(tempStorage->alloc(maxLength));
 
     glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) log("%s", infoLog);
+    if (infoLogLength > 0) engine_log("%s", infoLog);
 }
 
 void printShaderLog(uint shader, BumpAllocator *tempStorage) {
     // Make sure name is shader
     if (!glIsShader(shader)) {
-        log("Name %d is not a shader", shader);
+        engine_log("Name %d is not a shader", shader);
         return;
     }
 
@@ -278,7 +278,7 @@ void printShaderLog(uint shader, BumpAllocator *tempStorage) {
     char *infoLog = reinterpret_cast<char *>(tempStorage->alloc(maxLength));
 
     glGetShaderInfoLog(shader, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) { log("%s", infoLog); }
+    if (infoLogLength > 0) { engine_log("%s", infoLog); }
 }
 
 // TODO: Fix this
@@ -291,18 +291,18 @@ bool initOpenAL(ALState *alState) {
     alState->device = alcOpenDevice(defaultDeviceName);
 
     if (!alState->device) {
-        log("unable to open default device\n");
+        engine_log("unable to open default device\n");
         return false;
     }
 
     alState->context = alcCreateContext(alState->device, NULL);
     if (!alcMakeContextCurrent(alState->context)) {
-        log("failed to make default context\n");
+        engine_log("failed to make default context\n");
         return false;
     }
     displayErrorsAL(__FILE__, __LINE__);
 
-    log("Device: %s", alcGetString(alState->device, ALC_DEVICE_SPECIFIER));
+    engine_log("Device: %s", alcGetString(alState->device, ALC_DEVICE_SPECIFIER));
     displayErrorsAL(__FILE__, __LINE__);
 
     /* set orientation */
