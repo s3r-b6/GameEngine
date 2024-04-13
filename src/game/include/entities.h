@@ -239,6 +239,31 @@ struct SpriteRenderer : EntityComponentBase {
     void render() override { drawSprite(renderData, sprite, transform->pos, transform->size); }
 };
 
+enum GameAction {
+    UNKNOWN,
+
+    HELP,
+
+    MOVE_U,
+    MOVE_D,
+    MOVE_L,
+    MOVE_R,
+    QUIT,
+
+    TILE_1,
+    TILE_2,
+    TILE_3,
+
+    LAYER_FRONT,
+    LAYER_BACK,
+
+    SAVE_WORLD,
+    DELETE_WORLD,
+    RELOAD_WORLD,
+
+    GAME_ACTION_COUNT,
+};
+
 struct InputController : EntityComponentBase {
     std::vector<std::function<void(u32)>> inputActions;
 
@@ -249,18 +274,18 @@ struct InputController : EntityComponentBase {
 
     void registerFunction(GameAction *actions, char *keys, int nActions,
                           std::function<void(u32)> fn) {
-        for (int i = 0; i < nActions; i++) {
-            auto action = actions[i];
-            auto key = keys[i];
-            g->gameState->gameRegisterKey(action, key);
-        }
+        // for (int i = 0; i < nActions; i++) {
+        //     auto action = actions[i];
+        //     auto key = keys[i];
+        //     g->gameState->gameRegisterKey(action, key);
+        // }
 
-        inputActions.push_back(fn);
+        // inputActions.push_back(fn);
     }
 
     void registerAction(GameAction action, char key, std::function<void(u32)> fn) {
-        g->gameState->gameRegisterKey(action, key);
-        inputActions.push_back(fn);
+        // g->gameState->gameRegisterKey(action, key);
+        // inputActions.push_back(fn);
     }
 
     void update() {

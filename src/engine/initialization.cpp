@@ -9,6 +9,7 @@
 #include "./globals.h"
 #include "./input.h"
 #include "./renderer.h"
+#include "./tiles.h"
 
 #include "AL/al.h"
 #include "AL/alc.h"

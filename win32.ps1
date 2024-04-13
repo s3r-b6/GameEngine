@@ -18,6 +18,7 @@ $flags = (
     "-Wno-write-strings",
     "-D_REENTRANT",
     "-static-libstdc++", 
+    "-Wno-deprecated-declarations",
     "-pipe"
 )
 
