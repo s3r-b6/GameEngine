@@ -127,8 +127,8 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
     // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
     if (SDL_GL_SetSwapInterval(-1) < 0) {
         engine_log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
-            "SDL Error: %s\n",
-            SDL_GetError());
+                   "SDL Error: %s\n",
+                   SDL_GetError());
 
         if (SDL_GL_SetSwapInterval(1) < 0) {
             engine_log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());

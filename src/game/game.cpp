@@ -347,12 +347,13 @@ void handleInput() {
                 selection.selectedTile1.atlasIdx = WORLD_ATLAS;
 
                 engine_log("SELECTED TILES: 1{%d %d} 2{%d %d}", selection.selectedTile1.x,
-                    selection.selectedTile1.y, selection.selectedTile2.x,
-                    selection.selectedTile2.y);
+                           selection.selectedTile1.y, selection.selectedTile2.x,
+                           selection.selectedTile2.y);
             } else {
                 selection.selectedTile1.atlasIdx = WORLD_ATLAS;
                 selection.selectedTile2 = {0};
-                engine_log("SELECTED TILE: {%d %d}", selection.selectedTile1.x, selection.selectedTile1.y);
+                engine_log("SELECTED TILE: {%d %d}", selection.selectedTile1.x,
+                           selection.selectedTile1.y);
             }
         }
 

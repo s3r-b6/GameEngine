@@ -80,7 +80,8 @@ struct FrontTile {
         y = dataP[2];
         atlasIdx = dataP[1];
 
-        engine_log("deserializing: wX:%u wY:%u x:%u y:%u idx:%u", data, worldX, worldY, x, y, atlasIdx);
+        engine_log("deserializing: wX:%u wY:%u x:%u y:%u idx:%u", data, worldX, worldY, x, y,
+                   atlasIdx);
 
         return true;
     }
@@ -103,17 +104,11 @@ struct TileSelection {
 
 struct GameState {
     bool initialized;
-    SDL_Scancode gameBinds[GAME_ACTION_COUNT] = {};
-    bool actionsTriggered[GAME_ACTION_COUNT] = {false};
 
     EntityManager *entityManager;
     TileManager *tileManager;
 
     TileSelection selection = {0};
-
-    inline void gameRegisterKey(GameAction action, SDL_Keycode kc) {
-        gameBinds[action] = SDL_GetScancodeFromKey(kc);
-    }
 };
 
 // TODO: This is really bad. Should store n chunks instead of n individual tiles

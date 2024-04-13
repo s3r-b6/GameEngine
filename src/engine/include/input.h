@@ -51,35 +51,3 @@ struct Input {
     inline bool keyIsUp(SDL_Keycode kc) { return !keyboardState[SDL_GetScancodeFromKey(kc)]; }
     inline bool keyIsDown(SDL_Keycode kc) { return keyboardState[SDL_GetScancodeFromKey(kc)]; }
 };
-
-// This should return true only once until the action key is released
-inline bool actionJustPressed(GameState *gameState, Input *input, GameAction action) {
-    bool keyPressed = input->keyboardState[gameState->gameBinds[action]];
-    if (!keyPressed || gameState->actionsTriggered[action]) { return false; }
-    gameState->actionsTriggered[action] = true;
-    return true;
-}
-
-// This returns true until the action key is released
-inline bool actionDown(GameState *gameState, Input *input, GameAction action) {
-    return input->keyboardState[gameState->gameBinds[action]];
-}
-
-// This returns true while the action key is up
-inline bool actionUp(GameState *gameState, Input *input, GameAction action) {
-    return !input->keyboardState[gameState->gameBinds[action]];
-}
-
-// This returns true only once until the action key is pressed
-inline bool actionJustReleased(GameState *gameState, Input *input, GameAction action) {
-    bool keyReleased = !input->keyboardState[gameState->gameBinds[action]];
-
-    return keyReleased && gameState->actionsTriggered[action];
-}
-
-inline void releaseActions(GameState *gameState, Input *input) {
-    for (int i = 0; i < GAME_ACTION_COUNT; i++) {
-        bool keyReleased = !input->keyboardState[gameState->gameBinds[i]];
-        if (keyReleased) { gameState->actionsTriggered[i] = false; }
-    }
-}

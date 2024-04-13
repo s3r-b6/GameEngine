@@ -5,7 +5,8 @@ $include = ( "-I..\deps\",
     "-I..\deps\win32\SDL2\",
     "-I..\deps\openal-soft\include\",
     "-I..\deps\freealut\include\",
-    "-I..\include" 
+    "-I..\src\engine\include",
+    "-I..\src\game\include"
 )
 
 $libs = (
