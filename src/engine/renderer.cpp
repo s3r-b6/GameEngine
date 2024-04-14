@@ -2,8 +2,8 @@
 // This code is subject to the MIT license.
 
 #include "./renderer.h"
+#include "./engine_global.h"
 #include "./engine_lib.h"
-#include "./globals.h"
 #include "SDL2/SDL_log.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
@@ -50,7 +50,8 @@ void parse_png_data(u8 *data, int width, int height, int channels) {
 
 // TODO: This should use a map or something similar, so one texture can be freed
 // and then I can ask which slot is free and occupy it again and so on
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx, bool createTiles) {
+bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx,
+                      bool createTiles) {
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
 

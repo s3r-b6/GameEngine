@@ -2,19 +2,12 @@
 // This code is subject to the MIT license.
 #include "./game.h"
 
+#include "./engine_global.h"
+#include "./game_global.h"
+
 #include "./entities.h"
 #include "./renderer.h"
 #include "./tiles.h"
-
-global double deltaTime;
-global double updateTimer;
-global u64 frame;
-global ProgramState *appState;
-global GLContext *glContext;
-global RenderData *renderData;
-global GameState *gameState;
-global Input *input;
-global u32 player_id;
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, double dt) {
@@ -103,8 +96,8 @@ void setupPlayer() {
         new (permStorage->alloc(sizeof(ColliderComponent))) ColliderComponent(player_id, {16, 20});
     player->components.push_back(collider);
 
-    auto inputController =
-        new (permStorage->alloc(sizeof(InputController))) InputController(player_id);
+    // auto inputController =
+    //     new (permStorage->alloc(sizeof(InputController))) InputController(player_id);
 
     // inputController->registerAction(HELP, '/', [](u32 player_id) {
     //     if (actionJustPressed(gameState, input, HELP)) { helpShown = !helpShown; }
@@ -186,7 +179,7 @@ void setupPlayer() {
     //    }
     //});
 
-    player->components.push_back(inputController);
+    // player->components.push_back(inputController);
 }
 
 inline void initializeGameState() {

@@ -3,7 +3,7 @@
 #include <functional>
 #include <stack>
 
-#include "globals.h"
+#include "./game_global.h"
 #include "input.h"
 #include "types.h"
 

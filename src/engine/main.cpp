@@ -3,8 +3,8 @@
 
 #include "./main.h"
 
+#include "./engine_global.h"
 #include "./engine_lib.h"
-#include "./globals.h"
 #include "./initialization.h"
 #include "./input.h"
 

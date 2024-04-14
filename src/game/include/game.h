@@ -26,4 +26,4 @@ EXPORT_FN void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage
 
 void initializeGameState();
 void simulate();
-void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow);
+// void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow);

@@ -4,30 +4,23 @@
 #include <vector>
 
 #include "engine_lib.h"
+#include "game.h"
 
-enum GameAction {
-    UNKNOWN,
+enum InputMode {
+    INVALID_MODE,
+    GAME_MODE,
+    UI_MODE,
+    INPUT_MODE_COUNT,
+}
 
-    HELP,
+struct GameAction {
+    InputMode valid_mode;
+    std::function<void(u32)> fn;
+    char key;
 
-    MOVE_U,
-    MOVE_D,
-    MOVE_L,
-    MOVE_R,
-    QUIT,
-
-    TILE_1,
-    TILE_2,
-    TILE_3,
-
-    LAYER_FRONT,
-    LAYER_BACK,
-
-    SAVE_WORLD,
-    DELETE_WORLD,
-    RELOAD_WORLD,
-
-    GAME_ACTION_COUNT,
+    bool triggered(u32 player_id) { 
+        fn(player_id); 
+        }
 };
 
 struct InputManager {
@@ -35,8 +28,7 @@ struct InputManager {
 
     InputManager() { inputActions = std::vector<std::function<void(u32)>>(); }
 
-    void registerFunction(GameAction action, char key, std::function<void(u32)> fn) {}
-    void registerAction(GameAction action, char key, std::function<void(u32)> fn) {}
+    void registerFunction(InputMode valid_mode, char key, std::function<void(u32)> fn) {}
 
     void update() {}
 };
