@@ -71,11 +71,11 @@ struct TileSelection {
 struct TileManager {
     static constexpr int gridSize = WORLD_SIZE_x * WORLD_SIZE_y;
     Tile worldgrid[gridSize] = {0};
-
-    // Since there are not many collisions, maybe a vector makes more sense
-    // previously we were taking size * sizeof(Tile) bits and most tiles were
-    // empty
     std::vector<FrontTile> collisions;
+
+    TileSelection selection;
+
+    bool tilePickerShown;
 
     void clear() {
         for (int i = 0; i < gridSize; i++) {
@@ -144,7 +144,40 @@ struct TileManager {
         return true;
     }
 
+    void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
+        for (int i = 0; i < maxTiles; i++) {
+            int x = i % tilesPerRow, y = i / tilesPerRow;
+
+            int worldPosX = i * TILESIZE % WORLD_SIZE_x;
+            int worldPosY = i * TILESIZE / WORLD_SIZE_x * TILESIZE;
+            ui_drawTile(renderData, {x, y}, textureAtlas, {worldPosX, worldPosY});
+        }
+
+        if (selection.selectedTile2.atlasIdx) {
+            int xTiles = selection.selectedTile2.x - selection.selectedTile1.x;
+            int yTiles = selection.selectedTile2.y - selection.selectedTile1.y;
+
+            for (int x = 0; x <= xTiles; x++) {
+                for (int y = 0; y <= yTiles; y++) {
+                    ui_drawTile(renderData, {39, 35}, textureAtlas,
+                                {(selection.selectedTile1.x + x) * 16,
+                                 (selection.selectedTile1.y + y) * 16});
+                }
+            }
+        } else {
+            ui_drawTile(renderData, {39, 35}, textureAtlas,
+                        {selection.selectedTile1.x * 16, selection.selectedTile1.y * 16});
+        }
+
+        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, g->input->mouseUIpos * TILESIZE);
+    }
+
     void renderFront(RenderData *renderData) {
+        if (tilePickerShown) {
+            drawTilePicker(WORLD_ATLAS, (int)1440, 40);
+            return;
+        }
+
         for (int i = 0; i < gridSize; i++) {
             int x = i % WORLD_SIZE_x;
             int y = i / WORLD_SIZE_x;

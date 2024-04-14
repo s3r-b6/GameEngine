@@ -3,9 +3,10 @@
 #include <functional>
 #include <stack>
 
-#include "./game_global.h"
-#include "input.h"
 #include "types.h"
+
+#include "./game_global.h"
+#include "./game_render.h"
 
 struct EntityComponentBase {
     u32 entityID;
