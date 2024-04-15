@@ -122,6 +122,8 @@ struct TileManager {
             return false;
         }
 
+        engine_log("Found previous world.data, loading the map");
+
         // Deserialize gridSize tiles
         for (int i = 0; i < gridSize; i++) {
             u32 data;
@@ -190,6 +192,7 @@ struct TileManager {
     }
 
     void renderBack(RenderData *renderData) {
+        if (tilePickerShown) { return; }
         for (auto coll : collisions) {
             if (coll.atlasIdx) {
                 drawTile(renderData, coll.x, coll.y, coll.atlasIdx,

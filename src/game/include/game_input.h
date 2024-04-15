@@ -42,7 +42,8 @@ struct InputManager {
         for (auto &action : inputActions) {
             if (action.valid_mode == current_mode && action.key == '\0') {
                 action.fn(entity_id);
-            } else if (action.valid_mode == current_mode && engine_input->keyIsDown(action.key)) {
+            } else if (action.valid_mode == current_mode &&
+                       engine_input->keyJustPressed(action.key)) {
                 action.fn(entity_id);
                 engine_log("Action %s triggered", action.ID);
             };

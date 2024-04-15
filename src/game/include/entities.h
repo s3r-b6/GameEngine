@@ -150,19 +150,20 @@ struct ColliderComponent : EntityComponentBase {
     }
 
     bool checkCollisions(glm::vec2 otherPos, glm::vec2 otherSize) {
-        bool collX =
-            transform->pos.x + size.x >= otherPos.x && otherPos.x + otherSize.x >= transform->pos.x;
-        bool collY =
-            transform->pos.y + size.y >= otherPos.y && otherPos.y + otherSize.y >= transform->pos.y;
+        glm::vec2 halfSize = size * 0.5f;
+        glm::vec2 otherHalfSize = otherSize * 0.5f;
 
-        return collX && collY;
-    }
+        glm::vec2 center = transform->pos + halfSize;
+        glm::vec2 otherCenter = otherPos + otherHalfSize;
 
-    bool check_collision(TransformComponent *other) {
-        bool collX = transform->pos.x + transform->size.x >= other->pos.x &&
-                     other->pos.x + other->size.x >= transform->pos.x;
-        bool collY = transform->pos.y + transform->size.y >= other->pos.y &&
-                     other->pos.y + other->size.y >= transform->pos.x;
+        float deltaX = center.x - otherCenter.x;
+        float deltaY = center.y - otherCenter.y;
+
+        float minDistanceX = halfSize.x + otherHalfSize.x;
+        float minDistanceY = halfSize.y + otherHalfSize.y;
+
+        bool collX = std::abs(deltaX) < minDistanceX;
+        bool collY = std::abs(deltaY) < minDistanceY;
 
         return collX && collY;
     }

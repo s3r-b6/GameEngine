@@ -53,7 +53,16 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
 
     int numKeys;
     g->input->keyboardState = SDL_GetKeyboardState(&numKeys);
-    // log("numKeys: %d", numKeys);
+
+    engine_log("The keyboard has %d keys", numKeys);
+
+    // I am not happy with this, but wasting 512 bytes seems not that bad
+    g->input->previousKeyboardState = (u8 *)malloc(sizeof(u8) * numKeys);
+    if (g->input->previousKeyboardState == NULL) {
+        crash("Failed to alloc memory for the previous keyboard state");
+    }
+
+    memset((void *)g->input->previousKeyboardState, false, sizeof(u8) * numKeys);
 
     g->appState->running = true;
     g->appState->screenSize = {1280, 720};

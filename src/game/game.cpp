@@ -10,6 +10,7 @@
 #include "./tiles.h"
 
 #include "./game_input.h"
+#include "game.h"
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, double dt) {
@@ -45,32 +46,38 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         simulate();
     }
 
+    renderWorld(fps, dt);
+
+    frame += 1;
+}
+
+void renderWorld(int fps, double dt) {
     gameState->tileManager->renderBack(renderData);
-    gameState->entityManager->render();
+    if (!gameState->tileManager->tilePickerShown) gameState->entityManager->render();
     gameState->tileManager->renderFront(renderData);
 
-    ui_drawTextFormatted(renderData, {420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
+    if (!gameState->tileManager->tilePickerShown) {
+        ui_drawTextFormatted(renderData, {420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
 
-    if (gameState->tileManager->selection.selectedTile2.atlasIdx) {
-        ui_drawTileGroup(renderData,
-                         {gameState->tileManager->selection.selectedTile1.x,
-                          gameState->tileManager->selection.selectedTile1.y},
-                         {gameState->tileManager->selection.selectedTile2.x,
-                          gameState->tileManager->selection.selectedTile2.y},
-                         gameState->tileManager->selection.selectedTile1.atlasIdx,
-                         g->input->mouseWorldPos * TILESIZE);
-        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
-    } else if (gameState->tileManager->selection.selectedTile1.atlasIdx) {
-        ui_drawTile(renderData,
-                    {gameState->tileManager->selection.selectedTile1.x,
-                     gameState->tileManager->selection.selectedTile1.y},
-                    gameState->tileManager->selection.selectedTile1.atlasIdx,
-                    g->input->mouseWorldPos * TILESIZE);
+        if (gameState->tileManager->selection.selectedTile2.atlasIdx) {
+            ui_drawTileGroup(renderData,
+                             {gameState->tileManager->selection.selectedTile1.x,
+                              gameState->tileManager->selection.selectedTile1.y},
+                             {gameState->tileManager->selection.selectedTile2.x,
+                              gameState->tileManager->selection.selectedTile2.y},
+                             gameState->tileManager->selection.selectedTile1.atlasIdx,
+                             g->input->mouseWorldPos * TILESIZE);
+            ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, g->input->mouseWorldPos * TILESIZE);
+        } else if (gameState->tileManager->selection.selectedTile1.atlasIdx) {
+            ui_drawTile(renderData,
+                        {gameState->tileManager->selection.selectedTile1.x,
+                         gameState->tileManager->selection.selectedTile1.y},
+                        gameState->tileManager->selection.selectedTile1.atlasIdx,
+                        g->input->mouseWorldPos * TILESIZE);
+        }
     }
 
     ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, engine_input->mouseWorldPos * TILESIZE);
-
-    frame += 1;
 }
 
 void setupPlayer() {
@@ -105,9 +112,7 @@ inline void initializeGameState() {
     gameState->tileManager->selection.selectedTile1.x = 0;
     gameState->tileManager->selection.selectedTile1.y = 0;
 
-    if (gameState->tileManager->deserialize()) {
-        engine_log("Found previous world.data, loading the map");
-    }
+    if (gameState->tileManager->deserialize()) {}
 
     gameState->initialized = true;
 }

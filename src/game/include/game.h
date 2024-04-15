@@ -21,6 +21,7 @@ struct GameState {
 extern "C" {
 EXPORT_FN void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage,
                           GlobalState *globalStateIn, double dt);
+void renderWorld(int fps, double dt);
 }
 
 void initializeGameState();

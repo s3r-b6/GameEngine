@@ -63,21 +63,21 @@ auto move = [](u32 player_id) {
     spriteRenderer->animating = moved;
 };
 auto tileActions = [](u32) {
-    if (engine_input->keyIsDown('=')) {
+    if (engine_input->keyJustPressed('=')) {
         engine_log("Saving world state");
         gameState->tileManager->serialize();
-    } else if (engine_input->keyIsDown('9')) {
+    } else if (engine_input->keyJustPressed('9')) {
         engine_log("Reloading world");
         gameState->tileManager->deserialize();
-    } else if (engine_input->keyIsDown('-')) {
+    } else if (engine_input->keyJustPressed('-')) {
         engine_log("Clearing tile manager");
         gameState->tileManager->clear();
     }
 
-    if (engine_input->keyIsDown('b')) {
+    if (engine_input->keyJustPressed('b')) {
         engine_log("Back layer");
         // selectedWorldLayer = 0;
-    } else if (engine_input->keyIsDown('f')) {
+    } else if (engine_input->keyJustPressed('f')) {
         engine_log("Front layer");
         // selectedWorldLayer = 1;
     }

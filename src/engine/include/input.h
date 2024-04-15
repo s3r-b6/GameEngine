@@ -31,6 +31,7 @@ struct Input {
 
     SDL_Keycode lastPressed;
     const u8 *keyboardState;
+    u8 *previousKeyboardState;
 
     inline bool lMouseJustPressed() { return mouseInWindow && mouseState[0] && !prevMouseState[0]; }
     inline bool lMouseJustReleased() {
@@ -50,4 +51,12 @@ struct Input {
 
     inline bool keyIsUp(SDL_Keycode kc) { return !keyboardState[SDL_GetScancodeFromKey(kc)]; }
     inline bool keyIsDown(SDL_Keycode kc) { return keyboardState[SDL_GetScancodeFromKey(kc)]; }
+    bool keyJustPressed(SDL_Keycode kc) {
+        bool currentState = keyboardState[SDL_GetScancodeFromKey(kc)];
+        bool previousState = previousKeyboardState[SDL_GetScancodeFromKey(kc)];
+
+        previousKeyboardState[SDL_GetScancodeFromKey(kc)] = currentState;
+
+        return currentState && !previousState;
+    }
 };

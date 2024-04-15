@@ -1,3 +1,7 @@
+[Preview of a level](/preview/game.png)
+
+[Preview of a the tile picker](/preview/tile_picker.png)
+
 # What this is:
 This is a game engine pet project implemented in C++. 
 The engine aims to provide developers with a basic set of tools without hiding anything from them.
@@ -8,23 +12,19 @@ This project is primarily intended for educational purposes and personal explora
 
 # What this is not:
 This project is not a full-fledged commercial game engine (like Unity or Unreal Engine). 
-It aims to offer a comprehensive set of features for game development, but it does lack advanced functionalities and optimizations found in established game engines. Since this is my first attempt at something like this, the architecture can probably be improved by a lot.
 
-## Key Features:
+## Implemented Features:
 - **Rendering Engine**: Utilizes OpenGL to render quads (to render tiles and sprites) and TODO: particles
 - **Cross-Platform Compatibility**: Designed to run seamlessly on multiple platforms, Windows and Linux are supported right now, but should be easy enough to adapt to other platforms.
 - **Hot-reloading**: Hot reloading of game-logic without losing the current game state. TODO: Hot reloading of shaders and textures.
+- **Simple AABB Collisions**
 - WIP: **Entity-System**: While the engine has no concept of Systems, and is in no way an ECS engine, it has entities and components. This should be useful to bundle common patterns: for example, Entities with a position in the world can choose to use a Transform, and Entities that should render a sprite can choose to use a SpriteRenderer.
-- TODO: **Physics Simulation**: Incorporates a simple physics engine to handle interactions between game objects.
-- TODO: **Asset Management**: Management of game assets such as textures and audio files to optimize memory usage and loading times.
-- TODO: **Input Manager**: Management of input (keyboard and controller)
-- MAYBE TODO: **Scripting Support**: Provide scripting capabilities to make game development doable for level-designers and other non-technical individuals
+- WIP: **Input Manager**: Management of input (keyboard and controller)
+- WIP: **Simple level editor**: A tile picker that allows to pick tiles, and saving and loading of world data (a world grid composed of tiles - the background, and collisions - tiles that are stored as a vector, instead of as a grid) as binary files.
 
-#
-
+# Intent:
 I primarily keep this public in the hopes that anyone can learn anything from it, in the same way I have benefitted of similar efforts by other developers.
-
-I welcome any comments, suggestions, bug fixes, and improvements. This is the first release of the code, and my first time working in a game engine and much of it is rough and unfinished.
+I welcome any comments, suggestions, bug fixes, and improvements. This is my first time working in a game engine and much of it is bound to be rough and unfinished, and many decisions will be questionable.
 
 # Assets:
 - [Zelda-like tilesets and sprites](https://opengameart.org/content/zelda-like-tilesets-and-sprites)
