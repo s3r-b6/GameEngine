@@ -84,9 +84,12 @@ auto tileActions = [](u32) {
 };
 
 void setup_keys() {
-    inputManager->registerFunction("TilePickerToggle", InputManager::GAME_MODE, '1', [](u32) {
-        g->gameState->tileManager->tilePickerShown = !g->gameState->tileManager->tilePickerShown;
-    });
-    inputManager->registerFunction("Movement", InputManager::GAME_MODE, '\0', move);
-    inputManager->registerFunction("TileActions", InputManager::GAME_MODE, '\0', tileActions);
+    inputManager->registerFunction(permStorage, "TilePickerToggle", InputManager::GAME_MODE, '1',
+                                   [](u32) {
+                                       g->gameState->tileManager->tilePickerShown =
+                                           !g->gameState->tileManager->tilePickerShown;
+                                   });
+    inputManager->registerFunction(permStorage, "Movement", InputManager::GAME_MODE, '\0', move);
+    inputManager->registerFunction(permStorage, "TileActions", InputManager::GAME_MODE, '\0',
+                                   tileActions);
 }

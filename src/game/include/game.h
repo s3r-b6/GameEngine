@@ -16,6 +16,8 @@ struct GameState {
     EntityManager *entityManager;
     TileManager *tileManager;
     InputManager *inputManager;
+
+    u32 player_id;
 };
 
 extern "C" {

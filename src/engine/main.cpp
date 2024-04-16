@@ -8,9 +8,9 @@
 #include "./initialization.h"
 #include "./input.h"
 
+#include "./audio.h"
 #include "./fonts.h"
-#include "audio.h"
-#include "renderer.h"
+#include "./renderer.h"
 
 // NOTE: g is the GlobalState object
 
@@ -39,6 +39,8 @@ int plat_main() {
 
     while (g->appState->running) {
         SDL_ShowCursor(g->input->showCursor);
+
+        g->input->mouseState = g->input->mouseState | g->input->mouseState << 4;
 
         last = now;
         now = SDL_GetPerformanceCounter();
@@ -73,9 +75,9 @@ int plat_main() {
             hotreload_timer = 3.f;
         }
 
-        g->input->prevMouseState[0] = g->input->mouseState[0];
-        g->input->prevMouseState[1] = g->input->mouseState[1];
-        g->input->prevMouseState[2] = g->input->mouseState[2];
+        if ((g->input->mouseState & 0x0F) == 0) {
+            g->input->mouseState = g->input->mouseState << 4;
+        }
     }
 
     close(g->glContext, g->appState, g->alState);
@@ -88,27 +90,23 @@ inline void handleSDLevents(SDL_Event *event) {
     switch (event->type) {
     case SDL_QUIT: {
         g->appState->running = false;
-        break;
-    }
+    } break;
 
     case SDL_WINDOWEVENT: {
         if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
                                    &g->appState->screenSize.y);
         }
-
         break;
     }
 
     case SDL_WINDOWEVENT_ENTER: {
         g->input->mouseInWindow = true;
-        break;
-    }
+    } break;
 
     case SDL_WINDOWEVENT_LEAVE: {
         g->input->mouseInWindow = false;
-        break;
-    }
+    } break;
 
     case SDL_MOUSEMOTION: {
         if (g->input->mouseInWindow) {
@@ -116,33 +114,35 @@ inline void handleSDLevents(SDL_Event *event) {
             // log(__FILE__, __LINE__,"New mousePos: %d %d", g->input->mousePos.x,
             // g->input->mousePos.y);
         }
+    } break;
 
-        break;
-    }
-
-    case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEBUTTONUP: {
-        bool pressed = event->type == SDL_MOUSEBUTTONDOWN;
-
-        bool left = event->button.button == SDL_BUTTON_LEFT;
-        bool right = event->button.button == SDL_BUTTON_RIGHT;
-        bool mid = event->button.button == SDL_BUTTON_MIDDLE;
-
-        if (left) {
-            g->input->mouseState[0] = pressed;
-        } else if (mid) {
-            g->input->mouseState[1] = pressed;
-        } else if (right) {
-            g->input->mouseState[2] = pressed;
+        if (event->button.button == SDL_BUTTON_LEFT) {
+            g->input->mouseState &= ~(0x1);
+            g->input->mouseState |= (0x1 << 4);
+        } else if (event->button.button == SDL_BUTTON_MIDDLE) {
+            g->input->mouseState &= ~(0x1 << 1);
+            g->input->mouseState |= (0x1 << 5);
+        } else if (event->button.button == SDL_BUTTON_RIGHT) {
+            g->input->mouseState &= ~(0x1 << 2);
+            g->input->mouseState |= (0x1 << 6);
         }
+    } break;
 
-        break;
+    case SDL_MOUSEBUTTONDOWN: {
+        if (event->button.button == SDL_BUTTON_LEFT) {
+            g->input->mouseState |= 0x1;
+            g->input->mouseState &= ~(0x1 << 4);
+        } else if (event->button.button == SDL_BUTTON_MIDDLE) {
+            g->input->mouseState |= (0x1 << 1);
+            g->input->mouseState &= ~(0x1 << 5);
+        } else if (event->button.button == SDL_BUTTON_RIGHT) {
+            g->input->mouseState |= (0x1 << 2);
+            g->input->mouseState &= ~(0x1 << 6);
+        }
     }
 
-        // case SDL_KEYUP:
-        // case SDL_KEYDOWN: {
-        //     break;
-        // }
+    break;
     }
 }
 

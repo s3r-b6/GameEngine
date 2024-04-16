@@ -10,7 +10,6 @@
 #include "./tiles.h"
 
 #include "./game_input.h"
-#include "game.h"
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           GlobalState *globalStateIn, double dt) {
@@ -39,10 +38,14 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     while (updateTimer >= UPDATE_DELAY) {
         updateTimer -= UPDATE_DELAY;
 
+        if (g->input->rMouseJustPressed()) { engine_log("%f R press", dt); }
+        if (g->input->lMouseJustPressed()) { engine_log("%f L press", dt); }
+        if (g->input->rMouseJustReleased()) { engine_log("%f R release", dt); }
+        if (g->input->lMouseJustReleased()) { engine_log("%f L release", dt); }
+
         engine_input->mouseWorldPos =
             renderData->gameCamera.getMousePosInWorld(engine_input->mousePos, appState->screenSize);
-        engine_input->mouseUIpos =
-            renderData->uiCamera.getMousePosInWorld(engine_input->mousePos, appState->screenSize);
+
         simulate();
     }
 
@@ -81,20 +84,20 @@ void renderWorld(int fps, double dt) {
 }
 
 void setupPlayer() {
-    player_id = gameState->entityManager->getUninitializedID();
-    auto player = gameState->entityManager->entities[player_id];
+    gameState->player_id = gameState->entityManager->getUninitializedID();
+    auto player = gameState->entityManager->entities[gameState->player_id];
 
     auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
         TransformComponent(glm::vec2(128, 128), glm::vec2(16, 32));
     player->components.push_back(transform);
 
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
-        AnimatedSpriteRenderer(player_id, renderData, PlayerD_Walk, {16, 32}, 12, &deltaTime, 4,
-                               Player);
+        AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, {16, 32}, 12,
+                               &deltaTime, 4, Player);
     player->components.push_back(spriteRenderer);
 
-    auto collider =
-        new (permStorage->alloc(sizeof(ColliderComponent))) ColliderComponent(player_id, {16, 20});
+    auto collider = new (permStorage->alloc(sizeof(ColliderComponent)))
+        ColliderComponent(gameState->player_id, {16, 20});
     player->components.push_back(collider);
 
     setup_keys();
@@ -118,6 +121,6 @@ inline void initializeGameState() {
 }
 
 void simulate() {
-    inputManager->update(player_id);
+    inputManager->update(gameState->player_id);
     gameState->entityManager->update();
 }

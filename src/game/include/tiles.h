@@ -2,7 +2,9 @@
 
 #include <vector>
 
+#include "engine_global.h"
 #include "engine_lib.h"
+#include "game_global.h"
 #include "game_render.h"
 
 struct Tile {
@@ -171,7 +173,7 @@ struct TileManager {
                         {selection.selectedTile1.x * 16, selection.selectedTile1.y * 16});
         }
 
-        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, g->input->mouseUIpos * TILESIZE);
+        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, g->input->mousePos * TILESIZE);
     }
 
     void renderFront(RenderData *renderData) {

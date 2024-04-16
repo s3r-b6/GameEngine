@@ -38,13 +38,14 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
         new (permStorage->alloc(sizeof(EntityManager))) EntityManager(1024, permStorage);
 
     g->gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
-    g->gameState->inputManager =
-        new (permStorage->alloc(sizeof(InputManager))) InputManager(g->input);
+    g->gameState->inputManager = new (permStorage->alloc(sizeof(InputManager))) InputManager();
 
     if (!g->gameState->entityManager || !g->gameState->tileManager || !g->gameState->inputManager) {
         engine_log("ERROR: Failed to alloc gameState");
         return nullptr;
     }
+
+    g->gameState->inputManager->inputActions = std::vector<InputManager::GameAction *>();
 
     g->gameState->initialized = false;
 

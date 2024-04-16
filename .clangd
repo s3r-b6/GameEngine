@@ -1,17 +1,31 @@
 CompileFlags:
   Add:
-    - "-I../include/"
+    # Include Paths
+    - "-I../../engine/include/"
+    - "-I../../game/include/"
+    - "-I../engine/include/"
+    - "-I../game/include/"
+    - "-I./include"
+    - "-I../../../deps/"
+    - "-I../../deps/"
     - "-I../deps/"
     - "-I../deps/glad/"
+    - "-I../../deps/glad/"
     - "-I../deps/freetype2/"
     - "-I../deps/openal-soft/include/AL"
     - "-I../deps/freealut/include/AL"
     - "-I../deps/win32/"
     - "-I../deps/linux/"
+    
+    # Library Paths
     - "-L../lib/"
+    
+    # Libraries
     - "-lSDL2"
     - "-lGLEW"
     - "-lGL"
+    
+    # Compiler Flags
     - "-Wno-misc-definitions-in-headers"
     - "-Wno-write-strings"
   Compiler: "g++"
