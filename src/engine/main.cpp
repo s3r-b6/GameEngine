@@ -75,9 +75,7 @@ int plat_main() {
             hotreload_timer = 3.f;
         }
 
-        if (!g->input->lMouseDown()) { g->input->mouseState &= ~(0x1 << 4); }
-        if (!g->input->mMouseDown()) { g->input->mouseState &= ~(0x1 << 5); }
-        if (!g->input->rMouseDown()) { g->input->mouseState &= ~(0x1 << 6); }
+        g->input->mouseState &= ~(g->input->mouseState & 0xF0);
     }
 
     close(g->glContext, g->appState, g->alState);
