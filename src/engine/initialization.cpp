@@ -44,6 +44,8 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
         return nullptr;
     }
 
+    g->gameState->tileManager->tilemap = std::map<int, TileBase>();
+
     g->gameState->initialized = false;
 
     g->input->mouseInWindow = true;

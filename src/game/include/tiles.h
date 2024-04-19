@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 
 #include "./engine_global.h"
@@ -10,11 +11,13 @@
 #include "./game_render.h"
 #include "./input.h"
 
-struct Tile {
-    u8 x, y;
+struct TileBase {
+    u8 x, y;     // The pos in the tilemap
     u8 atlasIdx; // An atlasIdx of 0 == an invalid tile or a non-tile
-    u8 padding;
+    u8 id;
+};
 
+struct Tile : TileBase {
     bool deserialize(u32 data) {
         u8 *dataP = (u8 *)&data;
         if (!dataP[1]) { return false; } // If no-tile, skip
@@ -35,10 +38,8 @@ struct Tile {
     }
 };
 
-struct FrontTile {
+struct FrontTile : TileBase {
     u16 worldX, worldY;
-    u8 x, y, atlasIdx;
-    u8 pad;
 
     bool deserialize(u64 data) {
         u8 *dataP = (u8 *)&data;
@@ -68,19 +69,31 @@ struct FrontTile {
 };
 
 struct TileSelection {
-    Tile selectedTile1;
-    Tile selectedTile2;
+    TileBase selectedTile1;
+    TileBase selectedTile2;
+    u8 selectedLayer;
 };
 
 // TODO: This is really bad. Should store n chunks instead of n individual tiles
 struct TileManager {
     static constexpr int gridSize = WORLD_SIZE_x * WORLD_SIZE_y;
+    std::map<int, TileBase> tilemap;
+
+    u32 currentTiles = 0;
+    u8 shownAtlas = 2;
+
     Tile worldgrid[gridSize] = {0};
     std::vector<FrontTile> collisions;
 
     TileSelection selection;
 
     bool tilePickerShown;
+
+    u16 registerTile(TileBase t) {
+        t.id = currentTiles;
+        tilemap[currentTiles++] = t;
+        return t.id;
+    }
 
     void clear() {
         for (int i = 0; i < gridSize; i++) {
@@ -152,12 +165,10 @@ struct TileManager {
     }
 
     void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow) {
-        for (int i = 0; i < maxTiles; i++) {
-            int x = i % tilesPerRow, y = i / tilesPerRow;
-
-            int worldPosX = i * TILESIZE % WORLD_SIZE_x;
-            int worldPosY = i * TILESIZE / WORLD_SIZE_x * TILESIZE;
-            ui_drawTile(renderData, {x, y}, textureAtlas, {worldPosX, worldPosY});
+        for (auto const &[key, val] : tilemap) {
+            if (val.atlasIdx < shownAtlas) continue;
+            ui_drawTile(renderData, {val.x, val.y}, val.atlasIdx, {val.x * 16, val.y * 16});
+            if (val.atlasIdx > shownAtlas) break;
         }
 
         if (selection.selectedTile2.atlasIdx) {
@@ -176,7 +187,7 @@ struct TileManager {
                         {selection.selectedTile1.x * 16, selection.selectedTile1.y * 16});
         }
 
-        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, g->input->mousePos * TILESIZE);
+        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseWorldPos * 16);
     }
 
     void renderFront(RenderData *renderData) {
@@ -222,21 +233,65 @@ struct TileManager {
         }
     }
 
+    void setTile(int x, int y, TileBase t, u8 layer) {
+        local_persist float last_call = 0.f;
+
+        if (layer == 0) {
+            worldgrid[(y * WORLD_SIZE_x) + x] = Tile{t};
+        } else {
+            FrontTile tile = {};
+
+            tile.worldX = (u16)x;
+            tile.worldY = (u16)y;
+            tile.x = (u8)(t.x);
+            tile.y = (u8)(t.y);
+            tile.atlasIdx = t.atlasIdx;
+
+            collisions.push_back(tile);
+        }
+    }
+
     void setTile(int x, int y, Tile t, u8 layer) {
         local_persist float last_call = 0.f;
 
         if (layer == 0) {
             worldgrid[(y * WORLD_SIZE_x) + x] = t;
         } else {
-            FrontTile tile = {
-                .worldX = (u16)x,
-                .worldY = (u16)y,
-                .x = (u8)(t.x),
-                .y = (u8)(t.y),
-                .atlasIdx = t.atlasIdx,
-            };
+            FrontTile tile = {};
+
+            tile.worldX = (u16)x;
+            tile.worldY = (u16)y;
+            tile.x = (u8)(t.x);
+            tile.y = (u8)(t.y);
+            tile.atlasIdx = t.atlasIdx;
 
             collisions.push_back(tile);
+        }
+    }
+
+    void setTiles(glm::vec2 pos, TileBase t1, TileBase t2, u8 layer) {
+        for (int x = 0; x <= t2.x - t1.x; x++) {
+            for (int y = 0; y <= t2.y - t1.y; y++) {
+                int xPos = pos.x + x, yPos = pos.y + y;
+                if (layer == 0) {
+                    Tile tile = {};
+
+                    tile.x = (u8)(t1.x + x);
+                    tile.y = (u8)(t1.y + y);
+                    tile.atlasIdx = t1.atlasIdx;
+
+                    worldgrid[(yPos * WORLD_SIZE_x) + xPos] = tile;
+                } else {
+                    FrontTile tile = {};
+                    tile.worldX = (u16)xPos;
+                    tile.worldY = (u16)yPos;
+                    tile.x = (u8)(t1.x + x);
+                    tile.y = (u8)(t1.y + y);
+                    tile.atlasIdx = t1.atlasIdx;
+
+                    collisions.push_back(tile);
+                }
+            }
         }
     }
 
@@ -245,21 +300,20 @@ struct TileManager {
             for (int y = 0; y <= t2.y - t1.y; y++) {
                 int xPos = pos.x + x, yPos = pos.y + y;
                 if (layer == 0) {
-                    Tile tile = {
-                        .x = (u8)(t1.x + x),
-                        .y = (u8)(t1.y + y),
-                        .atlasIdx = t1.atlasIdx,
-                    };
+                    Tile tile = {};
+
+                    tile.x = (u8)(t1.x + x);
+                    tile.y = (u8)(t1.y + y);
+                    tile.atlasIdx = t1.atlasIdx;
 
                     worldgrid[(yPos * WORLD_SIZE_x) + xPos] = tile;
                 } else {
-                    FrontTile tile = {
-                        .worldX = (u16)xPos,
-                        .worldY = (u16)yPos,
-                        .x = (u8)(t1.x + x),
-                        .y = (u8)(t1.y + y),
-                        .atlasIdx = t1.atlasIdx,
-                    };
+                    FrontTile tile = {};
+                    tile.worldX = (u16)xPos;
+                    tile.worldY = (u16)yPos;
+                    tile.x = (u8)(t1.x + x);
+                    tile.y = (u8)(t1.y + y);
+                    tile.atlasIdx = t1.atlasIdx;
 
                     collisions.push_back(tile);
                 }

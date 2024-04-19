@@ -27,6 +27,9 @@ int plat_main() {
 
     // GL_TEXTURE0 is for the font
     load_font("../fonts/joystix.otf", 48, g->renderData, g->glContext, tempStorage);
+
+    // Changing the order in which atlases are loaded will break the maps, since the ids are
+    // generated here
     loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE1,
                      false);
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE2, true);

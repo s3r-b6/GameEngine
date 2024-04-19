@@ -5,6 +5,8 @@
 #include "./engine_global.h"
 #include "./engine_lib.h"
 #include "SDL2/SDL_log.h"
+#include "tiles.h"
+#include <vector>
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -15,17 +17,16 @@
 // with each pixel consisting of N interleaved 8-bit components:
 //  1           grey                 2           grey, alpha
 //  3           red, green, blue     4           red, green, blue, alpha
-void parse_png_data(u8 *data, int width, int height, int channels) {
+void parseTilemapData(u8 currentAtlas, u8 *data, int width, int height, int channels) {
     local_persist u32 total_tiles = 0;
     if (channels != 4) crash("oops");
-    // log("W%d H%d channels: %d", width, height, channels);
 
-    int x_tiles = width / 16, y_tiles = height / 16;
+    int x_tiles = width / TILESIZE, y_tiles = height / TILESIZE;
     for (int i = 0; i < x_tiles * y_tiles; i++) {
         bool is_empty = true;
-        for (int j = 0; j < 16 * 16; j++) {
-            int y = i / x_tiles * 16 + j / 16;
-            int x = i % x_tiles * 16 + j % 16;
+        for (int j = 0; j < TILESIZE * TILESIZE; j++) {
+            int y = i / x_tiles * TILESIZE + j / TILESIZE;
+            int x = i % x_tiles * TILESIZE + j % TILESIZE;
 
             if (x >= width || y >= height) continue;
 
@@ -40,7 +41,13 @@ void parse_png_data(u8 *data, int width, int height, int channels) {
         }
 
         if (!is_empty) {
-            // printf("tile { %d, %d } is non-empty\n", i % x_tiles, i / x_tiles);
+            printf("tile { %d, %d } is non-empty\n", i % x_tiles, i / x_tiles);
+            TileBase t = TileBase{};
+            t.x = u8(i % x_tiles);
+            t.y = u8(i / x_tiles);
+            t.atlasIdx = currentAtlas;
+
+            g->gameState->tileManager->registerTile(t);
             total_tiles++;
         }
     }
@@ -52,16 +59,17 @@ void parse_png_data(u8 *data, int width, int height, int channels) {
 // and then I can ask which slot is free and occupy it again and so on
 bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx,
                       bool createTiles) {
+    local_persist u8 currentAtlas = 1;
+
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
-
-    // TODO: do something with this
-    // parse_png_data(data, width, height, channels);
 
     if (!data) {
         SDL_Log("Failed to load texture %s", texturePath);
         return false;
     }
+
+    if (createTiles) parseTilemapData(currentAtlas, data, width, height, channels);
 
     glActiveTexture(glTextureIdx);
     glBindTexture(GL_TEXTURE_2D, glContext->textureIDs[glContext->usedTextures]);
@@ -79,6 +87,7 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTe
 
     glContext->usedTextures++;
 
+    currentAtlas++;
     return true;
 }
 
