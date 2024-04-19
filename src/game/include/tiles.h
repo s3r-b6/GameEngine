@@ -2,10 +2,13 @@
 
 #include <vector>
 
-#include "engine_global.h"
-#include "engine_lib.h"
-#include "game_global.h"
-#include "game_render.h"
+#include "./engine_global.h"
+#include "./game_global.h"
+
+#include "./engine_lib.h"
+#include "./entities.h"
+#include "./game_render.h"
+#include "./input.h"
 
 struct Tile {
     u8 x, y;
@@ -264,3 +267,12 @@ struct TileManager {
         }
     }
 };
+
+bool checkTileCollisions(ColliderComponent *collider) {
+    for (auto coll : gameState->tileManager->collisions) {
+        if (collider->checkCollisions({coll.worldX * TILESIZE, coll.worldY * TILESIZE}, {16, 16}))
+            return true;
+    }
+
+    return false;
+}

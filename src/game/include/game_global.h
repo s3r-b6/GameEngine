@@ -10,4 +10,4 @@ global ProgramState *appState;
 global GLContext *glContext;
 global RenderData *renderData;
 global GameState *gameState;
-global Input *engine_input;
+global Input *input;

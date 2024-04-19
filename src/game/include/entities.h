@@ -1,6 +1,7 @@
 #pragma once
 
-#include <functional>
+#include <typeinfo>
+
 #include <stack>
 #include <vector>
 
@@ -183,9 +184,8 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
 
     TransformComponent *transform;
 
-    AnimatedSpriteRenderer(u32 id, RenderData *renderDataIn, AnimatedSpriteID spriteIn,
-                           glm::vec2 sizeIn, int fpsIn, double *dt, int framesIn,
-                           SpriteID idleSpriteIn) {
+    AnimatedSpriteRenderer(u32 id, RenderData *renderDataIn, AnimatedSpriteID spriteIn, int fpsIn,
+                           double *dt, int framesIn, SpriteID idleSpriteIn) {
         entityID = id;
 
         auto e = g->gameState->entityManager->entities[entityID];
@@ -200,7 +200,7 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
 
         deltaTime = dt; // This is a reference to the float* dt global
 
-        timer = spritesPerSecond / TARGET_FPS;
+        timer = spritesPerSecond / 60.f;
         currFrame = 0;
     }
 
@@ -231,9 +231,8 @@ struct SpriteRenderer : EntityComponentBase {
     RenderData *renderData;
     TransformComponent *transform;
 
-    SpriteRenderer(u32 id, RenderData *renderDataIn, SpriteID spriteIn, glm::vec2 sizeIn) {
+    SpriteRenderer(u32 id, RenderData *renderDataIn, SpriteID spriteIn) {
         entityID = id;
-        sprite = spriteIn;
         renderData = renderDataIn;
         auto e = g->gameState->entityManager->entities[entityID];
         engine_log("ID: %u || %zu", entityID, e->components.size());

@@ -27,7 +27,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         appState = g->appState;
         gameState = g->gameState;
         glContext = g->glContext;
-        engine_input = g->input;
+        input = g->input;
     }
 
     if (!gameState->initialized) initializeGameState();
@@ -43,8 +43,8 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         if (g->input->rMouseJustReleased()) { engine_log("%f R release", dt); }
         if (g->input->lMouseJustReleased()) { engine_log("%f L release", dt); }
 
-        engine_input->mouseWorldPos =
-            renderData->gameCamera.getMousePosInWorld(engine_input->mousePos, appState->screenSize);
+        input->mouseWorldPos =
+            renderData->gameCamera.getMousePosInWorld(input->mousePos, appState->screenSize);
 
         simulate();
     }
@@ -80,7 +80,7 @@ void renderWorld(int fps, double dt) {
         }
     }
 
-    ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, engine_input->mouseWorldPos * TILESIZE);
+    ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseWorldPos * TILESIZE);
 }
 
 void setupPlayer() {
@@ -90,8 +90,8 @@ void setupPlayer() {
         TransformComponent(glm::vec2(128, 128), glm::vec2(16, 32));
     player->components.push_back(transform);
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
-        AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, {16, 32}, 12,
-                               &deltaTime, 4, Player);
+        AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, 8, &deltaTime, 4,
+                               Player);
     player->components.push_back(spriteRenderer);
 
     auto collider = new (permStorage->alloc(sizeof(ColliderComponent)))

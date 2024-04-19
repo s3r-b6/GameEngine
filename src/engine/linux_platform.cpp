@@ -9,8 +9,6 @@
 #include "./engine_memory.h"
 #include "./types.h"
 
-#include "SDL2/SDL_log.h"
-
 void *plat_loadDynamicLib(char *dlName) {
     void *sharedObject = dlopen(dlName, RTLD_NOW);
     if (!sharedObject) {
