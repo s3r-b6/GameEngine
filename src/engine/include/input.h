@@ -19,6 +19,7 @@ struct KeyState {
 // TODO: The input system should allow also controllers
 struct Input {
     glm::ivec2 mouseWorldPos;
+    glm::ivec2 mouseUiPos;
     glm::ivec2 mousePos;
 
     bool mouseInWindow;

@@ -15,13 +15,13 @@ void handleTilePickerNavigation() {
 
         gameState->tileManager->shownAtlas--;
         if (gameState->tileManager->shownAtlas < 2) { gameState->tileManager->shownAtlas = 2; }
-        engine_log("Tilemap selected: %u", gameState->tileManager->shownAtlas);
+        // engine_log("Tilemap selected: %u", gameState->tileManager->shownAtlas);
     } else if (input->keyJustPressed('=')) {
         gameState->tileManager->shownAtlas++;
         if (gameState->tileManager->shownAtlas > glContext->usedTextures) {
             gameState->tileManager->shownAtlas = glContext->usedTextures;
         }
-        engine_log("Tilemap selected: %u", gameState->tileManager->shownAtlas);
+        // engine_log("Tilemap selected: %u", gameState->tileManager->shownAtlas);
     }
 }
 
@@ -40,16 +40,8 @@ void adjustSelectionBounds(glm::ivec2 mousePos) {
     selection.selectedTile2.atlasIdx = gameState->tileManager->shownAtlas;
     selection.selectedTile1.atlasIdx = gameState->tileManager->shownAtlas;
 
-    SDL_Log("SELECTED TILES: 1{%d %d} 2{%d %d}", selection.selectedTile1.x,
-            selection.selectedTile1.y, selection.selectedTile2.x, selection.selectedTile2.y);
-}
-
-void handleCameraMovement() {
-    if (input->keyIsDown('S')) {
-        renderData->uiCamera.pos.y -= TILESIZE;
-    } else if (input->keyIsDown('W')) {
-        renderData->uiCamera.pos.y += TILESIZE;
-    }
+    // SDL_Log("SELECTED TILES: 1{%d %d} 2{%d %d}", selection.selectedTile1.x,
+    //         selection.selectedTile1.y, selection.selectedTile2.x, selection.selectedTile2.y);
 }
 
 void handleTileSelection() {
@@ -114,5 +106,10 @@ void handleTileActions() {
 
     handleTilePickerNavigation();
     handleTileSelection();
-    handleCameraMovement();
+
+    if (renderData->uiCamera.pos.y < 500 && input->keyIsDown('s')) {
+        renderData->uiCamera.pos.y += TILESIZE;
+    } else if (renderData->uiCamera.pos.y > 182 && input->keyIsDown('w')) {
+        renderData->uiCamera.pos.y -= TILESIZE;
+    }
 }

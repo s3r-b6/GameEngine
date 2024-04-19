@@ -45,6 +45,8 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 
         input->mouseWorldPos =
             renderData->gameCamera.getMousePosInWorld(input->mousePos, appState->screenSize);
+        input->mouseUiPos =
+            renderData->uiCamera.getMousePosInWorld(input->mousePos, appState->screenSize);
 
         simulate();
     }

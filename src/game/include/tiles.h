@@ -187,7 +187,7 @@ struct TileManager {
                         {selection.selectedTile1.x * 16, selection.selectedTile1.y * 16});
         }
 
-        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseWorldPos * 16);
+        ui_drawTile(renderData, {39, 35}, WORLD_ATLAS, input->mouseUiPos * 16);
     }
 
     void renderFront(RenderData *renderData) {
