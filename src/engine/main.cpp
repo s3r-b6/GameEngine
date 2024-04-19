@@ -75,10 +75,9 @@ int plat_main() {
             hotreload_timer = 3.f;
         }
 
-        // TODO: Pressing and releasing different buttons messes up everything
-        if ((g->input->mouseState & 0x0F) == 0) {
-            g->input->mouseState = g->input->mouseState << 4;
-        }
+        if (!g->input->lMouseDown()) { g->input->mouseState &= ~(0x1 << 4); }
+        if (!g->input->mMouseDown()) { g->input->mouseState &= ~(0x1 << 5); }
+        if (!g->input->rMouseDown()) { g->input->mouseState &= ~(0x1 << 6); }
     }
 
     close(g->glContext, g->appState, g->alState);
