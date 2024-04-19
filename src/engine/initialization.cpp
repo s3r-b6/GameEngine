@@ -38,14 +38,11 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
         new (permStorage->alloc(sizeof(EntityManager))) EntityManager(1024, permStorage);
 
     g->gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
-    g->gameState->inputManager = new (permStorage->alloc(sizeof(InputManager))) InputManager();
 
-    if (!g->gameState->entityManager || !g->gameState->tileManager || !g->gameState->inputManager) {
+    if (!g->gameState->entityManager || !g->gameState->tileManager) {
         engine_log("ERROR: Failed to alloc gameState");
         return nullptr;
     }
-
-    g->gameState->inputManager->inputActions = std::vector<InputManager::GameAction *>();
 
     g->gameState->initialized = false;
 
@@ -94,6 +91,9 @@ GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) 
     SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
 
     SDL_StartTextInput();
+
+    engine_log("Memory usage after init: \n\t PERM_STORAGE:%lu/%lu", (permStorage->used / MB(1)),
+               (permStorage->size / MB(1)));
 
     return g;
 }

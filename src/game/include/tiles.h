@@ -47,8 +47,8 @@ struct FrontTile {
         y = dataP[2];
         atlasIdx = dataP[1];
 
-        engine_log("deserializing: wX:%u wY:%u x:%u y:%u idx:%u", data, worldX, worldY, x, y,
-                   atlasIdx);
+        // engine_log("deserializing: wX:%u wY:%u x:%u y:%u idx:%u", data, worldX, worldY, x, y,
+        // atlasIdx);
 
         return true;
     }
@@ -94,7 +94,7 @@ struct TileManager {
         FILE *f = fopen("world.data", "wb");
 
         // Write gridSize tiles
-        engine_log("serializing %d tiles", gridSize);
+        // engine_log("serializing %d tiles", gridSize);
         for (int i = 0; i < gridSize; i++) {
             Tile t1 = worldgrid[i];
 
@@ -103,8 +103,8 @@ struct TileManager {
         }
 
         u64 size = collisions.size();
-        engine_log("serializing %lu", size);
-        // Write how many collisions there are
+        // engine_log("serializing %lu", size);
+        //  Write how many collisions there are
         fwrite(&size, sizeof(u64), 1, f);
         for (auto col : collisions) {
             u64 data = col.serialize();

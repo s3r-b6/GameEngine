@@ -2,10 +2,13 @@
 
 #include <functional>
 #include <stack>
+#include <vector>
 
-#include "types.h"
-
+#include "./engine_global.h"
 #include "./game_global.h"
+
+#include "./assets.h"
+#include "./game.h"
 #include "./game_render.h"
 
 struct EntityComponentBase {
@@ -39,7 +42,6 @@ struct Entity {
             if (castedComponent) { return castedComponent; }
         }
 
-        // Way too generic, might have to improve this
         engine_log("Entity failed to find a component %s", typeid(T).name());
 
         return nullptr;
@@ -64,7 +66,6 @@ struct EntityManager {
     std::stack<u32> freeEntities;
 
     EntityManager(u32 poolsize, BumpAllocator *allocator) {
-        // TODO: c++ vectors have a method to shrink... would be interesting
         entities = std::vector<Entity *>();
         freeEntities = std::stack<u32>();
 
@@ -86,6 +87,7 @@ struct EntityManager {
         }
 
         u32 id = freeEntities.top();
+        engine_log("Popped free_entity: %u", id);
         entities[id]->initialized = true;
         freeEntities.pop();
         return id;
@@ -143,7 +145,7 @@ struct ColliderComponent : EntityComponentBase {
         entityID = player_id;
 
         auto e = g->gameState->entityManager->entities[entityID];
-        engine_log("ID: %u || %zu", entityID, e->components.size());
+        // engine_log("ID: %u || %zu", entityID, e->components.size());
         transform = e->findComponent<TransformComponent>();
 
         size = s;

@@ -9,13 +9,11 @@
 
 struct EntityManager;
 struct TileManager;
-struct InputManager;
 
 struct GameState {
     bool initialized;
     EntityManager *entityManager;
     TileManager *tileManager;
-    InputManager *inputManager;
 
     u32 player_id;
 };

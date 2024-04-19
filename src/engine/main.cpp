@@ -75,6 +75,7 @@ int plat_main() {
             hotreload_timer = 3.f;
         }
 
+        // TODO: Pressing and releasing different buttons messes up everything
         if ((g->input->mouseState & 0x0F) == 0) {
             g->input->mouseState = g->input->mouseState << 4;
         }

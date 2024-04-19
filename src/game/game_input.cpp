@@ -1,7 +1,7 @@
-#include "game_input.h"
-#include "entities.h"
-#include "game_global.h"
-#include "tiles.h"
+#include "./entities.h"
+#include "./game_global.h"
+#include "./input.h"
+#include "./tiles.h"
 
 // TODO: I don't like this
 bool checkTileCollisions(ColliderComponent *collider) {
@@ -13,13 +13,29 @@ bool checkTileCollisions(ColliderComponent *collider) {
     return false;
 }
 
-auto move = [](u32 player_id) {
+void handlePlayerMovement(u32 player_id) {
     float playerSpeed = 2.f;
 
-    auto player = gameState->entityManager->entities[player_id];
-    auto transform = player->findComponent<TransformComponent>();
-    auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
-    auto collider = player->findComponent<ColliderComponent>();
+    local_persist u32 prev_player_id = 0;
+
+    if (prev_player_id == 0) { prev_player_id = player_id; }
+
+    local_persist auto player = gameState->entityManager->entities[player_id];
+    local_persist auto transform = player->findComponent<TransformComponent>();
+    local_persist auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
+    local_persist auto collider = player->findComponent<ColliderComponent>();
+
+    if (prev_player_id != player_id) {
+        player = gameState->entityManager->entities[player_id];
+        transform = player->findComponent<TransformComponent>();
+        spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
+        collider = player->findComponent<ColliderComponent>();
+    }
+
+    if (!player) {
+        engine_log("handlePlayerMovement() could not find a player!");
+        return;
+    }
 
     auto oldPos = transform->pos;
     auto newPos = &transform->pos;
@@ -61,8 +77,9 @@ auto move = [](u32 player_id) {
     }
 
     spriteRenderer->animating = moved;
-};
-auto tileActions = [](u32) {
+}
+
+void handletileActions() {
     if (engine_input->keyJustPressed('=')) {
         engine_log("Saving world state");
         gameState->tileManager->serialize();
@@ -81,15 +98,14 @@ auto tileActions = [](u32) {
         engine_log("Front layer");
         // selectedWorldLayer = 1;
     }
-};
+}
 
-void setup_keys() {
-    inputManager->registerFunction(permStorage, "TilePickerToggle", InputManager::GAME_MODE, '1',
-                                   [](u32) {
-                                       g->gameState->tileManager->tilePickerShown =
-                                           !g->gameState->tileManager->tilePickerShown;
-                                   });
-    inputManager->registerFunction(permStorage, "Movement", InputManager::GAME_MODE, '\0', move);
-    inputManager->registerFunction(permStorage, "TileActions", InputManager::GAME_MODE, '\0',
-                                   tileActions);
+void toggleTilePicker() {
+    g->gameState->tileManager->tilePickerShown = !g->gameState->tileManager->tilePickerShown;
+}
+
+void inputFunctions(u32 player_id) {
+    if (g->input->keyJustPressed('1')) { toggleTilePicker(); }
+    handlePlayerMovement(player_id);
+    handletileActions();
 }

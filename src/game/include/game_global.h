@@ -10,6 +10,4 @@ global ProgramState *appState;
 global GLContext *glContext;
 global RenderData *renderData;
 global GameState *gameState;
-global InputManager *inputManager;
 global Input *engine_input;
-global u32 player_id;

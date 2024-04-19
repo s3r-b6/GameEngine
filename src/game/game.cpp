@@ -6,6 +6,7 @@
 #include "./game_global.h"
 
 #include "./entities.h"
+#include "./input.h"
 #include "./renderer.h"
 #include "./tiles.h"
 
@@ -26,7 +27,6 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         appState = g->appState;
         gameState = g->gameState;
         glContext = g->glContext;
-        inputManager = g->gameState->inputManager;
         engine_input = g->input;
     }
 
@@ -86,11 +86,9 @@ void renderWorld(int fps, double dt) {
 void setupPlayer() {
     gameState->player_id = gameState->entityManager->getUninitializedID();
     auto player = gameState->entityManager->entities[gameState->player_id];
-
     auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
         TransformComponent(glm::vec2(128, 128), glm::vec2(16, 32));
     player->components.push_back(transform);
-
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
         AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, {16, 32}, 12,
                                &deltaTime, 4, Player);
@@ -99,8 +97,6 @@ void setupPlayer() {
     auto collider = new (permStorage->alloc(sizeof(ColliderComponent)))
         ColliderComponent(gameState->player_id, {16, 20});
     player->components.push_back(collider);
-
-    setup_keys();
 }
 
 inline void initializeGameState() {
@@ -121,6 +117,6 @@ inline void initializeGameState() {
 }
 
 void simulate() {
-    inputManager->update(gameState->player_id);
     gameState->entityManager->update();
+    inputFunctions(gameState->player_id);
 }

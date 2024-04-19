@@ -55,7 +55,8 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTe
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
 
-    parse_png_data(data, width, height, channels);
+    // TODO: do something with this
+    // parse_png_data(data, width, height, channels);
 
     if (!data) {
         SDL_Log("Failed to load texture %s", texturePath);
