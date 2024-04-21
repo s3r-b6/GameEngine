@@ -1,9 +1,8 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
-#include "./game.h"
-
 #include "./engine_global.h"
-#include "./game_global.h"
+
+#include "./game.h"
 
 #include "./entities.h"
 #include "./input.h"
@@ -12,22 +11,18 @@
 
 #include "./game_input.h"
 
-EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
-                          GlobalState *globalStateIn, double dt) {
+EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
     int fps = 1.f / dt;
     deltaTime = dt;
 
     // Since this is compiled as a separate dll, it holds its own static data
-    if (g != globalStateIn) {
-        permStorage = permStorageIn;
-        tempStorage = tempStorageIn;
-        g = globalStateIn;
+    if (renderData != renderDataIn) {
+        permStorage = permStorageIn, tempStorage = tempStorageIn;
+        renderData = renderDataIn, appState = appStateIn;
+        glContext = glContextIn, input = inputIn;
 
-        renderData = g->renderData;
-        appState = g->appState;
-        gameState = g->gameState;
-        glContext = g->glContext;
-        input = g->input;
+        gameState = gameStateIn;
+        entityManager = gameState->entityManager, tileManager = gameState->tileManager;
     }
 
     if (!gameState->initialized) initializeGameState();
@@ -38,17 +33,14 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     while (updateTimer >= UPDATE_DELAY) {
         updateTimer -= UPDATE_DELAY;
 
-        if (g->input->rMouseJustPressed()) { engine_log("%f R press", dt); }
-        if (g->input->lMouseJustPressed()) { engine_log("%f L press", dt); }
-        if (g->input->rMouseJustReleased()) { engine_log("%f R release", dt); }
-        if (g->input->lMouseJustReleased()) { engine_log("%f L release", dt); }
-
         input->mouseWorldPos =
             renderData->gameCamera.getMousePosInWorld(input->mousePos, appState->screenSize);
         input->mouseUiPos =
             renderData->uiCamera.getMousePosInWorld(input->mousePos, appState->screenSize);
 
-        simulate();
+        inputFunctions();
+
+        entityManager->update();
     }
 
     renderWorld(fps, dt);
@@ -57,36 +49,30 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 }
 
 void drawTileSelection() {
-    if (gameState->tileManager->selection.selectedTile2.atlasIdx) {
-        ui_drawTileGroup(renderData,
-                         {gameState->tileManager->selection.selectedTile1.x,
-                          gameState->tileManager->selection.selectedTile1.y},
-                         {gameState->tileManager->selection.selectedTile2.x,
-                          gameState->tileManager->selection.selectedTile2.y},
-                         gameState->tileManager->selection.selectedTile1.atlasIdx,
-                         g->input->mouseWorldPos * TILESIZE);
-    } else if (gameState->tileManager->selection.selectedTile1.atlasIdx) {
-        ui_drawTile(renderData,
-                    {gameState->tileManager->selection.selectedTile1.x,
-                     gameState->tileManager->selection.selectedTile1.y},
-                    gameState->tileManager->selection.selectedTile1.atlasIdx,
-                    g->input->mouseWorldPos * TILESIZE);
+    if (tileManager->selection.selectedTile2.atlasIdx) {
+        ui_drawTileGroup(
+            {tileManager->selection.selectedTile1.x, tileManager->selection.selectedTile1.y},
+            {tileManager->selection.selectedTile2.x, tileManager->selection.selectedTile2.y},
+            tileManager->selection.selectedTile1.atlasIdx, input->mouseWorldPos * TILESIZE);
+    } else if (tileManager->selection.selectedTile1.atlasIdx) {
+        ui_drawTile(
+            {tileManager->selection.selectedTile1.x, tileManager->selection.selectedTile1.y},
+            tileManager->selection.selectedTile1.atlasIdx, input->mouseWorldPos * TILESIZE);
     }
 }
 
 void renderWorld(int fps, double dt) {
-    // gameState->tileManager->renderBack(renderData);
-    if (!gameState->tileManager->tilePickerShown) {
-        ui_drawTextFormatted(renderData, {420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
+    tileManager->render();
+    if (!tileManager->tilePickerShown) {
+        ui_drawTextFormatted({420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
         drawTileSelection();
-        gameState->entityManager->render();
+        entityManager->render();
     }
-    // gameState->tileManager->renderFront(renderData);
 }
 
 void setupPlayer() {
-    gameState->player_id = gameState->entityManager->getUninitializedID();
-    auto player = gameState->entityManager->entities[gameState->player_id];
+    gameState->player_id = entityManager->getUninitializedID();
+    auto player = entityManager->entities[gameState->player_id];
     auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
         TransformComponent(glm::vec2(128, 128), glm::vec2(16, 32));
     player->components.push_back(transform);
@@ -108,23 +94,18 @@ inline void initializeGameState() {
 
     setupPlayer();
 
-    gameState->tileManager->selection.selectedTile1.atlasIdx = WORLD_ATLAS;
-    gameState->tileManager->selection.selectedTile1.x = 0;
-    gameState->tileManager->selection.selectedTile1.y = 0;
+    tileManager->selection.selectedTile1.atlasIdx = WORLD_ATLAS;
+    tileManager->selection.selectedTile1.x = 0;
+    tileManager->selection.selectedTile1.y = 0;
 
-    g->gameState->tileManager->shownAtlas = 2;
-    g->gameState->tileManager->selection = {0};
+    tileManager->shownAtlas = 2;
+    tileManager->selection = {0};
 
-    g->gameState->tileManager->selection.selectedTile1.atlasIdx = WORLD_ATLAS;
-    g->gameState->tileManager->selection.selectedTile1.x = 0;
-    g->gameState->tileManager->selection.selectedTile1.y = 0;
+    tileManager->selection.selectedTile1.atlasIdx = WORLD_ATLAS;
+    tileManager->selection.selectedTile1.x = 0;
+    tileManager->selection.selectedTile1.y = 0;
 
-    // if (gameState->tileManager->deserialize()) {}
+    // if (tileManager->deserialize()) {}
 
     gameState->initialized = true;
-}
-
-void simulate() {
-    gameState->entityManager->update();
-    inputFunctions();
 }

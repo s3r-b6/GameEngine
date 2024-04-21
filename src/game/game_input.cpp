@@ -1,4 +1,3 @@
-#include "./input.h"
 #include "./player_input.h"
 #include "./tile_input.h"
 
@@ -7,5 +6,5 @@
 // Also, should implement some state-machine to handle "input modes"
 void inputFunctions() {
     handleTileActions();
-    handlePlayerMovement(g->gameState->player_id);
+    handlePlayerMovement(gameState->player_id);
 }

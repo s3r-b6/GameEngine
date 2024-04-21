@@ -18,7 +18,8 @@ global void *gameSO;
 
 int plat_main() {
     permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(10));
-    if (!(g = initialize(permStorage, tempStorage))) { crash("Failed to initialize the engine."); }
+
+    if (!initialize(permStorage, tempStorage)) { crash("Failed to initialize the engine."); }
 
     u64 now = SDL_GetPerformanceCounter(), last = 0;
     double dt = 0;
@@ -26,24 +27,22 @@ int plat_main() {
     reloadGameLib(tempStorage);
 
     // GL_TEXTURE0 is for the font
-    load_font("../fonts/joystix.otf", 48, g->renderData, g->glContext, tempStorage);
+    load_font("../fonts/joystix.otf", 48, tempStorage);
 
     // Changing the order in which atlases are loaded will break the maps, since the ids are
     // generated here
-    loadTextureAtlas("../assets/textures/zelda-like/character.png", g->glContext, GL_TEXTURE1,
-                     false);
-    loadTextureAtlas("../assets/textures/zelda-like/objects.png", g->glContext, GL_TEXTURE2, true);
-    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", g->glContext, GL_TEXTURE3,
-                     true);
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE1, false);
+    loadTextureAtlas("../assets/textures/zelda-like/objects.png", GL_TEXTURE2, true);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", GL_TEXTURE3, true);
 
     SDL_Event event;
 
     local_persist float hotreload_timer = 3.f;
 
-    while (g->appState->running) {
-        SDL_ShowCursor(g->input->showCursor);
+    while (appState->running) {
+        SDL_ShowCursor(input->showCursor);
 
-        g->input->mouseState = g->input->mouseState | g->input->mouseState << 4;
+        input->mouseState = input->mouseState | input->mouseState << 4;
 
         last = now;
         now = SDL_GetPerformanceCounter();
@@ -54,10 +53,11 @@ int plat_main() {
             handleSDLevents(&event);
         }
 
-        updateGame_ptr(permStorage, tempStorage, g, dt);
+        updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input,
+                       dt);
 
-        auto screenSize = g->appState->screenSize;
-        auto color = g->renderData->clearColor;
+        auto screenSize = appState->screenSize;
+        auto color = renderData->clearColor;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -65,10 +65,10 @@ int plat_main() {
         glClearDepth(0.f);
         glViewport(0, 0, screenSize.x, screenSize.y);
 
-        render(g);
+        render();
         glFinish();
-        ui_render(g);
-        SDL_GL_SwapWindow(g->appState->window);
+        ui_render();
+        SDL_GL_SwapWindow(appState->window);
 
         tempStorage->freeMemory();
 
@@ -78,10 +78,10 @@ int plat_main() {
             hotreload_timer = 3.f;
         }
 
-        g->input->mouseState &= ~(g->input->mouseState & 0xF0);
+        input->mouseState &= ~(input->mouseState & 0xF0);
     }
 
-    close(g->glContext, g->appState, g->alState);
+    close();
     plat_freeDynamicLib(gameSO);
     plat_deleteFile(loadedgameSharedObject);
     return 0;
@@ -90,56 +90,56 @@ int plat_main() {
 inline void handleSDLevents(SDL_Event *event) {
     switch (event->type) {
     case SDL_QUIT: {
-        g->appState->running = false;
+        appState->running = false;
     } break;
 
     case SDL_WINDOWEVENT: {
         if (event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
-                                   &g->appState->screenSize.y);
+            SDL_GL_GetDrawableSize(appState->window, &appState->screenSize.x,
+                                   &appState->screenSize.y);
         }
         break;
     }
 
     case SDL_WINDOWEVENT_ENTER: {
-        g->input->mouseInWindow = true;
+        input->mouseInWindow = true;
     } break;
 
     case SDL_WINDOWEVENT_LEAVE: {
-        g->input->mouseInWindow = false;
+        input->mouseInWindow = false;
     } break;
 
     case SDL_MOUSEMOTION: {
-        if (g->input->mouseInWindow) {
-            SDL_GetMouseState(&g->input->mousePos.x, &g->input->mousePos.y);
-            // log(__FILE__, __LINE__,"New mousePos: %d %d", g->input->mousePos.x,
-            // g->input->mousePos.y);
+        if (input->mouseInWindow) {
+            SDL_GetMouseState(&input->mousePos.x, &input->mousePos.y);
+            // log(__FILE__, __LINE__,"New mousePos: %d %d", input->mousePos.x,
+            // input->mousePos.y);
         }
     } break;
 
     case SDL_MOUSEBUTTONUP: {
         if (event->button.button == SDL_BUTTON_LEFT) {
-            g->input->mouseState &= ~(0x1);
-            g->input->mouseState |= (0x1 << 4);
+            input->mouseState &= ~(0x1);
+            input->mouseState |= (0x1 << 4);
         } else if (event->button.button == SDL_BUTTON_MIDDLE) {
-            g->input->mouseState &= ~(0x1 << 1);
-            g->input->mouseState |= (0x1 << 5);
+            input->mouseState &= ~(0x1 << 1);
+            input->mouseState |= (0x1 << 5);
         } else if (event->button.button == SDL_BUTTON_RIGHT) {
-            g->input->mouseState &= ~(0x1 << 2);
-            g->input->mouseState |= (0x1 << 6);
+            input->mouseState &= ~(0x1 << 2);
+            input->mouseState |= (0x1 << 6);
         }
     } break;
 
     case SDL_MOUSEBUTTONDOWN: {
         if (event->button.button == SDL_BUTTON_LEFT) {
-            g->input->mouseState |= 0x1;
-            g->input->mouseState &= ~(0x1 << 4);
+            input->mouseState |= 0x1;
+            input->mouseState &= ~(0x1 << 4);
         } else if (event->button.button == SDL_BUTTON_MIDDLE) {
-            g->input->mouseState |= (0x1 << 1);
-            g->input->mouseState &= ~(0x1 << 5);
+            input->mouseState |= (0x1 << 1);
+            input->mouseState &= ~(0x1 << 5);
         } else if (event->button.button == SDL_BUTTON_RIGHT) {
-            g->input->mouseState |= (0x1 << 2);
-            g->input->mouseState &= ~(0x1 << 6);
+            input->mouseState |= (0x1 << 2);
+            input->mouseState &= ~(0x1 << 6);
         }
     }
 
@@ -151,7 +151,7 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist u64 lastModTimestamp;
 
     u64 currentTimestamp = plat_getFileTimestamp(gameSharedObject);
-    if (g->appState->running && currentTimestamp == 0) platform_sleep(350);
+    if (appState->running && currentTimestamp == 0) platform_sleep(350);
 
     if (currentTimestamp <= lastModTimestamp) return;
 
@@ -163,7 +163,7 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     }
 
     while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
-        if (g->appState->running) platform_sleep(50);
+        if (appState->running) platform_sleep(50);
     }
 
     engine_log("Copied game.so to game_load.so");

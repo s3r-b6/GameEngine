@@ -7,6 +7,11 @@
 
 #include "./platform.h"
 
+#define UPDATE_GAME_PARAMS                                                                         \
+    BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn, RenderData *renderDataIn,          \
+        ProgramState *appStateIn, GameState *gameStateIn, GLContext *glContextIn, Input *inputIn,  \
+        double dt
+
 struct EntityManager;
 struct TileManager;
 
@@ -19,11 +24,8 @@ struct GameState {
 };
 
 extern "C" {
-EXPORT_FN void updateGame(BumpAllocator *permStorage, BumpAllocator *tempStorage,
-                          GlobalState *globalStateIn, double dt);
-void renderWorld(int fps, double dt);
+EXPORT_FN void updateGame(UPDATE_GAME_PARAMS);
 }
 
+void renderWorld(int fps, double dt);
 void initializeGameState();
-void simulate();
-// void drawTilePicker(int textureAtlas, int maxTiles, int tilesPerRow);

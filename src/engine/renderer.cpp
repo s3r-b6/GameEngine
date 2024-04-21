@@ -18,7 +18,6 @@
 //  1           grey                 2           grey, alpha
 //  3           red, green, blue     4           red, green, blue, alpha
 void parseTilemapData(u8 currentAtlas, u8 *data, int width, int height, int channels) {
-    local_persist u32 total_tiles = 0;
     if (channels != 4) crash("oops");
 
     int x_tiles = width / TILESIZE, y_tiles = height / TILESIZE;
@@ -41,35 +40,34 @@ void parseTilemapData(u8 currentAtlas, u8 *data, int width, int height, int chan
         }
 
         if (!is_empty) {
-            printf("tile { %d, %d } is non-empty\n", i % x_tiles, i / x_tiles);
             TileBase t = TileBase{};
             t.x = u8(i % x_tiles);
             t.y = u8(i / x_tiles);
             t.atlasIdx = currentAtlas;
 
-            g->gameState->tileManager->registerTile(t);
-            total_tiles++;
+            tileManager->registerTile(t);
         }
     }
-
-    engine_log("total tiles after loading file: %d", total_tiles);
 }
 
 // TODO: This should use a map or something similar, so one texture can be freed
 // and then I can ask which slot is free and occupy it again and so on
-bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTextureIdx,
-                      bool createTiles) {
+bool loadTextureAtlas(char const *texturePath, GLenum glTextureIdx, bool createTiles) {
     local_persist u8 currentAtlas = 1;
 
     int height, width, channels;
     u8 *data = stbi_load(texturePath, &width, &height, &channels, 4);
 
     if (!data) {
-        SDL_Log("Failed to load texture %s", texturePath);
+        SDL_Log("Failed to load texture '%s'", texturePath);
         return false;
     }
 
-    if (createTiles) parseTilemapData(currentAtlas, data, width, height, channels);
+    if (createTiles) {
+        engine_log("Loading tilemap: '%s'", texturePath);
+        parseTilemapData(currentAtlas, data, width, height, channels);
+        engine_log("Total tiles: %d", tileManager->currentTiles);
+    }
 
     glActiveTexture(glTextureIdx);
     glBindTexture(GL_TEXTURE_2D, glContext->textureIDs[glContext->usedTextures]);
@@ -86,46 +84,45 @@ bool loadTextureAtlas(char const *texturePath, GLContext *glContext, GLenum glTe
     stbi_image_free(data);
 
     glContext->usedTextures++;
-
     currentAtlas++;
+
     return true;
 }
 
-void render(GlobalState *g) {
-    auto screenSize = g->appState->screenSize;
+void render() {
+    auto screenSize = appState->screenSize;
     glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
                                  static_cast<float>(screenSize.y)};
-    glUniform2fv(g->glContext->screenSizeID, 1, &floatScreenSize.x);
+    glUniform2fv(glContext->screenSizeID, 1, &floatScreenSize.x);
 
-    glm::mat4x4 mat = g->renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
-    glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
+    glm::mat4x4 mat = renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
+    glUniformMatrix4fv(glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Transform) * g->renderData->transformCount,
-                    g->renderData->transforms);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Transform) * renderData->transformCount,
+                    renderData->transforms);
 
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->transformCount);
-    g->renderData->transformCount = 0;
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, renderData->transformCount);
+    renderData->transformCount = 0;
 }
 
-void ui_render(GlobalState *g) {
-    auto screenSize = g->appState->screenSize;
+void ui_render() {
+    auto screenSize = appState->screenSize;
 
     glDisable(GL_DEPTH_TEST);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glm::mat4x4 mat = g->renderData->uiCamera.getProjectionMatrix(screenSize.x, screenSize.y);
-    glUniformMatrix4fv(g->glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
+    glm::mat4x4 mat = renderData->uiCamera.getProjectionMatrix(screenSize.x, screenSize.y);
+    glUniformMatrix4fv(glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);
 
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-                    sizeof(Transform) * g->renderData->uiTransformCount,
-                    g->renderData->uiTransforms);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g->renderData->uiTransformCount);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(Transform) * renderData->uiTransformCount,
+                    renderData->uiTransforms);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, renderData->uiTransformCount);
 
     // 42 w/o help 193 with it
-    // log("%d", g->renderData->uiTransformCount);
-    g->renderData->uiTransformCount = 0;
+    // log("%d", renderData->uiTransformCount);
+    renderData->uiTransformCount = 0;
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);

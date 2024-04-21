@@ -3,7 +3,6 @@
 #include "./types.h"
 
 #include "./entities.h"
-#include "./game_global.h"
 #include "./input.h"
 #include "./tiles.h"
 

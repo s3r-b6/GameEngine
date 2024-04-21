@@ -2,7 +2,6 @@
 
 #include "./entities.h"
 #include "./game.h"
-#include "./game_global.h"
 #include "./input.h"
 #include "./renderer.h"
 #include "./tiles.h"
@@ -66,10 +65,10 @@ void handleTileSelection() {
 }
 
 void handleTileActions() {
-    bool pickerShown = g->gameState->tileManager->tilePickerShown;
+    bool pickerShown = gameState->tileManager->tilePickerShown;
 
-    if (g->input->keyJustPressed('1')) {
-        g->gameState->tileManager->tilePickerShown = !pickerShown;
+    if (input->keyJustPressed('1')) {
+        gameState->tileManager->tilePickerShown = !pickerShown;
         pickerShown = !pickerShown;
         engine_log("engine_shown: %b", pickerShown);
     }
@@ -96,15 +95,12 @@ void handleTileActions() {
 
         if (input->lMouseDown()) {
             if (selection.selectedTile2.atlasIdx) {
-                //                gameState->tileManager->setTiles(input->mouseWorldPos,
-                //                selection.selectedTile1,
-                //                                                 selection.selectedTile2,
-                //                                                 selection.selectedLayer);
+                // gameState->tileManager->setTiles(input->mouseWorldPos, selection.selectedTile1,
+                // selection.selectedTile2, selection.selectedLayer);
             } else if (selection.selectedTile1.atlasIdx) {
-                //                auto pos = input->mouseWorldPos;
-                //                gameState->tileManager->setTile(pos.x, pos.y,
-                //                selection.selectedTile1,
-                //                                                selection.selectedLayer);
+                auto pos = input->mouseWorldPos;
+                // gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
+                //                                 selection.selectedLayer);
             }
         } else if (input->rMouseDown()) {
             //            gameState->tileManager->removeTile(input->mouseWorldPos.x,

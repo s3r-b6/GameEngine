@@ -18,90 +18,86 @@
 // Append to the shaders location the file
 #define SHADER_SRC(termination) "../assets/shaders/" termination
 
-GlobalState *initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
-    // GlobalState just stitches together all pointers
-    GlobalState *g = (GlobalState *)permStorage->alloc(sizeof(GlobalState));
+bool initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
+    appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
+    gameState = (GameState *)permStorage->alloc(sizeof(GameState));
+    renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
+    input = (Input *)permStorage->alloc(sizeof(Input));
+    glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
+    alState = (ALState *)permStorage->alloc(sizeof(ALState));
 
-    g->appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
-    g->gameState = (GameState *)permStorage->alloc(sizeof(GameState));
-    g->renderData = (RenderData *)permStorage->alloc(sizeof(RenderData));
-    g->input = (Input *)permStorage->alloc(sizeof(Input));
-    g->glContext = (GLContext *)permStorage->alloc(sizeof(GLContext));
-    g->alState = (ALState *)permStorage->alloc(sizeof(ALState));
-
-    if (!g->appState || !g->renderData || !g->gameState || !g->input) {
+    if (!appState || !renderData || !gameState || !input) {
         engine_log("ERROR: Failed to alloc globalState");
-        return nullptr;
+        return false;
     }
 
-    g->gameState->entityManager =
+    gameState->entityManager =
         new (permStorage->alloc(sizeof(EntityManager))) EntityManager(1024, permStorage);
+    gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
 
-    g->gameState->tileManager = (TileManager *)permStorage->alloc(sizeof(TileManager));
-
-    if (!g->gameState->entityManager || !g->gameState->tileManager) {
+    if (!gameState->entityManager || !gameState->tileManager) {
         engine_log("ERROR: Failed to alloc gameState");
-        return nullptr;
+        return false;
     }
 
-    g->gameState->tileManager->tilemap = std::map<int, TileBase>();
+    tileManager = gameState->tileManager;
+    entityManager = gameState->entityManager;
 
-    g->gameState->initialized = false;
+    gameState->tileManager->tilemap = std::map<int, TileBase>();
+    gameState->initialized = false;
 
-    g->input->mouseInWindow = true;
-    g->input->showCursor = true;
+    input->mouseInWindow = true;
+    input->showCursor = true;
 
     int numKeys;
-    g->input->keyboardState = SDL_GetKeyboardState(&numKeys);
+    input->keyboardState = SDL_GetKeyboardState(&numKeys);
 
     engine_log("The keyboard has %d keys", numKeys);
 
     // I am not happy with this, but wasting 512 bytes seems not that bad
-    g->input->previousKeyboardState = (u8 *)malloc(sizeof(u8) * numKeys);
-    if (g->input->previousKeyboardState == NULL) {
+    input->previousKeyboardState = (u8 *)malloc(sizeof(u8) * numKeys);
+    if (input->previousKeyboardState == NULL) {
         crash("Failed to alloc memory for the previous keyboard state");
     }
 
-    memset((void *)g->input->previousKeyboardState, false, sizeof(u8) * numKeys);
+    memset((void *)input->previousKeyboardState, false, sizeof(u8) * numKeys);
 
-    g->appState->running = true;
-    g->appState->screenSize = {1280, 720};
-    g->appState->window = NULL;
-    g->appState->glContext = NULL;
+    appState->running = true;
+    appState->screenSize = {1280, 720};
+    appState->window = NULL;
+    appState->glContext = NULL;
 
-    g->renderData->clearColor = {119.f / 255.f, 33.f / 255.f, 111.f / 255.f};
+    renderData->clearColor = {119.f / 255.f, 33.f / 255.f, 111.f / 255.f};
 
-    if (!initOpenAL(g->alState)) {
+    if (!initOpenAL()) {
         engine_log("ERROR: Failed to initialize OpenAL");
-        return nullptr;
+        return false;
     }
 
-    if (!initSDLandGL(tempStorage, g->appState, g->glContext, g->renderData)) {
+    if (!initSDLandGL(tempStorage)) {
         engine_log("ERROR: Failed to initialize SDL or OpenGL!");
-        return nullptr;
+        return false;
     }
 
     // Get initial window size. It should have been initialized to defaults,
     // but who knows
-    SDL_GL_GetDrawableSize(g->appState->window, &g->appState->screenSize.x,
-                           &g->appState->screenSize.y);
+    SDL_GL_GetDrawableSize(appState->window, &appState->screenSize.x, &appState->screenSize.y);
 
     // This is a dumb hack; at least for my WM, the window is resizable unless
     // it has been in fullscreen before
-    SDL_SetWindowResizable(g->appState->window, SDL_FALSE);
-    SDL_SetWindowFullscreen(g->appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    SDL_SetWindowFullscreen(g->appState->window, SDL_FALSE);
+    SDL_SetWindowResizable(appState->window, SDL_FALSE);
+    SDL_SetWindowFullscreen(appState->window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    SDL_SetWindowFullscreen(appState->window, SDL_FALSE);
 
     SDL_StartTextInput();
 
-    engine_log("Memory usage after init: \n\t PERM_STORAGE:%lu/%lu", (permStorage->used / MB(1)),
+    engine_log("PermStorage use after init: %d/%d", (permStorage->used / MB(1)),
                (permStorage->size / MB(1)));
 
-    return g;
+    return true;
 }
 
-inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLContext *glContext,
-                         RenderData *renderData) {
+inline bool initSDLandGL(BumpAllocator *tempStorage) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         engine_log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -150,7 +146,7 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
     }
 
     // Initialize OpenGL
-    if (!initGL(tempStorage, glContext, renderData)) {
+    if (!initGL(tempStorage)) {
         engine_log("Unable to initialize OpenGL!");
         return false;
     }
@@ -158,7 +154,7 @@ inline bool initSDLandGL(BumpAllocator *tempStorage, ProgramState *appState, GLC
     return true;
 }
 
-inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData *renderData) {
+inline bool initGL(BumpAllocator *tempStorage) {
     glContext->programID = glCreateProgram();
 
     size_t vertSourceSize = 0, fragSourceSize = 0;
@@ -243,9 +239,9 @@ inline bool initGL(BumpAllocator *tempStorage, GLContext *glContext, RenderData 
     return true;
 }
 
-void close(GLContext *glContext, ProgramState *appState, ALState *alState) {
+void close() {
     engine_log("Closing OpenAL");
-    exitOpenAL(alState);
+    exitOpenAL();
 
     engine_log("Closing SDL resources");
     SDL_StopTextInput();
@@ -296,7 +292,7 @@ void printShaderLog(uint shader, BumpAllocator *tempStorage) {
 
 // TODO: Fix this
 // rn: mostly yanked from: https://github.com/ffainelli/openal-example/tree/master
-bool initOpenAL(ALState *alState) {
+bool initOpenAL() {
     alState->enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
     if (alState->enumeration == AL_FALSE) fprintf(stderr, "enumeration extension not available\n");
 
@@ -348,7 +344,7 @@ bool initOpenAL(ALState *alState) {
     return true;
 }
 
-void exitOpenAL(ALState *alState) {
+void exitOpenAL() {
     alDeleteSources(1, &alState->source);
     alDeleteBuffers(1, &alState->buffer);
     alDeleteSources(1, &alState->bgSource);

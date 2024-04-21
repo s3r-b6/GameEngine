@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "./engine_global.h"
-#include "./game_global.h"
 
 #include "./assets.h"
 #include "./game.h"
@@ -145,7 +144,7 @@ struct ColliderComponent : EntityComponentBase {
     ColliderComponent(u32 player_id, glm::vec2 s) {
         entityID = player_id;
 
-        auto e = g->gameState->entityManager->entities[entityID];
+        auto e = gameState->entityManager->entities[entityID];
         // engine_log("ID: %u || %zu", entityID, e->components.size());
         transform = e->findComponent<TransformComponent>();
 
@@ -188,7 +187,7 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
                            double *dt, int framesIn, SpriteID idleSpriteIn) {
         entityID = id;
 
-        auto e = g->gameState->entityManager->entities[entityID];
+        auto e = gameState->entityManager->entities[entityID];
         transform = e->findComponent<TransformComponent>();
 
         renderData = renderDataIn;
@@ -216,10 +215,9 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
         }
 
         if (animating) {
-            drawAnimatedSprite(renderData, animatedSprite, transform->pos, transform->size,
-                               currFrame);
+            drawAnimatedSprite(animatedSprite, transform->pos, transform->size, currFrame);
         } else if (idleSprite != INVALID) {
-            drawSprite(renderData, idleSprite, transform->pos, transform->size);
+            drawSprite(idleSprite, transform->pos, transform->size);
         } else {
             crash("AnimatedSpriteRenderer does not know what to draw");
         }
@@ -234,10 +232,10 @@ struct SpriteRenderer : EntityComponentBase {
     SpriteRenderer(u32 id, RenderData *renderDataIn, SpriteID spriteIn) {
         entityID = id;
         renderData = renderDataIn;
-        auto e = g->gameState->entityManager->entities[entityID];
+        auto e = gameState->entityManager->entities[entityID];
         engine_log("ID: %u || %zu", entityID, e->components.size());
         transform = e->findComponent<TransformComponent>();
     }
 
-    void render() override { drawSprite(renderData, sprite, transform->pos, transform->size); }
+    void render() override { drawSprite(sprite, transform->pos, transform->size); }
 };
