@@ -1,11 +1,11 @@
 #pragma once
 
-#include "types.h"
+#include "./types.h"
 
-#include "entities.h"
-#include "game_global.h"
-#include "input.h"
-#include "tiles.h"
+#include "./entities.h"
+#include "./game_global.h"
+#include "./input.h"
+#include "./tiles.h"
 
 void handlePlayerMovement(u32 player_id) {
     float playerSpeed = 2.f;

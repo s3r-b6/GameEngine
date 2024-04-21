@@ -75,13 +75,13 @@ void drawTileSelection() {
 }
 
 void renderWorld(int fps, double dt) {
-    gameState->tileManager->renderBack(renderData);
+    // gameState->tileManager->renderBack(renderData);
     if (!gameState->tileManager->tilePickerShown) {
         ui_drawTextFormatted(renderData, {420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
         drawTileSelection();
         gameState->entityManager->render();
     }
-    gameState->tileManager->renderFront(renderData);
+    // gameState->tileManager->renderFront(renderData);
 }
 
 void setupPlayer() {
@@ -119,12 +119,12 @@ inline void initializeGameState() {
     g->gameState->tileManager->selection.selectedTile1.x = 0;
     g->gameState->tileManager->selection.selectedTile1.y = 0;
 
-    if (gameState->tileManager->deserialize()) {}
+    // if (gameState->tileManager->deserialize()) {}
 
     gameState->initialized = true;
 }
 
 void simulate() {
     gameState->entityManager->update();
-    inputFunctions(gameState->player_id);
+    inputFunctions();
 }

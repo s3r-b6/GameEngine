@@ -5,7 +5,7 @@
 // The idea is to just add all functions relative to input here
 // Simple input checking can go here. Else, inside the function.
 // Also, should implement some state-machine to handle "input modes"
-void inputFunctions(u32 player_id) {
+void inputFunctions() {
     handleTileActions();
-    handlePlayerMovement(player_id);
+    handlePlayerMovement(g->gameState->player_id);
 }

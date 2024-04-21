@@ -77,28 +77,39 @@ void handleTileActions() {
     if (!pickerShown) {
         if (input->keyJustPressed('[')) {
             engine_log("Saving world state");
-            gameState->tileManager->serialize();
+            // gameState->tileManager->serialize();
         } else if (input->keyJustPressed(']')) {
             engine_log("Reloading world");
-            gameState->tileManager->deserialize();
+            // gameState->tileManager->deserialize();
         } else if (input->keyJustPressed('p')) {
             engine_log("Clearing tile manager");
-            gameState->tileManager->clear();
+            // gameState->tileManager->clear();
         }
 
         auto &selection = gameState->tileManager->selection;
+
+        if (input->keyJustPressed('f')) {
+            gameState->tileManager->selection.selectedLayer = 1;
+        } else if (input->keyJustPressed('b')) {
+            gameState->tileManager->selection.selectedLayer = 0;
+        }
+
         if (input->lMouseDown()) {
             if (selection.selectedTile2.atlasIdx) {
-                gameState->tileManager->setTiles(input->mouseWorldPos, selection.selectedTile1,
-                                                 selection.selectedTile2, selection.selectedLayer);
+                //                gameState->tileManager->setTiles(input->mouseWorldPos,
+                //                selection.selectedTile1,
+                //                                                 selection.selectedTile2,
+                //                                                 selection.selectedLayer);
             } else if (selection.selectedTile1.atlasIdx) {
-                auto pos = input->mouseWorldPos;
-                gameState->tileManager->setTile(pos.x, pos.y, selection.selectedTile1,
-                                                selection.selectedLayer);
+                //                auto pos = input->mouseWorldPos;
+                //                gameState->tileManager->setTile(pos.x, pos.y,
+                //                selection.selectedTile1,
+                //                                                selection.selectedLayer);
             }
         } else if (input->rMouseDown()) {
-            gameState->tileManager->removeTile(input->mouseWorldPos.x, input->mouseWorldPos.y,
-                                               gameState->tileManager->selection.selectedLayer);
+            //            gameState->tileManager->removeTile(input->mouseWorldPos.x,
+            //            input->mouseWorldPos.y,
+            //                                               gameState->tileManager->selection.selectedLayer);
         }
 
         return;
