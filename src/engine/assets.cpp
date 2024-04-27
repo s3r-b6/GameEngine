@@ -67,13 +67,3 @@ Sprite get_sprite(SpriteID spriteID) {
 
     return sprite;
 }
-
-Sprite getTile(u8 x, u8 y, u8 atlasIdx) {
-    Sprite sprite = {
-        .atlasOffset = {x * 16, y * 16},
-        .spriteSize = {16, 16},
-        .atlasIdx = atlasIdx,
-    };
-
-    return sprite;
-}

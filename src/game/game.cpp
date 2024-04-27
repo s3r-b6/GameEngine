@@ -49,33 +49,17 @@ EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
     frame += 1;
 }
 
-void drawTileSelection() {
-    if (tileManager->selection.selectedTile2.atlasIdx) {
-        ui_drawTileGroup(
-            {tileManager->selection.selectedTile1.x, tileManager->selection.selectedTile1.y},
-            {tileManager->selection.selectedTile2.x, tileManager->selection.selectedTile2.y},
-            tileManager->selection.selectedTile1.atlasIdx, input->mouseWorldPos * TILESIZE);
-    } else if (tileManager->selection.selectedTile1.atlasIdx) {
-        ui_drawTile(
-            {tileManager->selection.selectedTile1.x, tileManager->selection.selectedTile1.y},
-            tileManager->selection.selectedTile1.atlasIdx, input->mouseWorldPos * TILESIZE);
-    }
-}
-
 void renderWorld(int fps, double dt) {
-    if (!tileManager->tilePickerShown) {
-        ui_drawTextFormatted({420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
-        drawTileSelection();
-        entityManager->render();
-    }
+    ui_drawTextFormatted({420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
+    entityManager->render();
     tileManager->render();
 }
 
 void setupPlayer() {
     gameState->player_id = entityManager->getUninitializedID();
     auto player = entityManager->entities[gameState->player_id];
-    auto transform = new (permStorage->alloc(sizeof(TransformComponent)))
-        TransformComponent(glm::vec2(128, 128), glm::vec2(16, 32));
+    auto transform = new (permStorage->alloc(sizeof(TransformComponent))) TransformComponent(
+        glm::vec2(CHUNK_SIZE_x / 2 - 8, CHUNK_SIZE_y / 2 - 16), glm::vec2(16, 32));
     player->components.push_back(transform);
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
         AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, 8, &deltaTime, 4,
@@ -94,21 +78,16 @@ inline void initializeGameState() {
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
     for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
-        tileManager->world[0].chunkTiles[i] = 112;
+        int x = i % TILES_CHUNK_x, y = i / TILES_CHUNK_x;
+
+        if (x == TILES_CHUNK_x / 2 || y == TILES_CHUNK_y / 2 || x + 1 == TILES_CHUNK_x / 2 ||
+            y + 1 == TILES_CHUNK_y / 2) {
+        } else if (x == 0 || y == 0 || x + 1 == TILES_CHUNK_x || y + 1 == TILES_CHUNK_y) {
+            tileManager->world[0].chunkTiles[i] = 1;
+        }
     }
 
     setupPlayer();
-
-    tileManager->selection.selectedTile1.atlasIdx = WORLD_ATLAS;
-    tileManager->selection.selectedTile1.x = 0;
-    tileManager->selection.selectedTile1.y = 0;
-
-    tileManager->shownAtlas = 2;
-    tileManager->selection = {0};
-
-    tileManager->selection.selectedTile1.atlasIdx = WORLD_ATLAS;
-    tileManager->selection.selectedTile1.x = 0;
-    tileManager->selection.selectedTile1.y = 0;
 
     // if (tileManager->deserialize()) {}
 

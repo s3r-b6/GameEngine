@@ -22,6 +22,7 @@
 #define CAMERA_SIZE_y 360
 
 #define TILESIZE 16
+#define TileID u16
 
 // Int types
 #include <stdint.h>

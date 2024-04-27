@@ -5,6 +5,8 @@
 #include "./entities.h"
 #include "./input.h"
 #include "./tiles.h"
+#include "glm/ext/quaternion_common.hpp"
+#include "renderer.h"
 
 void handlePlayerMovement(u32 player_id) {
     float playerSpeed = 2.f;
@@ -68,6 +70,8 @@ void handlePlayerMovement(u32 player_id) {
         transform->pos = oldPos;
         moved = false;
     }
+
+    renderData->gameCamera.pos = lerp(renderData->gameCamera.pos, transform->pos, 0.12);
 
     spriteRenderer->animating = moved;
 }

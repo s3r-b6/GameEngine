@@ -65,3 +65,7 @@ DEBUG_FORMAT inline void _crash(const std::string &filename, const std::uint_fas
     int *ptr = NULL;
     *ptr = 42;
 }
+
+glm::vec2 lerp(glm::vec2 curr, glm::vec2 target, float lerp) {
+    return curr + (target - curr) * lerp;
+}

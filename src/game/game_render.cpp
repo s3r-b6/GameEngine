@@ -1,9 +1,9 @@
-#include "game_render.h"
+#include <string>
 
 #include "engine_global.h"
+#include "game_render.h"
 #include "renderer.h"
-#include "types.h"
-#include <string>
+#include "tiles.h"
 
 void ui_drawTextFormatted(glm::vec2 pos, float fontSize, const char *text...) {
     va_list args;
@@ -47,51 +47,53 @@ void ui_drawText(glm::vec2 pos, float fontSize, const char *text) {
     }
 }
 
-void drawTileGroup(glm::vec2 tile1, glm::vec2 tile2, u8 atlasIdx, glm::ivec2 pos) {
+void drawTileGroup(TileID t1, TileID t2, glm::ivec2 pos) {
+    TileBase tile1 = tileManager->tilemap[t1];
+    TileBase tile2 = tileManager->tilemap[t2];
+
     int xDiff = tile2.x - tile1.x + 1;
     int ySpan = tile2.y - tile1.y + 1;
 
-    Sprite sp = getTile(tile1.x, tile1.y, atlasIdx);
-    Transform t = {};
-    t.atlasOffset = sp.atlasOffset;
-    t.spriteSize = {xDiff * 16, ySpan * 16};
-    t.pos = pos;
-    t.size = {xDiff * 16, ySpan * 16};
-    t.atlasIdx = sp.atlasIdx,
+    Transform t = {
+        .atlasOffset = {tile1.x * 16, tile1.y * 16},
+        .spriteSize = {xDiff * 16, ySpan * 16},
+        .pos = pos,
+        .size = {xDiff * 16, ySpan * 16},
+
+        .atlasIdx = tile1.atlasIdx,
+    };
 
     renderData->transforms[renderData->transformCount++] = t;
 }
+void ui_drawTileGroup(TileID t1, TileID t2, glm::ivec2 pos) {
+    TileBase tile1 = tileManager->tilemap[t1];
+    TileBase tile2 = tileManager->tilemap[t2];
 
-void ui_drawTileGroup(glm::vec2 tile1, glm::vec2 tile2, u8 atlasIdx, glm::ivec2 pos) {
     int xDiff = tile2.x - tile1.x + 1;
     int ySpan = tile2.y - tile1.y + 1;
 
-    Sprite sp = getTile(tile1.x, tile1.y, atlasIdx);
-    Transform t = {};
+    Transform t = {
+        .atlasOffset = {tile1.x * 16, tile1.y * 16},
+        .spriteSize = {xDiff * 16, ySpan * 16},
+        .pos = pos,
+        .size = {xDiff * 16, ySpan * 16},
 
-    t.atlasOffset = sp.atlasOffset;
-    t.spriteSize = {xDiff * 16, ySpan * 16};
-    t.pos = pos;
-    t.size = {xDiff * 16, ySpan * 16};
-
-    t.atlasIdx = sp.atlasIdx;
+        .atlasIdx = tile1.atlasIdx,
+    };
 
     renderData->uiTransforms[renderData->uiTransformCount++] = t;
 }
+void UIdrawTileID(TileID t1, glm::vec2 pos) {
+    TileBase t = tileManager->tilemap[t1];
 
-void ui_drawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
-    Sprite sp = getTile(tile.x, tile.y, atlasIdx);
+    Transform transform = {};
+    transform.atlasOffset = {t.x * 16, t.y * 16};
+    transform.spriteSize = {16, 16};
+    transform.size = {16, 16};
+    transform.atlasIdx = t.atlasIdx;
+    transform.pos = pos;
 
-    Transform t = {};
-
-    t.atlasOffset = sp.atlasOffset;
-    t.spriteSize = sp.spriteSize;
-    t.pos = pos;
-    t.size = {16, 16};
-
-    t.atlasIdx = sp.atlasIdx;
-
-    renderData->uiTransforms[renderData->uiTransformCount++] = t;
+    renderData->uiTransforms[renderData->uiTransformCount++] = transform;
 }
 
 void drawSprite(SpriteID spriteID, glm::vec2 pos, glm::vec2 size) {
@@ -124,17 +126,40 @@ void drawAnimatedSprite(AnimatedSpriteID spriteID, glm::vec2 pos, glm::vec2 size
     renderData->transforms[renderData->transformCount++] = t;
 }
 
-void drawTile(u8 x, u8 y, u8 atlasIdx, glm::vec2 pos) {
-    Sprite sp = getTile(x, y, atlasIdx);
+void drawTileID(TileID tileID, glm::vec2 pos) {
+    TileBase t = tileManager->tilemap[tileID];
 
+    Transform transform = {};
+
+    transform.atlasOffset = {t.x * 16, t.y * 16};
+    transform.spriteSize = {16, 16};
+    transform.size = {16, 16};
+    transform.atlasIdx = t.atlasIdx;
+    transform.pos = pos;
+
+    renderData->transforms[renderData->transformCount++] = transform;
+}
+
+void drawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
     Transform t = {};
 
-    t.atlasOffset = sp.atlasOffset;
-    t.spriteSize = sp.spriteSize;
+    t.atlasOffset = {tile.x * 16, tile.y * 16};
+    t.spriteSize = {16, 16};
     t.pos = pos;
     t.size = {16, 16};
-
-    t.atlasIdx = sp.atlasIdx;
+    t.atlasIdx = atlasIdx;
 
     renderData->transforms[renderData->transformCount++] = t;
+}
+
+void UIdrawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
+    Transform t = {};
+
+    t.atlasOffset = {tile.x * 16, tile.y * 16};
+    t.spriteSize = {16, 16};
+    t.pos = pos;
+    t.size = {16, 16};
+    t.atlasIdx = atlasIdx;
+
+    renderData->uiTransforms[renderData->uiTransformCount++] = t;
 }

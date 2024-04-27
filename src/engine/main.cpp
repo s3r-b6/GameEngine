@@ -29,11 +29,9 @@ int plat_main() {
     // GL_TEXTURE0 is for the font
     load_font("../fonts/joystix.otf", 48, tempStorage);
 
-    // Changing the order in which atlases are loaded will break the maps, since the ids are
-    // generated here
-    loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE1, false);
+    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", GL_TEXTURE1, true);
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", GL_TEXTURE2, true);
-    loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", GL_TEXTURE3, true);
+    loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
 
     SDL_Event event;
 
