@@ -12,8 +12,11 @@
 #define UPDATE_DELAY 1. / TARGET_FPS
 #define MAX_TRANSFORMS 2048
 
-#define WORLD_SIZE_x 640
-#define WORLD_SIZE_y 360
+#define CHUNK_SIZE_x 640
+#define CHUNK_SIZE_y 360
+
+#define TILES_CHUNK_x 40
+#define TILES_CHUNK_y 23
 
 #define CAMERA_SIZE_x 640
 #define CAMERA_SIZE_y 360

@@ -9,10 +9,16 @@
 #include "./entities.h"
 #include "./game_render.h"
 #include "./input.h"
+#include "types.h"
 
 struct TileBase {
     u8 x, y;     // The pos in the tilemap
     u8 atlasIdx; // An atlasIdx of 0 == an invalid tile or a non-tile
+    u8 id;
+};
+
+struct FrontTile {
+    u16 posX, posY;
     u8 id;
 };
 
@@ -22,12 +28,21 @@ struct TileSelection {
     u8 selectedLayer;
 };
 
+struct TileChunk {
+    u8 chunkTiles[TILES_CHUNK_x * TILES_CHUNK_x];
+    std::vector<FrontTile> collisions;
+};
+
 // TODO: This is really bad. Should store n chunks instead of n individual tiles
 struct TileManager {
     TileSelection selection;
+
     u32 currentTiles = 0;
-    std::map<int, TileBase> tilemap;
     u8 shownAtlas = 2;
+
+    TileChunk world[16];
+
+    std::map<int, TileBase> tilemap;
     bool tilePickerShown;
     u16 registerTile(TileBase t) {
         t.id = currentTiles;
@@ -67,7 +82,16 @@ struct TileManager {
             return;
         }
 
-        // render...
+        for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
+            u8 tileID = world[0].chunkTiles[i];
+            if (tileID == 0) continue;
+            TileBase t = tilemap[tileID];
+            if (!t.atlasIdx) continue;
+
+            int x = i % TILES_CHUNK_x, y = i / TILES_CHUNK_x;
+
+            drawTile(t.x, t.y, t.atlasIdx, {x * 16, y * 16});
+        }
     }
 };
 

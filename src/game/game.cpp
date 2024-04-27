@@ -10,6 +10,7 @@
 #include "./tiles.h"
 
 #include "./game_input.h"
+#include "types.h"
 
 EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
     int fps = 1.f / dt;
@@ -62,12 +63,12 @@ void drawTileSelection() {
 }
 
 void renderWorld(int fps, double dt) {
-    tileManager->render();
     if (!tileManager->tilePickerShown) {
         ui_drawTextFormatted({420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
         drawTileSelection();
         entityManager->render();
     }
+    tileManager->render();
 }
 
 void setupPlayer() {
@@ -87,10 +88,14 @@ void setupPlayer() {
 }
 
 inline void initializeGameState() {
-    renderData->gameCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
+    renderData->gameCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
     renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
-    renderData->uiCamera.pos = {WORLD_SIZE_x / 2., WORLD_SIZE_y / 2.};
+    renderData->uiCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
+
+    for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
+        tileManager->world[0].chunkTiles[i] = 112;
+    }
 
     setupPlayer();
 
