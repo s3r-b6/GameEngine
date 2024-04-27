@@ -63,7 +63,7 @@ void setupPlayer() {
     player->components.push_back(transform);
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
         AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, 8, &deltaTime, 4,
-                               Player);
+                               PlayerD);
     player->components.push_back(spriteRenderer);
 
     auto collider = new (permStorage->alloc(sizeof(ColliderComponent)))

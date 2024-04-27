@@ -9,30 +9,55 @@ Sprite get_animated_sprite(AnimatedSpriteID animatedSprite, int frame) {
     Sprite sprite = {};
 
     switch (animatedSprite) {
-
     case PlayerD_Walk: {
         sprite.atlasIdx = CHAR_ATLAS;
         sprite.spriteSize = {16, 32};
-        sprite.atlasOffset = {1 + (16 * (frame % 4)), 6};
+        sprite.atlasOffset = {0 + (16 * (frame % 4)), 6};
         break;
     };
 
     case PlayerR_Walk: {
         sprite.atlasIdx = CHAR_ATLAS;
         sprite.spriteSize = {16, 32};
-        sprite.atlasOffset = {1 + (16 * (frame % 4)), 101};
+        sprite.atlasOffset = {0 + (16 * (frame % 4)), 101};
         break;
     };
     case PlayerU_Walk: {
         sprite.atlasIdx = CHAR_ATLAS;
         sprite.spriteSize = {16, 32};
-        sprite.atlasOffset = {1 + (16 * (frame % 4)), 68};
+        sprite.atlasOffset = {0 + (16 * (frame % 4)), 68};
         break;
     };
     case PlayerL_Walk: {
         sprite.atlasIdx = CHAR_ATLAS;
         sprite.spriteSize = {16, 32};
-        sprite.atlasOffset = {1 + (16 * (frame % 4)), 37};
+        sprite.atlasOffset = {0 + (16 * (frame % 4)), 37};
+        break;
+    };
+
+    case PlayerD_Attack: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {8 + (32 * (frame % 4)), 133};
+        break;
+    };
+
+    case PlayerR_Attack: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {8 + (32 * (frame % 4)), 198};
+        break;
+    };
+    case PlayerU_Attack: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {8 + (32 * (frame % 4)), 165};
+        break;
+    };
+    case PlayerL_Attack: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {8 + (32 * (frame % 4)), 229};
         break;
     };
 
@@ -50,10 +75,29 @@ Sprite get_sprite(SpriteID spriteID) {
     Sprite sprite = {};
 
     switch (spriteID) {
-    case Player: {
+    case PlayerD: {
         sprite.atlasIdx = CHAR_ATLAS;
-        sprite.atlasOffset = {1, 6};
         sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {0, 6};
+        break;
+    };
+
+    case PlayerL: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {0, 101};
+        break;
+    };
+    case PlayerU: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {0, 68};
+        break;
+    };
+    case PlayerR: {
+        sprite.atlasIdx = CHAR_ATLAS;
+        sprite.spriteSize = {16, 32};
+        sprite.atlasOffset = {0, 37};
         break;
     };
 
@@ -63,6 +107,9 @@ Sprite get_sprite(SpriteID spriteID) {
         sprite.spriteSize = {16, 16};
         break;
     };
+    case INVALID:
+    case SPRITE_COUNT:
+        break;
     }
 
     return sprite;

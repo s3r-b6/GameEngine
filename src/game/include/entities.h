@@ -204,17 +204,13 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
     }
 
     void render() override {
-        timer -= *deltaTime;
-
-        // log("timer: %f dt: %f", timer, *deltaTime);
-        if (timer <= 0) {
-            // log("timer: %f sps: %d", timer, spritesPerSecond);
-            // log("cf: %d mf: %d", currFrame, maxFrames);
-            if (++currFrame >= maxFrames) currFrame = 0;
-            timer = spritesPerSecond / TARGET_FPS;
-        }
-
         if (animating) {
+            timer -= *deltaTime;
+            if (timer <= 0) {
+                if (++currFrame >= maxFrames) { currFrame = 0; }
+                timer = spritesPerSecond / TARGET_FPS;
+            }
+
             drawAnimatedSprite(animatedSprite, transform->pos, transform->size, currFrame);
         } else if (idleSprite != INVALID) {
             drawSprite(idleSprite, transform->pos, transform->size);

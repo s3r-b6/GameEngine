@@ -19,11 +19,19 @@ enum AnimatedSpriteID {
     PlayerR_Walk,
     PlayerL_Walk,
     PlayerU_Walk,
+
+    PlayerD_Attack,
+    PlayerU_Attack,
+    PlayerR_Attack,
+    PlayerL_Attack
 };
 
 enum SpriteID {
     INVALID,
-    Player,
+    PlayerD,
+    PlayerR,
+    PlayerL,
+    PlayerU,
     Chest,
     SPRITE_COUNT,
 };

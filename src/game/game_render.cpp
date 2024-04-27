@@ -115,7 +115,6 @@ void drawAnimatedSprite(AnimatedSpriteID spriteID, glm::vec2 pos, glm::vec2 size
     Sprite sp = get_animated_sprite(spriteID, frame);
 
     Transform t = {};
-
     t.atlasOffset = sp.atlasOffset;
     t.spriteSize = sp.spriteSize;
     t.pos = pos;
