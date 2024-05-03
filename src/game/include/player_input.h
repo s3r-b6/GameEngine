@@ -13,13 +13,14 @@ enum Direction { U, L, D, R };
 void playerActions() {
     float playerSpeed = 2.f;
 
-    local_persist u32 p_id = gameState->player_id;
+    local_persist u32 p_id = MAX_U32;
     local_persist Entity *player = nullptr;
     local_persist TransformComponent *transform;
     local_persist AnimatedSpriteRenderer *spriteRenderer;
     local_persist ColliderComponent *collider;
 
-    if (!player || p_id != gameState->player_id) {
+    if (p_id != gameState->player_id) {
+        p_id = gameState->player_id;
         player = gameState->entityManager->entities[gameState->player_id];
         transform = player->findComponent<TransformComponent>();
         spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();

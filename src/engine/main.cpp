@@ -36,8 +36,8 @@ int plat_main() {
     local_persist float hotreload_timer = 3.f;
 
     while (appState->running) {
-        engine_log("PermStorage: %d/%d", (permStorage->used / MB(1)), (permStorage->size / MB(1)));
-        engine_log("TempStorage: %d/%d", (tempStorage->used / MB(1)), (tempStorage->size / MB(1)));
+        //engine_log("PermStorage: %d/%d", (permStorage->used / MB(1)), (permStorage->size / MB(1)));
+        //engine_log("TempStorage: %d/%d", (tempStorage->used / MB(1)), (tempStorage->size / MB(1)));
         SDL_ShowCursor(input->showCursor);
 
         input->mouseState = input->mouseState | input->mouseState << 4;
@@ -172,6 +172,9 @@ void reloadGameLib(BumpAllocator *tempStorage) {
 
     engine_log("Loaded dynamic library game_load.so");
 
+    // TODO: This seems to crash on linux, but on windows when compiling and trying to check for the timestamp it says: 
+    //  Failed to open file for ./game.dll. Error code: 2
+    // Then, procceeds normally. Might be because the compilation takes longer than before now.
     updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
     if (!updateGame_ptr) { crash("Failed to load updateGame function"); }
 

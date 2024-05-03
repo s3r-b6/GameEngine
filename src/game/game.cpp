@@ -12,15 +12,14 @@
 #include "./input.h"
 #include "./renderer.h"
 #include "./tiles.h"
+#include "./rooms.h"
 
 #include "./game_input.h"
-#include "./rooms.h"
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           RenderData *renderDataIn, ProgramState *appStateIn,
                           GameState *gameStateIn, GLContext *glContextIn, Input *inputIn,
                           double dt) {
-    engine_log("Reached updateGame...");
     int fps = 1.f / dt;
     deltaTime = dt;
 
@@ -43,7 +42,6 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     // World is simulated every 1/60 seconds
     // https://gafferongames.com/post/fix_your_timestep/
     while (updateTimer >= UPDATE_DELAY) {
-        engine_log("Updating the world state...");
         updateTimer -= UPDATE_DELAY;
 
         input->mouseWorldPos =
@@ -55,7 +53,6 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         inputFunctions();
     }
 
-    engine_log("Starting render of the world...");
     renderWorld(fps, dt);
 
     frame += 1;
@@ -91,7 +88,7 @@ inline void initializeGameState() {
 
     engine_log("Setting up the player...");
     setupPlayer();
-    // initializeWorld();
+
     tileManager->world[0].x = 0;
     tileManager->world[0].y = 0;
     tileManager->world[1].x = 1;
@@ -106,8 +103,6 @@ inline void initializeGameState() {
     tileManager->world[1].chunkTiles = room1Mem;
     tileManager->world[2].chunkTiles = room1Mem;
     tileManager->world[3].chunkTiles = room1Mem;
-
-    // if (tileManager->deserialize()) {}
 
     engine_log("Initialized world state");
     gameState->initialized = true;

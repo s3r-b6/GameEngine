@@ -7,9 +7,6 @@
 #define global static
 #define local_persist static
 
-#define MAX_I16 32767
-#define MAX_U16 65535
-
 #define MAX_TEXTURES 8
 #define TARGET_FPS 60.
 #define UPDATE_DELAY 1. / TARGET_FPS
@@ -26,6 +23,11 @@
 
 #define TILESIZE 16
 #define TileID u16
+
+#define MAX_I16 32767
+#define MAX_U16 65535
+
+#define MAX_U32 4294967295
 
 // Int types
 #include <stdint.h>
