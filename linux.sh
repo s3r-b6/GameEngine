@@ -40,14 +40,14 @@ echo "Trying to recompile game.cpp"
 timestamp=$(date '+%s')
 echo "Recompiling game logic..."
 echo "Compiling game_$timestamp.so..."
-g++ -O1 -fPIC -fsanitize=address -g "${include[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/build_game.cpp
+g++ -fno-gnu-unique -fPIC -g "${include[@]}" "${flags[@]}" -shared -o "game_$timestamp.so" ../src/build_game.cpp
 echo "Renaming game_$timestamp.so to game.so"
 mv "./game_$timestamp.so" ./game.so
 
-if ! pgrep game > /dev/null; then
+if not pgrep game > /dev/null; then
     echo "Game is not running"
     echo "Compiling main.cpp..."
-    g++ -O1 -fsanitize=address -g "${include[@]}" "${flags[@]}" -o game.out ../src/build_engine.cpp
+    g++ -fno-gnu-unique -g "${include[@]}" "${flags[@]}" -o game.out ../src/build_engine.cpp
 else 
     echo "Game is running, skipping main.cpp..."
 fi

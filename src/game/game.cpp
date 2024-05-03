@@ -3,18 +3,16 @@
 #include <cstdlib>
 #include <ctime>
 
-#include "./engine_global.h"
-#include "types.h"
-
 #include "./game.h"
 
-#include "./entities.h"
-#include "./input.h"
-#include "./renderer.h"
-#include "./tiles.h"
-#include "./rooms.h"
+#include "./engine_global.h"
+#include "./types.h"
 
+#include "./entities.h"
 #include "./game_input.h"
+#include "./input.h"
+#include "./rooms.h"
+#include "./tiles.h"
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           RenderData *renderDataIn, ProgramState *appStateIn,

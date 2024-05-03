@@ -58,7 +58,8 @@ struct EntityManager;
 struct OrthographicCamera;
 
 // KeyCodes
-#include "SDL2/SDL_keycode.h"
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
 
 // Math
 #include <glm/gtc/type_ptr.hpp>

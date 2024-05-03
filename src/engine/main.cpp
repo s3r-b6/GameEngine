@@ -4,9 +4,8 @@
 #include "./main.h"
 
 #include "./engine_global.h"
-
-#include "./audio.h"
 #include "./engine_lib.h"
+
 #include "./fonts.h"
 #include "./initialization.h"
 #include "./input.h"
@@ -44,7 +43,8 @@ int plat_main() {
             handleSDLevents(&event);
         }
 
-        updateGame(permStorage, tempStorage, renderData, appState, gameState, glContext, input, dt);
+        updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input,
+                       dt);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(renderData->clearColor[0], renderData->clearColor[1],
@@ -71,12 +71,6 @@ int plat_main() {
     plat_freeDynamicLib(gameSO);
     plat_deleteFile(loadedgameSharedObject);
     return 0;
-}
-
-void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
-                RenderData *renderDataIn, ProgramState *appStateIn, GameState *gameStateIn,
-                GLContext *glContextIn, Input *inputIn, double dt) {
-    updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input, dt);
 }
 
 inline void handleSDLevents(SDL_Event *event) {

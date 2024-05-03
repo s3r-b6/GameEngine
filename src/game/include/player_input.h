@@ -2,11 +2,8 @@
 
 #include "./types.h"
 
-#include "./entities.h"
 #include "./input.h"
-#include "./renderer.h"
 #include "./tiles.h"
-#include "assets.h"
 
 enum Direction { U, L, D, R };
 
