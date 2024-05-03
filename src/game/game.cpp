@@ -1,5 +1,8 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
+#include <cstdlib>
+#include <ctime>
+//
 #include "./engine_global.h"
 
 #include "./game.h"
@@ -77,17 +80,22 @@ inline void initializeGameState() {
     renderData->uiCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
-    for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
-        int x = i % TILES_CHUNK_x, y = i / TILES_CHUNK_x;
-
-        if (x == TILES_CHUNK_x / 2 || y == TILES_CHUNK_y / 2 || x + 1 == TILES_CHUNK_x / 2 ||
-            y + 1 == TILES_CHUNK_y / 2) {
-        } else if (x == 0 || y == 0 || x + 1 == TILES_CHUNK_x || y + 1 == TILES_CHUNK_y) {
-            tileManager->world[0].chunkTiles[i] = 1;
-        }
-    }
-
     setupPlayer();
+    // initializeWorld();
+    tileManager->world[0].x = 0;
+    tileManager->world[0].y = 0;
+    tileManager->world[1].x = 1;
+    tileManager->world[1].y = 0;
+    tileManager->world[2].x = 2;
+    tileManager->world[2].y = 0;
+    tileManager->world[3].x = 1;
+    tileManager->world[3].y = -1;
+    for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
+        tileManager->world[0].chunkTiles[i] = 1;
+        tileManager->world[1].chunkTiles[i] = 1;
+        tileManager->world[2].chunkTiles[i] = 1;
+        tileManager->world[3].chunkTiles[i] = 1;
+    }
 
     // if (tileManager->deserialize()) {}
 

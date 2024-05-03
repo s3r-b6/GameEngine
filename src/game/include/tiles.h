@@ -10,6 +10,7 @@
 #include "./game_render.h"
 #include "./input.h"
 #include "./types.h"
+#include "renderer.h"
 
 struct TileBase {
     u8 x, y;     // The pos in the tilemap
@@ -23,29 +24,68 @@ struct FrontTile {
 };
 
 struct TileChunk {
-    TileID chunkTiles[TILES_CHUNK_x * TILES_CHUNK_x];
+    i16 x, y;
+    TileID chunkTiles[TILES_CHUNK_x * TILES_CHUNK_y];
     std::vector<FrontTile> collisions;
 };
 
 // TODO: This is really bad. Should store n chunks instead of n individual tiles
 struct TileManager {
-    TileChunk world[16];
+    static constexpr u8 MAX_ROOMS = 4;
+    TileChunk world[MAX_ROOMS];
 
     u32 currentTiles = 1;
     std::map<int, TileBase> tilemap;
 
     TileID registerTile(TileBase t) {
         t.id = currentTiles;
-        tilemap[currentTiles++] = t;
+        tilemap[++currentTiles] = t;
         return t.id;
     }
 
-    void render() {
+    void renderChunk(const TileChunk &chunk, float offset_x, float offset_y) {
+        float viewport_left = renderData->gameCamera.pos.x - CAMERA_SIZE_x * 0.55;
+        float viewport_right = renderData->gameCamera.pos.x + renderData->gameCamera.dimensions.x;
+        float viewport_top = renderData->gameCamera.pos.y - CAMERA_SIZE_y * 0.55;
+        float viewport_bottom = renderData->gameCamera.pos.y + renderData->gameCamera.dimensions.y;
+
         for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
-            TileID tileID = world[0].chunkTiles[i];
-            // if (tileID == 0) continue;
+            TileID tileID = chunk.chunkTiles[i];
+            if (tileID == 0) continue;
+
+            // Calculate the position of the tile in world space
             int x = i % TILES_CHUNK_x, y = i / TILES_CHUNK_x;
-            drawTileID(tileID, {x * 16, y * 16});
+            float tile_x = offset_x + x * TILESIZE;
+            float tile_y = offset_y + y * TILESIZE;
+
+            // Check if the tile is within the viewport
+            if (tile_x >= viewport_left && tile_x + TILESIZE <= viewport_right &&
+                tile_y >= viewport_top && tile_y + TILESIZE <= viewport_bottom) {
+                drawTileID(tileID, {tile_x, tile_y});
+            }
+        }
+    }
+
+    void render() {
+        for (auto &chunk : world) {
+            if (chunk.x == MAX_I16 && chunk.y == MAX_I16) { continue; }
+            float offsetX = chunk.x * TILES_CHUNK_x * TILESIZE,
+                  offsetY = chunk.y * TILES_CHUNK_y * TILESIZE;
+
+            // Chunks have their origin top left, but distance should be calculated from center
+            glm::vec2 distVector = glm::vec2((offsetX * 1.5) - renderData->gameCamera.pos.x,
+                                             (offsetY * 1.5) - renderData->gameCamera.pos.y);
+
+            if (offsetX == 0) { distVector.x += CHUNK_SIZE_x / 2.f; }
+            if (offsetY == 0) { distVector.y += CHUNK_SIZE_y / 2.f; }
+
+            if (distVector.x > CHUNK_SIZE_x || distVector.y > CHUNK_SIZE_y) {
+                engine_log("%f %f %f %f", offsetX, offsetY, renderData->gameCamera.pos.x,
+                           renderData->gameCamera.pos.y);
+                continue;
+            }
+
+            renderChunk(chunk, offsetX, offsetY);
         }
     }
 };

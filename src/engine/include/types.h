@@ -7,19 +7,21 @@
 #define global static
 #define local_persist static
 
+#define MAX_I16 32767
+
 #define MAX_TEXTURES 8
 #define TARGET_FPS 60.
 #define UPDATE_DELAY 1. / TARGET_FPS
 #define MAX_TRANSFORMS 2048
 
 #define CHUNK_SIZE_x 640
-#define CHUNK_SIZE_y 360
+#define CHUNK_SIZE_y 368
 
 #define TILES_CHUNK_x 40
 #define TILES_CHUNK_y 23
 
-#define CAMERA_SIZE_x 640
-#define CAMERA_SIZE_y 360
+#define CAMERA_SIZE_x 480
+#define CAMERA_SIZE_y 270
 
 #define TILESIZE 16
 #define TileID u16

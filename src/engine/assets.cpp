@@ -109,6 +109,7 @@ Sprite get_sprite(SpriteID spriteID) {
     };
     case INVALID:
     case SPRITE_COUNT:
+        crash("BAD SPRITE");
         break;
     }
 
