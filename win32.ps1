@@ -49,7 +49,7 @@ Write-Host "Trying to recompile game.cpp"
 
 Remove-Item .\game_* -ErrorAction SilentlyContinue 
 Remove-Item .\game.dll -ErrorAction SilentlyContinue 
-g++ -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\build_game.cpp
+g++ -O1 -fsanitize=address -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\build_game.cpp
 Write-Host "Renaming game_$timestamp.dll to game.dll"
 Rename-Item -Path ".\game_$timestamp.dll" -NewName ".\game.dll"
 
@@ -57,7 +57,7 @@ if (-not (Get-Process -Name "game" -ErrorAction SilentlyContinue)) {
     Write-Host "Game is not running"
     Write-Host "Compiling main.cpp..."
     Remove-Item .\game.exe -ErrorAction SilentlyContinue 
-    g++ $include $libs $flags -o game.exe ../src/build_engine.cpp
+    g++ -O1 -fsanitize=address $include $libs $flags -o game.exe ../src/build_engine.cpp
 }
 else {
     Write-Host "Game is running, skipping main.cpp..."

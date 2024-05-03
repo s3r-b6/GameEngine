@@ -11,11 +11,12 @@
 #include "./audio.h"
 #include "./fonts.h"
 #include "./renderer.h"
+#include "platform.h"
 
 global void *gameSO;
 
 int plat_main() {
-    permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(10));
+    permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(5));
 
     if (!initialize(permStorage, tempStorage)) { crash("Failed to initialize the engine."); }
 
@@ -32,19 +33,13 @@ int plat_main() {
     loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
 
     SDL_Event event;
-
     local_persist float hotreload_timer = 3.f;
-
     while (appState->running) {
-        //engine_log("PermStorage: %d/%d", (permStorage->used / MB(1)), (permStorage->size / MB(1)));
-        //engine_log("TempStorage: %d/%d", (tempStorage->used / MB(1)), (tempStorage->size / MB(1)));
-        SDL_ShowCursor(input->showCursor);
+        // SDL_ShowCursor(input->showCursor);
 
         input->mouseState = input->mouseState | input->mouseState << 4;
 
-        last = now;
-        now = SDL_GetPerformanceCounter();
-
+        last = now, now = SDL_GetPerformanceCounter();
         dt = static_cast<double>(now - last) / static_cast<double>(SDL_GetPerformanceFrequency());
 
         while (SDL_PollEvent(&event) != 0) {
@@ -54,14 +49,11 @@ int plat_main() {
         updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input,
                        dt);
 
-        auto screenSize = appState->screenSize;
-        auto color = renderData->clearColor;
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glClearColor(color[0], color[1], color[2], 1.f);
+        glClearColor(renderData->clearColor[0], renderData->clearColor[1],
+                     renderData->clearColor[2], 1.f);
         glClearDepth(0.f);
-        glViewport(0, 0, screenSize.x, screenSize.y);
+        glViewport(0, 0, appState->screenSize.x, appState->screenSize.y);
 
         render();
         glFinish();
@@ -69,14 +61,13 @@ int plat_main() {
         SDL_GL_SwapWindow(appState->window);
 
         tempStorage->freeMemory();
+        input->mouseState &= ~(input->mouseState & 0xF0);
 
         hotreload_timer -= dt;
         if (hotreload_timer <= 0.f) {
             reloadGameLib(tempStorage);
             hotreload_timer = 3.f;
         }
-
-        input->mouseState &= ~(input->mouseState & 0xF0);
     }
 
     close();
@@ -161,6 +152,10 @@ void reloadGameLib(BumpAllocator *tempStorage) {
         engine_log("Freed gameSO");
     }
 
+    if (!plat_deleteFile(loadedgameSharedObject)) {
+        crash("Failed to delete %s", loadedgameSharedObject);
+    }
+
     while (!plat_copyFile(gameSharedObject, loadedgameSharedObject, tempStorage)) {
         if (appState->running) platform_sleep(50);
     }
@@ -172,9 +167,6 @@ void reloadGameLib(BumpAllocator *tempStorage) {
 
     engine_log("Loaded dynamic library game_load.so");
 
-    // TODO: This seems to crash on linux, but on windows when compiling and trying to check for the timestamp it says: 
-    //  Failed to open file for ./game.dll. Error code: 2
-    // Then, procceeds normally. Might be because the compilation takes longer than before now.
     updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
     if (!updateGame_ptr) { crash("Failed to load updateGame function"); }
 
