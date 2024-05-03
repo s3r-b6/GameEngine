@@ -5,12 +5,8 @@
 
 #include "SDL2/SDL_keyboard.h"
 
+#include "./game.h"
 #include "./platform.h"
-
-#define UPDATE_GAME_PARAMS                                                                         \
-    BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn, RenderData *renderDataIn,          \
-        ProgramState *appStateIn, GameState *gameStateIn, GLContext *glContextIn, Input *inputIn,  \
-        double dt
 
 struct EntityManager;
 struct TileManager;
@@ -24,7 +20,10 @@ struct GameState {
 };
 
 extern "C" {
-EXPORT_FN void updateGame(UPDATE_GAME_PARAMS);
+EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
+                          RenderData *renderDataIn, ProgramState *appStateIn,
+                          GameState *gameStateIn, GLContext *glContextIn, Input *inputIn,
+                          double dt);
 }
 
 void renderWorld(int fps, double dt);

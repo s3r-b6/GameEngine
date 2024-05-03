@@ -5,7 +5,7 @@
 
 #ifdef __linux__
 #define plat_main() main(int argc, char *args[])
-#define EXPORT_FN
+#define EXPORT_FN __attribute__((visibility("default")))
 #include <unistd.h>
 #define platform_sleep(ms) sleep(ms)
 #elif _WIN32

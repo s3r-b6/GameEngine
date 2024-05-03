@@ -12,8 +12,6 @@
 #include "./fonts.h"
 #include "./renderer.h"
 
-// NOTE: g is the GlobalState object
-
 global void *gameSO;
 
 int plat_main() {
@@ -38,6 +36,8 @@ int plat_main() {
     local_persist float hotreload_timer = 3.f;
 
     while (appState->running) {
+        engine_log("PermStorage: %d/%d", (permStorage->used / MB(1)), (permStorage->size / MB(1)));
+        engine_log("TempStorage: %d/%d", (tempStorage->used / MB(1)), (tempStorage->size / MB(1)));
         SDL_ShowCursor(input->showCursor);
 
         input->mouseState = input->mouseState | input->mouseState << 4;
@@ -157,6 +157,7 @@ void reloadGameLib(BumpAllocator *tempStorage) {
         if (!plat_freeDynamicLib(gameSO)) crash("Failed to free game.so");
 
         gameSO = nullptr;
+        updateGame_ptr = nullptr;
         engine_log("Freed gameSO");
     }
 
@@ -166,14 +167,13 @@ void reloadGameLib(BumpAllocator *tempStorage) {
 
     engine_log("Copied game.so to game_load.so");
 
-    if (!(gameSO = plat_loadDynamicLib(loadedgameSharedObject))) {
-        crash("Failed to load game_load.so");
-    }
+    gameSO = plat_loadDynamicLib(loadedgameSharedObject);
+    if (!gameSO) { crash("Failed to load game_load.so"); }
 
     engine_log("Loaded dynamic library game_load.so");
-    if (!(updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame"))) {
-        crash("Failed to load updateGame function");
-    }
+
+    updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
+    if (!updateGame_ptr) { crash("Failed to load updateGame function"); }
 
     engine_log("Loaded dynamic function updateGame");
     lastModTimestamp = currentTimestamp;

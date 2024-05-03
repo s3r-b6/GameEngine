@@ -11,4 +11,6 @@ void handleSDLevents(SDL_Event *event);
 void reloadGameLib(BumpAllocator *transientStorage);
 
 // This is the game function call
-void updateGame(UPDATE_GAME_PARAMS);
+void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
+                RenderData *renderDataIn, ProgramState *appStateIn, GameState *gameStateIn,
+                GLContext *glContextIn, Input *inputIn, double dt);

@@ -2,7 +2,6 @@
 
 #include "./engine_global.h"
 #include "./types.h"
-#include "engine_memory.h"
 
 static u16 room1[] = {
     404, 405,     405,     0,       0,       0,       0,       0,       0,       0,   0,
@@ -96,5 +95,5 @@ TileID *loadRoom(BumpAllocator *bumpAlloc) {
         room[i] = room1[i];
     }
 
-    return &room[0];
+    return room;
 }

@@ -16,26 +16,34 @@
 #include "./game_input.h"
 #include "./rooms.h"
 
-EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
+EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
+                          RenderData *renderDataIn, ProgramState *appStateIn,
+                          GameState *gameStateIn, GLContext *glContextIn, Input *inputIn,
+                          double dt) {
+    engine_log("Reached updateGame...");
     int fps = 1.f / dt;
     deltaTime = dt;
 
     // Since this is compiled as a separate dll, it holds its own static data
     if (renderData != renderDataIn) {
+        engine_log("Assigning static data ptrs...");
         permStorage = permStorageIn, tempStorage = tempStorageIn;
         renderData = renderDataIn, appState = appStateIn;
         glContext = glContextIn, input = inputIn;
-
         gameState = gameStateIn;
         entityManager = gameState->entityManager, tileManager = gameState->tileManager;
     }
 
-    if (!gameState->initialized) initializeGameState();
+    if (!gameState->initialized) {
+        engine_log("Initializing the world state...");
+        initializeGameState();
+    }
     updateTimer += dt;
 
     // World is simulated every 1/60 seconds
     // https://gafferongames.com/post/fix_your_timestep/
     while (updateTimer >= UPDATE_DELAY) {
+        engine_log("Updating the world state...");
         updateTimer -= UPDATE_DELAY;
 
         input->mouseWorldPos =
@@ -47,6 +55,7 @@ EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
         inputFunctions();
     }
 
+    engine_log("Starting render of the world...");
     renderWorld(fps, dt);
 
     frame += 1;
@@ -80,6 +89,7 @@ inline void initializeGameState() {
     renderData->uiCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
     renderData->uiCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
 
+    engine_log("Setting up the player...");
     setupPlayer();
     // initializeWorld();
     tileManager->world[0].x = 0;
@@ -90,6 +100,7 @@ inline void initializeGameState() {
     tileManager->world[2].y = 0;
     tileManager->world[3].x = 1;
     tileManager->world[3].y = -1;
+    engine_log("Loading room1 into the allocator");
     u16 *room1Mem = loadRoom(permStorage);
     tileManager->world[0].chunkTiles = room1Mem;
     tileManager->world[1].chunkTiles = room1Mem;
@@ -98,5 +109,6 @@ inline void initializeGameState() {
 
     // if (tileManager->deserialize()) {}
 
+    engine_log("Initialized world state");
     gameState->initialized = true;
 }

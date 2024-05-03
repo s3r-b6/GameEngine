@@ -2,6 +2,7 @@
 
 #include "SDL2/SDL_video.h"
 
+#include "./platform.h"
 #include "./types.h"
 #include <string>
 
@@ -43,8 +44,8 @@ DEBUG_FORMAT void _log(const std::string &filename, const u64 line, const char *
     va_end(args);
 }
 
-DEBUG_FORMAT inline void _crash(const std::string &filename, const std::uint_fast32_t line,
-                                const char *fmt...) {
+DEBUG_FORMAT void _crash(const std::string &filename, const std::uint_fast32_t line,
+                         const char *fmt...) {
     va_list args, argsCopy;
     va_start(args, fmt);
 
@@ -52,7 +53,10 @@ DEBUG_FORMAT inline void _crash(const std::string &filename, const std::uint_fas
     int size = vsnprintf(nullptr, 0, fmt, argsCopy) + 1;
     va_end(argsCopy);
 
-    if (size < 0) { return; }
+    if (size < 0) {
+        va_end(args);
+        return;
+    }
 
     std::string result(size, '\0');
     vsnprintf(&result[0], size, fmt, args);
@@ -60,8 +64,9 @@ DEBUG_FORMAT inline void _crash(const std::string &filename, const std::uint_fas
     printf("[ \u001b[31mFATAL ERROR:  %s : %lu \u001b[37m] ", filename.c_str(), line);
     printf(" %s\n", result.c_str());
 
-    va_end(args);
+    platform_sleep(1000);
 
+    va_end(args);
     int *ptr = NULL;
     *ptr = 42;
 }

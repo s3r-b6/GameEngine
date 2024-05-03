@@ -9,8 +9,8 @@
 #include "./entities.h"
 #include "./game_render.h"
 #include "./input.h"
+#include "./renderer.h"
 #include "./types.h"
-#include "renderer.h"
 
 struct TileBase {
     u8 x, y;     // The pos in the tilemap
@@ -26,10 +26,10 @@ struct FrontTile {
 struct TileChunk {
     i16 x, y;
     TileID *chunkTiles;
+    std::vector<FrontTile> frontTiles;
     std::vector<FrontTile> collisions;
 };
 
-// TODO: This is really bad. Should store n chunks instead of n individual tiles
 struct TileManager {
     static constexpr u8 MAX_ROOMS = 4;
     TileChunk world[MAX_ROOMS];

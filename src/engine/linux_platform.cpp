@@ -11,8 +11,10 @@
 
 void *plat_loadDynamicLib(char *dlName) {
     void *sharedObject = dlopen(dlName, RTLD_NOW);
+    char *error = dlerror();
+    if (error) engine_log("dlerror: %s", error);
     if (!sharedObject) {
-        engine_log("Failed to load dynamic library: %s", dlerror());
+        engine_log("Failed to load dynamic library");
         return nullptr;
     }
     return sharedObject;
@@ -27,10 +29,13 @@ bool plat_freeDynamicLib(void *sharedObject) {
     return true;
 }
 
-void *plat_loadDynamicFun(void *sharedObject, char *funName) {
+void *plat_loadDynamicFun(void *sharedObject, const char *funName) {
+    engine_log("Loading %s", funName);
     void *function = dlsym(sharedObject, funName);
+    char *error = dlerror();
+    if (error) engine_log("dlerror: %s", error);
     if (!function) {
-        engine_log("Failed to load dynamic function: %s", dlerror());
+        engine_log("Failed to load dynamic function");
         return nullptr;
     }
     return function;
@@ -83,25 +88,28 @@ char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator) 
     return reinterpret_cast<char *>(memory);
 }
 
-bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) {
+bool plat_copyFile(char *fileName, const char *newFileName, BumpAllocator *allocator) {
     size_t fSize;
     char *f1_ptr = plat_readFile(fileName, &fSize, allocator);
-
-    int fd2 = open(newFileName, O_RDWR | O_CREAT | O_TRUNC, 0666);
-    if (fd2 == -1) {
-        engine_log("Failed to open file descriptor for %s", newFileName);
+    if (!f1_ptr) {
+        engine_log("Failed to read file: %s", fileName);
         return false;
     }
 
-    int written = write(fd2, f1_ptr, fSize);
+    int fd2 = open(newFileName, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    if (fd2 == -1) {
+        engine_log("Failed to open file: %s", newFileName);
+        return false;
+    }
 
-    if (written != fSize) {
-        engine_log("Failed to copy %s to %s", fileName, newFileName);
+    ssize_t written = write(fd2, f1_ptr, fSize);
+    if (written == -1 || static_cast<size_t>(written) != fSize) {
+        engine_log("Failed to write file: %s", newFileName);
+        close(fd2);
         return false;
     }
 
     close(fd2);
-
     return true;
 }
 
