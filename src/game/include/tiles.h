@@ -3,12 +3,7 @@
 #include <map>
 #include <vector>
 
-#include "./engine_global.h"
-
-#include "./engine_lib.h"
 #include "./entities.h"
-#include "./game_render.h"
-#include "./input.h"
 #include "./renderer.h"
 #include "./types.h"
 

@@ -1,11 +1,5 @@
 #pragma once
 
-#include <cstdio>
-#include <vector>
-
-#include "SDL2/SDL_keyboard.h"
-
-#include "./game.h"
 #include "./platform.h"
 
 struct EntityManager;

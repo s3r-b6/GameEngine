@@ -1,8 +1,6 @@
 #pragma once
 
-#include "./engine_global.h"
 #include "./engine_lib.h"
-#include "./types.h"
 
 u16 room1[] = {
     404, 405,     405,     0,       0,       0,       0,       0,       0,       0,   0,

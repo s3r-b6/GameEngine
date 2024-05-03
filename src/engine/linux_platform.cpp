@@ -12,8 +12,8 @@
 void *plat_loadDynamicLib(char *dlName) {
     void *sharedObject = dlopen(dlName, RTLD_NOW);
     char *error = dlerror();
-    if (error) engine_log("dlerror: %s", error);
-    if (!sharedObject) {
+    if (error != NULL || !sharedObject) {
+        engine_log("dlerror: %s", error);
         engine_log("Failed to load dynamic library");
         return nullptr;
     }
@@ -22,15 +22,16 @@ void *plat_loadDynamicLib(char *dlName) {
 
 bool plat_freeDynamicLib(void *sharedObject) {
     int res = dlclose(sharedObject);
-    if (res != 0) {
-        engine_log("Failed to free dynamic library: %s", dlerror());
+    char *error = dlerror();
+    if (error != NULL || res != 0) {
+        engine_log("Failed to free dynamic library: %s", error);
         return false;
     }
     return true;
 }
 
 void *plat_loadDynamicFun(void *sharedObject, const char *funName) {
-    engine_log("Loading %s", funName);
+    engine_log("Loading %s from: %p", funName, sharedObject);
     void *function = dlsym(sharedObject, funName);
     char *error = dlerror();
     if (error) engine_log("dlerror: %s", error);
@@ -96,7 +97,7 @@ bool plat_copyFile(char *fileName, const char *newFileName, BumpAllocator *alloc
         return false;
     }
 
-    int fd2 = open(newFileName, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    int fd2 = open(newFileName, O_RDWR | O_CREAT | O_TRUNC, 0777);
     if (fd2 == -1) {
         engine_log("Failed to open file: %s", newFileName);
         return false;
@@ -108,6 +109,7 @@ bool plat_copyFile(char *fileName, const char *newFileName, BumpAllocator *alloc
         close(fd2);
         return false;
     }
+    engine_log("Wrote %zd bytes to %s", written, newFileName);
 
     close(fd2);
     return true;
@@ -115,10 +117,15 @@ bool plat_copyFile(char *fileName, const char *newFileName, BumpAllocator *alloc
 
 bool plat_deleteFile(char *fileName) {
     if (unlink(fileName) == 0) {
-        engine_log("File '%s' deleted successfully.\n", fileName);
+        engine_log("File '%s' deleted successfully.", fileName);
+        return true;
+    } else if (errno == ENOENT) {
+        perror("unlink");
+        engine_log("File '%s' does not exist.", fileName);
         return true;
     } else {
-        engine_log("Error deleting file");
+        perror("unlink");
+        engine_log("Error deleting file: %s", strerror(errno));
         return false;
     }
 }

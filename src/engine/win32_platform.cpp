@@ -15,7 +15,7 @@ void *plat_loadDynamicLib(char *dll) {
 void *plat_loadDynamicFun(void *dll, char *funName) {
     FARPROC proc = GetProcAddress((HMODULE)dll, funName);
     if (!proc) engine_log("Failed to load dynamic function");
-    return (void *)proc; 
+    return (void *)proc;
 }
 
 bool plat_freeDynamicLib(void *dll) {
@@ -115,10 +115,16 @@ bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator) 
 
 bool plat_deleteFile(char *fileName) {
     if (DeleteFileA(fileName)) {
-        engine_log("File '%s' deleted successfully.\n", fileName);
+        engine_log("File '%s' deleted successfully.", fileName);
         return true;
     } else {
-        engine_log("Error deleting file '%s'", fileName);
-        return false;
+        DWORD errorCode = GetLastError();
+        if (errorCode == ERROR_FILE_NOT_FOUND) {
+            engine_log("File '%s' does not exist.", fileName);
+            return true;
+        } else {
+            engine_log("Error deleting file '%s': %lu", fileName, errorCode);
+            return false;
+        }
     }
 }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "./engine_memory.h"
-#include "./game.h"
 #include "./types.h"
 
 global RenderData *renderData;

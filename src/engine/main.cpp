@@ -4,14 +4,13 @@
 #include "./main.h"
 
 #include "./engine_global.h"
-#include "./engine_lib.h"
-#include "./initialization.h"
-#include "./input.h"
 
 #include "./audio.h"
+#include "./engine_lib.h"
 #include "./fonts.h"
+#include "./initialization.h"
+#include "./input.h"
 #include "./renderer.h"
-#include "platform.h"
 
 global void *gameSO;
 
@@ -33,10 +32,9 @@ int plat_main() {
     loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
 
     SDL_Event event;
-    local_persist float hotreload_timer = 3.f;
+    local_persist float hotreload_timer = 1.5f;
     while (appState->running) {
         // SDL_ShowCursor(input->showCursor);
-
         input->mouseState = input->mouseState | input->mouseState << 4;
 
         last = now, now = SDL_GetPerformanceCounter();
@@ -46,8 +44,7 @@ int plat_main() {
             handleSDLevents(&event);
         }
 
-        updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input,
-                       dt);
+        updateGame(permStorage, tempStorage, renderData, appState, gameState, glContext, input, dt);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(renderData->clearColor[0], renderData->clearColor[1],
@@ -60,7 +57,6 @@ int plat_main() {
         ui_render();
         SDL_GL_SwapWindow(appState->window);
 
-        tempStorage->freeMemory();
         input->mouseState &= ~(input->mouseState & 0xF0);
 
         hotreload_timer -= dt;
@@ -68,12 +64,19 @@ int plat_main() {
             reloadGameLib(tempStorage);
             hotreload_timer = 3.f;
         }
+        tempStorage->freeMemory();
     }
 
     close();
     plat_freeDynamicLib(gameSO);
     plat_deleteFile(loadedgameSharedObject);
     return 0;
+}
+
+void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
+                RenderData *renderDataIn, ProgramState *appStateIn, GameState *gameStateIn,
+                GLContext *glContextIn, Input *inputIn, double dt) {
+    updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input, dt);
 }
 
 inline void handleSDLevents(SDL_Event *event) {
@@ -145,10 +148,12 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     if (currentTimestamp <= lastModTimestamp) return;
 
     if (gameSO) {
+        engine_log("Freeing old gameSO: %p", gameSO);
+        engine_log("Freeing old updateGame_ptr: %p", updateGame_ptr);
+        updateGame_ptr = nullptr;
         if (!plat_freeDynamicLib(gameSO)) crash("Failed to free game.so");
 
         gameSO = nullptr;
-        updateGame_ptr = nullptr;
         engine_log("Freed gameSO");
     }
 
@@ -160,16 +165,13 @@ void reloadGameLib(BumpAllocator *tempStorage) {
         if (appState->running) platform_sleep(50);
     }
 
-    engine_log("Copied game.so to game_load.so");
-
     gameSO = plat_loadDynamicLib(loadedgameSharedObject);
     if (!gameSO) { crash("Failed to load game_load.so"); }
-
-    engine_log("Loaded dynamic library game_load.so");
+    engine_log("Loaded new gameSO: %p", gameSO);
 
     updateGame_ptr = (update_game_type *)plat_loadDynamicFun(gameSO, "updateGame");
     if (!updateGame_ptr) { crash("Failed to load updateGame function"); }
+    engine_log("Loaded new updateGame_ptr: %p", updateGame_ptr);
 
-    engine_log("Loaded dynamic function updateGame");
     lastModTimestamp = currentTimestamp;
 }

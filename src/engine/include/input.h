@@ -2,7 +2,6 @@
 
 #include <map>
 
-#include "game.h"
 #include "types.h"
 
 #include "SDL2/SDL_keyboard.h"

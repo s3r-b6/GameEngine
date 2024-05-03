@@ -5,7 +5,7 @@
 
 #ifdef __linux__
 #define plat_main() main(int argc, char *args[])
-#define EXPORT_FN __attribute__((visibility("default")))
+#define EXPORT_FN
 #include <unistd.h>
 #define platform_sleep(ms) sleep(ms)
 #elif _WIN32
@@ -29,9 +29,7 @@ void *plat_loadDynamicLib(char *dll);
 void *plat_loadDynamicFun(void *dll, char *funName);
 bool plat_freeDynamicLib(void *dll);
 u64 plat_getFileTimestamp(char *fileName);
-
 char *plat_readFile(char *fileName, size_t *fileSize, BumpAllocator *allocator);
 bool plat_copyFile(char *fileName, char *newFileName, BumpAllocator *allocator);
-
 bool plat_writeFile(char *fileName);
 bool plat_deleteFile(char *fileName);

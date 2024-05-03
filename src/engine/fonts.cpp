@@ -1,9 +1,7 @@
 #include "freetype/freetype.h"
 
 #include "./engine_global.h"
-#include "./engine_memory.h"
 #include "./renderer.h"
-#include "./types.h"
 
 // This has been mostly yanked from https://github.com/Cakez77/CelesteClone
 void load_font(char *filePath, int fontSize, BumpAllocator *tempStorage) {

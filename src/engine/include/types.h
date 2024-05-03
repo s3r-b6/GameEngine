@@ -53,7 +53,8 @@ struct GlobalState;
 struct GameState;
 struct KeyState;
 struct ALState;
-
+struct TileManager;
+struct EntityManager;
 struct OrthographicCamera;
 
 // KeyCodes

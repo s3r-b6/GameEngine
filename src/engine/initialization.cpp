@@ -3,12 +3,7 @@
 
 #include "./initialization.h"
 #include "./audio.h"
-#include "./engine_global.h"
-#include "./engine_lib.h"
-#include "./entities.h"
-#include "./game.h"
 #include "./input.h"
-#include "./renderer.h"
 #include "./tiles.h"
 
 #include "AL/al.h"
