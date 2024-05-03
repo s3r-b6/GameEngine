@@ -25,7 +25,7 @@ struct FrontTile {
 
 struct TileChunk {
     i16 x, y;
-    TileID chunkTiles[TILES_CHUNK_x * TILES_CHUNK_y];
+    TileID *chunkTiles;
     std::vector<FrontTile> collisions;
 };
 
@@ -34,12 +34,12 @@ struct TileManager {
     static constexpr u8 MAX_ROOMS = 4;
     TileChunk world[MAX_ROOMS];
 
-    u32 currentTiles = 1;
+    u32 currentTiles;
     std::map<int, TileBase> tilemap;
 
     TileID registerTile(TileBase t) {
         t.id = currentTiles;
-        tilemap[++currentTiles] = t;
+        tilemap[currentTiles++] = t;
         return t.id;
     }
 
@@ -51,7 +51,7 @@ struct TileManager {
 
         for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
             TileID tileID = chunk.chunkTiles[i];
-            if (tileID == 0) continue;
+            if (tileID == MAX_U16) continue;
 
             // Calculate the position of the tile in world space
             int x = i % TILES_CHUNK_x, y = i / TILES_CHUNK_x;
@@ -80,8 +80,8 @@ struct TileManager {
             if (offsetY == 0) { distVector.y += CHUNK_SIZE_y / 2.f; }
 
             if (distVector.x > CHUNK_SIZE_x || distVector.y > CHUNK_SIZE_y) {
-                engine_log("%f %f %f %f", offsetX, offsetY, renderData->gameCamera.pos.x,
-                           renderData->gameCamera.pos.y);
+                // engine_log("%f %f %f %f", offsetX, offsetY, renderData->gameCamera.pos.x,
+                //            renderData->gameCamera.pos.y);
                 continue;
             }
 

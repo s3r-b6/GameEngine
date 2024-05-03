@@ -8,6 +8,7 @@
 #define local_persist static
 
 #define MAX_I16 32767
+#define MAX_U16 65535
 
 #define MAX_TEXTURES 8
 #define TARGET_FPS 60.

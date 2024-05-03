@@ -2,8 +2,9 @@
 // This code is subject to the MIT license.
 #include <cstdlib>
 #include <ctime>
-//
+
 #include "./engine_global.h"
+#include "types.h"
 
 #include "./game.h"
 
@@ -13,7 +14,7 @@
 #include "./tiles.h"
 
 #include "./game_input.h"
-#include "types.h"
+#include "./rooms.h"
 
 EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
     int fps = 1.f / dt;
@@ -42,9 +43,8 @@ EXPORT_FN void updateGame(UPDATE_GAME_PARAMS) {
         input->mouseUiPos =
             renderData->uiCamera.getMousePosInWorld(input->mousePos, appState->screenSize);
 
-        inputFunctions();
-
         entityManager->update();
+        inputFunctions();
     }
 
     renderWorld(fps, dt);
@@ -90,12 +90,11 @@ inline void initializeGameState() {
     tileManager->world[2].y = 0;
     tileManager->world[3].x = 1;
     tileManager->world[3].y = -1;
-    for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
-        tileManager->world[0].chunkTiles[i] = 1;
-        tileManager->world[1].chunkTiles[i] = 1;
-        tileManager->world[2].chunkTiles[i] = 1;
-        tileManager->world[3].chunkTiles[i] = 1;
-    }
+    u16 *room1Mem = loadRoom(permStorage);
+    tileManager->world[0].chunkTiles = room1Mem;
+    tileManager->world[1].chunkTiles = room1Mem;
+    tileManager->world[2].chunkTiles = room1Mem;
+    tileManager->world[3].chunkTiles = room1Mem;
 
     // if (tileManager->deserialize()) {}
 

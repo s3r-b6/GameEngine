@@ -10,36 +10,31 @@
 
 enum Direction { U, L, D, R };
 
-void playerActions(u32 player_id) {
+void playerActions() {
     float playerSpeed = 2.f;
 
-    local_persist u32 prev_player_id = 0;
+    local_persist u32 p_id = gameState->player_id;
+    local_persist Entity *player = nullptr;
+    local_persist TransformComponent *transform;
+    local_persist AnimatedSpriteRenderer *spriteRenderer;
+    local_persist ColliderComponent *collider;
 
-    if (prev_player_id == 0) { prev_player_id = player_id; }
-
-    local_persist auto player = gameState->entityManager->entities[player_id];
-    local_persist auto transform = player->findComponent<TransformComponent>();
-    local_persist auto spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
-    local_persist auto collider = player->findComponent<ColliderComponent>();
-
-    local_persist Direction direction = D;
-
-    if (prev_player_id != player_id) {
-        player = gameState->entityManager->entities[player_id];
+    if (!player || p_id != gameState->player_id) {
+        player = gameState->entityManager->entities[gameState->player_id];
         transform = player->findComponent<TransformComponent>();
         spriteRenderer = player->findComponent<AnimatedSpriteRenderer>();
         collider = player->findComponent<ColliderComponent>();
     }
+
+    local_persist Direction direction = D;
 
     if (!player) {
         engine_log("handlePlayerMovement() could not find a player!");
         return;
     }
 
-    auto oldPos = transform->pos;
-    auto newPos = &transform->pos;
-
     bool moved = false;
+    auto oldPos = transform->pos, *newPos = &transform->pos;
     if (input->keyIsDown('w')) {
         newPos->y -= playerSpeed;
         spriteRenderer->animatedSprite = PlayerU_Walk;
