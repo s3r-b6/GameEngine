@@ -2,20 +2,20 @@
 
 #include "./types.h"
 
-global RenderData *renderData;
-global GLContext *glContext;
-global ProgramState *appState;
-global GameState *gameState;
+_global RenderData *renderData;
+_global GLContext *glContext;
+_global ProgramState *appState;
+_global GameState *gameState;
 
-global TileManager *tileManager;
-global EntityManager *entityManager;
+_global TileManager *tileManager;
+_global EntityManager *entityManager;
 
-global Input *input;
-global ALState *alState;
+_global Input *input;
+_global ALState *alState;
 
-global double deltaTime;
-global double updateTimer;
-global u64 frame;
+_global double deltaTime;
+_global double updateTimer;
+_global u64 frame;
 
-global BumpAllocator *permStorage;
-global BumpAllocator *tempStorage;
+_global BumpAllocator *permStorage;
+_global BumpAllocator *tempStorage;

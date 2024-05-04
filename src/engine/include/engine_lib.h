@@ -1,10 +1,11 @@
 #pragma once
 
+#include <string>
+
 #include "SDL2/SDL_video.h"
 
 #include "./platform.h"
 #include "./types.h"
-#include <string>
 
 // Struct that holds all the data relevant to program execution.
 //  \bool running -> Marks if the program should continue to run the main loop

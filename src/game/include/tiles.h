@@ -22,7 +22,7 @@ struct TileChunk {
     i16 x, y;
     TileID *chunkTiles;
     std::vector<FrontTile> frontTiles;
-    std::vector<FrontTile> collisions;
+    std::vector<FrontTile> *collisions;
 };
 
 struct TileManager {
@@ -55,13 +55,30 @@ struct TileManager {
 
             // Check if the tile is within the viewport
             if (tile_x >= viewport_left && tile_x + TILESIZE <= viewport_right &&
-                tile_y >= viewport_top && tile_y + TILESIZE <= viewport_bottom) {
+                tile_y >= viewport_top - TILESIZE && tile_y + TILESIZE <= viewport_bottom) {
                 drawTileID(tileID, {tile_x, tile_y});
             }
         }
     }
 
-    void render() {
+    void renderCollisions(const TileChunk &chunk, float offset_x, float offset_y) {
+        float viewport_left = renderData->gameCamera.pos.x - CAMERA_SIZE_x * 0.55;
+        float viewport_right = renderData->gameCamera.pos.x + renderData->gameCamera.dimensions.x;
+        float viewport_top = renderData->gameCamera.pos.y - CAMERA_SIZE_y * 0.55;
+        float viewport_bottom = renderData->gameCamera.pos.y + renderData->gameCamera.dimensions.y;
+
+        for (auto &ftile : *chunk.collisions) {
+            float tile_x = offset_x + ftile.posX * TILESIZE;
+            float tile_y = offset_y + ftile.posY * TILESIZE;
+
+            if (tile_x >= viewport_left && tile_x + TILESIZE <= viewport_right &&
+                tile_y >= viewport_top && tile_y + TILESIZE <= viewport_bottom) {
+                drawTileID(ftile.id, {tile_x, tile_y});
+            }
+        }
+    }
+
+    void renderBack() {
         for (auto &chunk : world) {
             if (chunk.x == MAX_I16 && chunk.y == MAX_I16) { continue; }
             float offsetX = chunk.x * TILES_CHUNK_x * TILESIZE,
@@ -81,6 +98,29 @@ struct TileManager {
             }
 
             renderChunk(chunk, offsetX, offsetY);
+        }
+    }
+
+    void renderFront() {
+        for (auto &chunk : world) {
+            if (chunk.x == MAX_I16 && chunk.y == MAX_I16) { continue; }
+            float offsetX = chunk.x * TILES_CHUNK_x * TILESIZE,
+                  offsetY = chunk.y * TILES_CHUNK_y * TILESIZE;
+
+            // Chunks have their origin top left, but distance should be calculated from center
+            glm::vec2 distVector = glm::vec2((offsetX * 1.5) - renderData->gameCamera.pos.x,
+                                             (offsetY * 1.5) - renderData->gameCamera.pos.y);
+
+            if (offsetX == 0) { distVector.x += CHUNK_SIZE_x / 2.f; }
+            if (offsetY == 0) { distVector.y += CHUNK_SIZE_y / 2.f; }
+
+            if (distVector.x > CHUNK_SIZE_x || distVector.y > CHUNK_SIZE_y) {
+                // engine_log("%f %f %f %f", offsetX, offsetY, renderData->gameCamera.pos.x,
+                //            renderData->gameCamera.pos.y);
+                continue;
+            }
+
+            renderCollisions(chunk, offsetX, offsetY);
         }
     }
 };

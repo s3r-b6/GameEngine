@@ -11,7 +11,7 @@
 #include "./input.h"
 #include "./renderer.h"
 
-global void *gameSO;
+_global void *gameSO;
 
 int plat_main() {
     permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(5));
@@ -39,9 +39,7 @@ int plat_main() {
         last = now, now = SDL_GetPerformanceCounter();
         dt = static_cast<double>(now - last) / static_cast<double>(SDL_GetPerformanceFrequency());
 
-        while (SDL_PollEvent(&event) != 0) {
-            handleSDLevents(&event);
-        }
+        while (SDL_PollEvent(&event) != 0) { handleSDLevents(&event); }
 
         updateGame_ptr(permStorage, tempStorage, renderData, appState, gameState, glContext, input,
                        dt);

@@ -52,15 +52,14 @@ bool displayErrorsAL(const std::string &filename, const std::uint_fast32_t line)
              "AL_OUT_OF_MEMORY: the requested operation resulted in OpenAL running out of "
              "memory");
         break;
-    default:
-        _log(filename, line, "UNKNOWN AL ERROR: ", error);
+    default: _log(filename, line, "UNKNOWN AL ERROR: ", error);
     }
 
     return false;
 }
 
 // TODO: just one wavFile
-global WavFile wavFile = {};
+_global WavFile wavFile = {};
 WavFile *loadAudio(const char *originalFilename) {
     signed char filename[64];
 

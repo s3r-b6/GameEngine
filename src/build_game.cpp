@@ -7,5 +7,6 @@
 #include "./engine/assets.cpp"
 #include "./game/game_input.cpp"
 #include "./game/game_render.cpp"
+#include "./game/rooms.cpp"
 
 #include "./game/game.cpp"

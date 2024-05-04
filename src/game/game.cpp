@@ -56,8 +56,9 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 }
 
 void renderWorld(int fps, double dt) {
+    tileManager->renderFront();
     entityManager->render();
-    tileManager->render();
+    tileManager->renderBack();
     ui_drawTextFormatted({CAMERA_SIZE_x - 80, 70}, 0.2, "FPS:%d DT:%f", fps, dt);
 }
 
@@ -77,47 +78,6 @@ void setupPlayer() {
     player->components.push_back(collider);
 }
 
-void placeRoom(Direction dirToParent, int x, int y, u16 *roomData) {
-    local_persist int count = -1;
-    if (count >= TileManager::MAX_ROOMS) { return; }
-
-    if (count > 0) {
-        for (auto &chunk : tileManager->world) {
-            if (chunk.x == x && chunk.y == y) return;
-        }
-    }
-
-    ++count;
-
-    tileManager->world[count].x = x, tileManager->world[count].y = y;
-    tileManager->world[count].chunkTiles = roomData;
-
-    Direction directions[] = {Direction::U, Direction::L, Direction::D, Direction::R};
-
-    // reorder directions
-    for (int i = 3; i > 0; --i) {
-        int j = rand() % (i + 1);
-        auto tmp = directions[i];
-        directions[i] = directions[j];
-        directions[j] = tmp;
-    }
-
-    int placed = 0;
-    for (const auto &dir : directions) {
-        if (dir != dirToParent) {
-            switch (dir) {
-            case Direction::U: placeRoom(dir, x, y - 1, roomData); break;
-            case Direction::L: placeRoom(dir, x - 1, y, roomData); break;
-            case Direction::D: placeRoom(dir, x, y + 1, roomData); break;
-            case Direction::R: placeRoom(dir, x + 1, y, roomData); break;
-            }
-            engine_log("Placing room on %u", dir);
-            ++placed;
-            if ((dirToParent == Direction::No && placed >= 4) || (placed >= 3)) break;
-        }
-    }
-}
-
 inline void initializeGameState() {
     srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -130,8 +90,7 @@ inline void initializeGameState() {
     setupPlayer();
 
     engine_log("Initializing world state");
-    u16 *room1Mem = loadRoom(permStorage);
-    placeRoom(Direction::No, 0, 0, room1Mem);
+    initRooms();
 
     gameState->initialized = true;
 }

@@ -4,7 +4,7 @@
 #define MB(x) KB(x) * 1024
 #define GB(x) MB(x) * 1024
 
-#define global static
+#define _global static
 #define local_persist static
 
 #define MAX_TEXTURES 8

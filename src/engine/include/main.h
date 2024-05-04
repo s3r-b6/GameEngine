@@ -7,7 +7,7 @@ void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                 GLContext *glContextIn, Input *inputIn, double dt);
 
 typedef decltype(updateGame) update_game_type;
-global update_game_type *updateGame_ptr;
+_global update_game_type *updateGame_ptr;
 
 void handleSDLevents(SDL_Event *event);
 void reloadGameLib(BumpAllocator *transientStorage);
