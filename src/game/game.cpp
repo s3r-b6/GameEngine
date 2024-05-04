@@ -1,5 +1,7 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
+#include <ctime>
+
 #include "./game.h"
 
 #include "./engine_global.h"
@@ -75,7 +77,8 @@ void setupPlayer() {
     player->components.push_back(collider);
 }
 
-void placeRoom(int count, Direction dirToParent, int x, int y, u16 *roomData) {
+void placeRoom(Direction dirToParent, int x, int y, u16 *roomData) {
+    local_persist int count = -1;
     if (count >= TileManager::MAX_ROOMS) { return; }
 
     if (count > 0) {
@@ -84,16 +87,40 @@ void placeRoom(int count, Direction dirToParent, int x, int y, u16 *roomData) {
         }
     }
 
+    ++count;
+
     tileManager->world[count].x = x, tileManager->world[count].y = y;
     tileManager->world[count].chunkTiles = roomData;
 
-    if (dirToParent != U) placeRoom(count + 1, D, x, y - 1, roomData);
-    if (dirToParent != L) placeRoom(count + 2, R, x - 1, y, roomData);
-    if (dirToParent != D) placeRoom(count + 3, U, x, y + 1, roomData);
-    if (dirToParent != R) placeRoom(count + 4, L, x + 1, y, roomData);
+    Direction directions[] = {Direction::U, Direction::L, Direction::D, Direction::R};
+
+    // reorder directions
+    for (int i = 3; i > 0; --i) {
+        int j = rand() % (i + 1);
+        auto tmp = directions[i];
+        directions[i] = directions[j];
+        directions[j] = tmp;
+    }
+
+    int placed = 0;
+    for (const auto &dir : directions) {
+        if (dir != dirToParent) {
+            switch (dir) {
+            case Direction::U: placeRoom(dir, x, y - 1, roomData); break;
+            case Direction::L: placeRoom(dir, x - 1, y, roomData); break;
+            case Direction::D: placeRoom(dir, x, y + 1, roomData); break;
+            case Direction::R: placeRoom(dir, x + 1, y, roomData); break;
+            }
+            engine_log("Placing room on %u", dir);
+            ++placed;
+            if ((dirToParent == Direction::No && placed >= 4) || (placed >= 3)) break;
+        }
+    }
 }
 
 inline void initializeGameState() {
+    srand(static_cast<unsigned int>(time(nullptr)));
+
     renderData->gameCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
     renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
     renderData->uiCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
@@ -104,7 +131,7 @@ inline void initializeGameState() {
 
     engine_log("Initializing world state");
     u16 *room1Mem = loadRoom(permStorage);
-    placeRoom(0, Direction::No, 0, 0, room1Mem);
+    placeRoom(Direction::No, 0, 0, room1Mem);
 
     gameState->initialized = true;
 }
