@@ -1,8 +1,5 @@
 // Copyright (c) 2024 <Sergio Bermejo de las Heras>
 // This code is subject to the MIT license.
-#include <cstdlib>
-#include <ctime>
-
 #include "./game.h"
 
 #include "./engine_global.h"
@@ -57,9 +54,9 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
 }
 
 void renderWorld(int fps, double dt) {
-    ui_drawTextFormatted({420, 15}, 0.2, "FPS:%d DT:%f", fps, dt);
     entityManager->render();
     tileManager->render();
+    ui_drawTextFormatted({CAMERA_SIZE_x - 80, 70}, 0.2, "FPS:%d DT:%f", fps, dt);
 }
 
 void setupPlayer() {
@@ -78,6 +75,24 @@ void setupPlayer() {
     player->components.push_back(collider);
 }
 
+void placeRoom(int count, Direction dirToParent, int x, int y, u16 *roomData) {
+    if (count >= TileManager::MAX_ROOMS) { return; }
+
+    if (count > 0) {
+        for (auto &chunk : tileManager->world) {
+            if (chunk.x == x && chunk.y == y) return;
+        }
+    }
+
+    tileManager->world[count].x = x, tileManager->world[count].y = y;
+    tileManager->world[count].chunkTiles = roomData;
+
+    if (dirToParent != U) placeRoom(count + 1, D, x, y - 1, roomData);
+    if (dirToParent != L) placeRoom(count + 2, R, x - 1, y, roomData);
+    if (dirToParent != D) placeRoom(count + 3, U, x, y + 1, roomData);
+    if (dirToParent != R) placeRoom(count + 4, L, x + 1, y, roomData);
+}
+
 inline void initializeGameState() {
     renderData->gameCamera.pos = {TILES_CHUNK_x * 16. / 2., TILES_CHUNK_y * 16 / 2.};
     renderData->gameCamera.dimensions = {CAMERA_SIZE_x, CAMERA_SIZE_y};
@@ -87,21 +102,9 @@ inline void initializeGameState() {
     engine_log("Setting up the player...");
     setupPlayer();
 
-    tileManager->world[0].x = 0;
-    tileManager->world[0].y = 0;
-    tileManager->world[1].x = 1;
-    tileManager->world[1].y = 0;
-    tileManager->world[2].x = 2;
-    tileManager->world[2].y = 0;
-    tileManager->world[3].x = 1;
-    tileManager->world[3].y = -1;
-    engine_log("Loading room1 into the allocator");
+    engine_log("Initializing world state");
     u16 *room1Mem = loadRoom(permStorage);
-    tileManager->world[0].chunkTiles = room1Mem;
-    tileManager->world[1].chunkTiles = room1Mem;
-    tileManager->world[2].chunkTiles = room1Mem;
-    tileManager->world[3].chunkTiles = room1Mem;
+    placeRoom(0, Direction::No, 0, 0, room1Mem);
 
-    engine_log("Initialized world state");
     gameState->initialized = true;
 }

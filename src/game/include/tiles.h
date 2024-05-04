@@ -26,7 +26,7 @@ struct TileChunk {
 };
 
 struct TileManager {
-    static constexpr u8 MAX_ROOMS = 4;
+    static constexpr u8 MAX_ROOMS = 16;
     TileChunk world[MAX_ROOMS];
 
     u32 currentTiles;

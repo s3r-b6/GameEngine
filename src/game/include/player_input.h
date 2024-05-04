@@ -5,8 +5,6 @@
 #include "./input.h"
 #include "./tiles.h"
 
-enum Direction { U, L, D, R };
-
 void playerActions() {
     float playerSpeed = 2.f;
 

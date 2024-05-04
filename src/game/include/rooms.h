@@ -2,7 +2,7 @@
 
 #include "./engine_lib.h"
 
-u16 room1[] = {
+static u16 room1[] = {
     404, 405,     405,     0,       0,       0,       0,       0,       0,       0,   0,
     0,   0,       0,       0,       0,       0,       0,       0,       0,       0,   0,
     0,   0,       0,       0,       0,       0,       0,       0,       0,       0,   0,
@@ -88,11 +88,13 @@ u16 room1[] = {
     566, 566,     566,     566,     566,     566,     566,     566,     566,     526, 566,
     566, 566,     566,     566,     566,     566,     566};
 
+// This is bad, but I do not want to break hot-reload and rn I do not want to spend more time
+// in a system that should be disposable (hot-reload is just for the development?).
 TileID *loadRoom(BumpAllocator *bumpAlloc) {
     TileID *room = (TileID *)bumpAlloc->alloc(sizeof(TileID) * TILES_CHUNK_x * TILES_CHUNK_y);
     for (size_t i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; ++i) {
         room[i] = room1[i];
     }
 
-    return room;
+    return room1;
 }

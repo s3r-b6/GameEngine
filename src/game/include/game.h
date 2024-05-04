@@ -2,6 +2,8 @@
 
 #include "./platform.h"
 
+enum Direction { No, U, L, D, R };
+
 struct EntityManager;
 struct TileManager;
 
