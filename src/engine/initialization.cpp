@@ -38,7 +38,8 @@ bool initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
     tileManager = gameState->tileManager;
     entityManager = gameState->entityManager;
 
-    gameState->tileManager->tilemap = std::map<int, TileBase>();
+    gameState->tileManager->tilemap = std::map<TileID, TileBase>();
+    gameState->tileManager->currentTiles = 0;
     gameState->initialized = false;
 
     input->mouseInWindow = true;

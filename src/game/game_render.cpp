@@ -5,7 +5,7 @@
 #include "renderer.h"
 #include "tiles.h"
 
-void ui_drawTextFormatted(glm::vec2 pos, float fontSize, const char *text...) {
+void UIdrawTextFormatted(glm::vec2 pos, float fontSize, const char *text...) {
     va_list args;
     va_start(args, text);
 
@@ -19,10 +19,10 @@ void ui_drawTextFormatted(glm::vec2 pos, float fontSize, const char *text...) {
     va_end(args);
 
     const char *char_ptr = result.c_str();
-    ui_drawText(pos, fontSize, char_ptr);
+    UIdrawText(pos, fontSize, char_ptr);
 }
 
-void ui_drawText(glm::vec2 pos, float fontSize, const char *text) {
+void UIdrawText(glm::vec2 pos, float fontSize, const char *text) {
     if (!text) { return; }
 
     glm::vec2 origin = pos;
@@ -47,42 +47,6 @@ void ui_drawText(glm::vec2 pos, float fontSize, const char *text) {
     }
 }
 
-void drawTileGroup(TileID t1, TileID t2, glm::ivec2 pos) {
-    TileBase tile1 = tileManager->tilemap[t1];
-    TileBase tile2 = tileManager->tilemap[t2];
-
-    int xDiff = tile2.x - tile1.x + 1;
-    int ySpan = tile2.y - tile1.y + 1;
-
-    Transform t = {
-        .atlasOffset = {tile1.x * 16, tile1.y * 16},
-        .spriteSize = {xDiff * 16, ySpan * 16},
-        .pos = pos,
-        .size = {xDiff * 16, ySpan * 16},
-
-        .atlasIdx = tile1.atlasIdx,
-    };
-
-    renderData->transforms[renderData->transformCount++] = t;
-}
-void ui_drawTileGroup(TileID t1, TileID t2, glm::ivec2 pos) {
-    TileBase tile1 = tileManager->tilemap[t1];
-    TileBase tile2 = tileManager->tilemap[t2];
-
-    int xDiff = tile2.x - tile1.x + 1;
-    int ySpan = tile2.y - tile1.y + 1;
-
-    Transform t = {
-        .atlasOffset = {tile1.x * 16, tile1.y * 16},
-        .spriteSize = {xDiff * 16, ySpan * 16},
-        .pos = pos,
-        .size = {xDiff * 16, ySpan * 16},
-
-        .atlasIdx = tile1.atlasIdx,
-    };
-
-    renderData->uiTransforms[renderData->uiTransformCount++] = t;
-}
 void UIdrawTileID(TileID t1, glm::vec2 pos) {
     TileBase t = tileManager->tilemap[t1];
 
@@ -96,7 +60,42 @@ void UIdrawTileID(TileID t1, glm::vec2 pos) {
     renderData->uiTransforms[renderData->uiTransformCount++] = transform;
 }
 
+void UIdrawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
+    Transform t = {};
+
+    t.atlasOffset = {tile.x * 16, tile.y * 16};
+    t.spriteSize = {16, 16};
+    t.pos = pos;
+    t.size = {16, 16};
+    t.atlasIdx = atlasIdx;
+
+    renderData->uiTransforms[renderData->uiTransformCount++] = t;
+}
+
+bool checkViewport(glm::vec2 pos) {
+    // Left, Right, Top, Bottom
+    local_persist float viewport[4] = {0.f, 0.f, 0.f, 0.f};
+    local_persist float lastCameraPosX = 0.f;
+    local_persist float lastCameraPosY = 0.f;
+
+    if (lastCameraPosY != renderData->gameCamera.pos.y || // Last data is now invalid
+        lastCameraPosX != renderData->gameCamera.pos.x || // OR
+        viewport[0] == 0.f && viewport[1] == 0.f) {       // Not initialized
+        viewport[0] = renderData->gameCamera.pos.x - CAMERA_SIZE_x * 0.55;
+        viewport[1] = renderData->gameCamera.pos.x + renderData->gameCamera.dimensions.x;
+        viewport[2] = renderData->gameCamera.pos.y - CAMERA_SIZE_y * 0.55;
+        viewport[3] = renderData->gameCamera.pos.y + renderData->gameCamera.dimensions.y;
+    }
+
+    bool isWithinVp = pos.x >= viewport[0] && pos.x + TILESIZE <= viewport[1] &&
+                      pos.y >= viewport[2] - TILESIZE && pos.y + TILESIZE <= viewport[3];
+
+    return isWithinVp;
+}
+
 void drawSprite(SpriteID spriteID, glm::vec2 pos, glm::vec2 size) {
+    if (!checkViewport(pos)) return;
+
     Sprite sp = get_sprite(spriteID);
 
     Transform t = {};
@@ -112,6 +111,8 @@ void drawSprite(SpriteID spriteID, glm::vec2 pos, glm::vec2 size) {
 }
 
 void drawAnimatedSprite(AnimatedSpriteID spriteID, glm::vec2 pos, glm::vec2 size, int frame) {
+    if (!checkViewport(pos)) return;
+
     Sprite sp = get_animated_sprite(spriteID, frame);
 
     Transform t = {};
@@ -126,6 +127,8 @@ void drawAnimatedSprite(AnimatedSpriteID spriteID, glm::vec2 pos, glm::vec2 size
 }
 
 void drawTileID(TileID tileID, glm::vec2 pos) {
+    if (!checkViewport(pos)) return;
+
     TileBase t = tileManager->tilemap[tileID];
 
     Transform transform = {};
@@ -140,6 +143,8 @@ void drawTileID(TileID tileID, glm::vec2 pos) {
 }
 
 void drawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
+    if (!checkViewport(pos)) return;
+
     Transform t = {};
 
     t.atlasOffset = {tile.x * 16, tile.y * 16};
@@ -149,16 +154,4 @@ void drawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
     t.atlasIdx = atlasIdx;
 
     renderData->transforms[renderData->transformCount++] = t;
-}
-
-void UIdrawTile(glm::vec2 tile, u8 atlasIdx, glm::vec2 pos) {
-    Transform t = {};
-
-    t.atlasOffset = {tile.x * 16, tile.y * 16};
-    t.spriteSize = {16, 16};
-    t.pos = pos;
-    t.size = {16, 16};
-    t.atlasIdx = atlasIdx;
-
-    renderData->uiTransforms[renderData->uiTransformCount++] = t;
 }

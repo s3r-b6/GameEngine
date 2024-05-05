@@ -54,9 +54,9 @@ struct RenderData {
 
     Glyph glyphs[127];
 
-    int fontHeight = 0;
-    int transformCount = 0;
-    int uiTransformCount = 0;
+    u16 fontHeight = 0;
+    u32 transformCount = 0;
+    u32 uiTransformCount = 0;
 
     glm::vec3 clearColor;
 
@@ -78,4 +78,4 @@ struct GLContext {
 
 bool loadTextureAtlas(char const *texturePath, GLenum glTextureIdx, bool createTiles);
 void render();
-void ui_render();
+void UIrender();

@@ -52,15 +52,16 @@ int plat_main() {
 
         render();
         glFinish();
-        ui_render();
+        UIrender();
         SDL_GL_SwapWindow(appState->window);
 
         input->mouseState &= ~(input->mouseState & 0xF0);
 
         hotreload_timer -= dt;
+        // Try to load a new shared object every x seconds
         if (hotreload_timer <= 0.f) {
             reloadGameLib(tempStorage);
-            hotreload_timer = 3.f;
+            hotreload_timer = 2.f;
         }
         tempStorage->freeMemory();
     }

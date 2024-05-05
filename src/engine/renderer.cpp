@@ -22,36 +22,15 @@ void parseTilemapData(u8 currentAtlas, u8 *data, int width, int height, int chan
 
     int x_tiles = width / TILESIZE, y_tiles = height / TILESIZE;
     for (int i = 0; i < x_tiles * y_tiles; i++) {
-        // bool is_empty = true;
-        // for (int j = 0; j < TILESIZE * TILESIZE; j++) {
-        //     int y = i / x_tiles * TILESIZE + j / TILESIZE;
-        //     int x = i % x_tiles * TILESIZE + j % TILESIZE;
-
-        //    if (x >= width || y >= height) continue;
-
-        //    u32 pixel_index = (y * width + x) * channels;
-        //    u8 r = data[pixel_index], g = data[pixel_index + 1];
-        //    u8 b = data[pixel_index + 2], a = data[pixel_index + 3];
-
-        //    if (a != 0) {
-        //        is_empty = false;
-        //        break;
-        //    }
-        //}
-
-        // if (!is_empty) {
         TileBase t = TileBase{};
         t.x = u8(i % x_tiles);
         t.y = u8(i / x_tiles);
         t.atlasIdx = currentAtlas;
 
         tileManager->registerTile(t);
-        //}
     }
 }
 
-// TODO: This should use a map or something similar, so one texture can be freed
-// and then I can ask which slot is free and occupy it again and so on
 bool loadTextureAtlas(char const *texturePath, GLenum glTextureIdx, bool createTiles) {
     local_persist u8 currentAtlas = 1;
 
@@ -105,7 +84,7 @@ void render() {
     renderData->transformCount = 0;
 }
 
-void ui_render() {
+void UIrender() {
     auto screenSize = appState->screenSize;
 
     glDisable(GL_DEPTH_TEST);

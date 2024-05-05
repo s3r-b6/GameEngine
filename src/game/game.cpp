@@ -55,14 +55,14 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
     frame += 1;
 }
 
-void renderWorld(int fps, double dt) {
+inline void renderWorld(int fps, double dt) {
     tileManager->renderFront();
     entityManager->render();
     tileManager->renderBack();
-    ui_drawTextFormatted({CAMERA_SIZE_x - 80, 70}, 0.2, "FPS:%d DT:%f", fps, dt);
+    UIdrawTextFormatted({CAMERA_SIZE_x - 80, 70}, 0.2, "FPS:%d DT:%f", fps, dt);
 }
 
-void setupPlayer() {
+inline void setupPlayer() {
     gameState->player_id = entityManager->getUninitializedID();
     auto player = entityManager->entities[gameState->player_id];
     auto transform = new (permStorage->alloc(sizeof(TransformComponent))) TransformComponent(

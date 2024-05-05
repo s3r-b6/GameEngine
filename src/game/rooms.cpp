@@ -4,8 +4,11 @@
 
 #include <delaunator.hpp>
 
+_global u16 collCount;
+_global u16 frontCount;
 _global u16 *room1Mem;
-_global std::vector<FrontTile> *room1ColMem;
+_global PosTile *room1ColMem;
+_global PosTile *room1FrontMem;
 
 void placeRoom(Direction dirToParent, int x, int y) {
     local_persist int count = -1;
@@ -23,6 +26,9 @@ void placeRoom(Direction dirToParent, int x, int y) {
     tileManager->world[count].x = x, tileManager->world[count].y = y;
     tileManager->world[count].chunkTiles = room1Mem;
     tileManager->world[count].collisions = room1ColMem;
+    tileManager->world[count].collisionCount = collCount;
+    tileManager->world[count].frontTiles = room1FrontMem;
+    tileManager->world[count].frontCount = frontCount;
 
     Direction directions[] = {Direction::U, Direction::L, Direction::D, Direction::R};
 
@@ -51,9 +57,9 @@ void placeRoom(Direction dirToParent, int x, int y) {
 
 void initRooms() {
     room1Mem = loadRoom(permStorage);
-    room1ColMem = loadCollisions(permStorage);
-
-    engine_log("Colls: %zu", room1ColMem->size());
+    room1ColMem = loadCollisions(permStorage, &collCount);
+    room1FrontMem = loadFront(permStorage, &frontCount);
+    engine_log("Colls: %hu", collCount);
 
     placeRoom(Direction::No, 0, 0);
 

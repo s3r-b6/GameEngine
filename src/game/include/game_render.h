@@ -5,10 +5,8 @@
 #include "assets.h"
 #include "types.h"
 
-void ui_drawTextFormatted(glm::vec2 pos, float fontSize, const char *text...);
-void ui_drawText(glm::vec2 pos, float fontSize, const char *text);
-void drawTileGroup(TileID t1, TileID t2, glm::ivec2 pos);
-void ui_drawTileGroup(TileID t1, TileID t2, glm::ivec2 pos);
+void UIdrawTextFormatted(glm::vec2 pos, float fontSize, const char *text...);
+void UIdrawText(glm::vec2 pos, float fontSize, const char *text);
 void UIdrawTileID(TileID t1, glm::vec2 pos);
 void drawTileID(TileID tileId, glm::vec2 pos);
 

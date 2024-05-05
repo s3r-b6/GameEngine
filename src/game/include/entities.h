@@ -27,9 +27,7 @@ struct Entity {
     bool clear() {
         if (!initialized) { crash("Tried to clear an uninitialized component"); }
 
-        for (auto &c : components) {
-            free(c);
-        }
+        for (auto &c : components) { free(c); }
 
         components.clear();
         initialized = false;
@@ -200,7 +198,7 @@ struct AnimatedSpriteRenderer : EntityComponentBase {
 
         deltaTime = dt; // This is a reference to the float* dt global
 
-        timer = spritesPerSecond / 60.f;
+        timer = spritesPerSecond / TARGET_FPS;
         currFrame = 0;
     }
 
