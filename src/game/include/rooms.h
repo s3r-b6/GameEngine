@@ -284,19 +284,13 @@ _global u16 room1Front[] = {
 // This is bad, but I do not want to break hot-reload and rn I do not want to spend more time
 // in a system that should be disposable (hot-reload is just for the development?).
 TileID *loadRoom(BumpAllocator *bumpAlloc) {
-    engine_log("%lu", bumpAlloc->used);
     TileID *room = (TileID *)bumpAlloc->alloc(sizeof(TileID) * TILES_CHUNK_x * TILES_CHUNK_y);
     for (size_t i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) { room[i] = room1[i]; }
-
-    bumpAlloc->alloc(sizeof(TileID));
-
-    engine_log("%lu", bumpAlloc->used);
     return room;
 }
 
 PosTile *loadFront(BumpAllocator *bumpAlloc, u16 *count) {
     PosTile *front = nullptr;
-    engine_log("%lu", bumpAlloc->used);
     for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
         u16 id = room1Front[i];
         if (id == MAX_U16) { continue; }
@@ -313,15 +307,12 @@ PosTile *loadFront(BumpAllocator *bumpAlloc, u16 *count) {
         // Increment the count
         (*count)++;
     }
-    bumpAlloc->alloc(sizeof(PosTile));
 
-    engine_log("%lu", bumpAlloc->used);
     return front;
 }
 
 PosTile *loadCollisions(BumpAllocator *bumpAlloc, u16 *count) {
     PosTile *collisions = nullptr;
-    engine_log("%lu", bumpAlloc->used);
     for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
         u16 id = room1Collisions[i];
         if (id == MAX_U16) { continue; }
@@ -338,9 +329,7 @@ PosTile *loadCollisions(BumpAllocator *bumpAlloc, u16 *count) {
         // Increment the count
         (*count)++;
     }
-    bumpAlloc->alloc(sizeof(PosTile));
 
-    engine_log("%lu", bumpAlloc->used);
     return collisions;
 }
 

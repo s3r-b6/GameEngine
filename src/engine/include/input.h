@@ -31,9 +31,7 @@ struct Input {
     u8 *previousKeyboardState;
 
     void debug_printMouseState() {
-        for (int i = 7; i >= 0; i--) {
-            printf("%d", (mouseState >> i) & 1);
-        }
+        for (int i = 7; i >= 0; i--) { printf("%d", (mouseState >> i) & 1); }
         printf("\n");
     }
 

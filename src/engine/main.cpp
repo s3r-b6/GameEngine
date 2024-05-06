@@ -61,7 +61,7 @@ int plat_main() {
         // Try to load a new shared object every x seconds
         if (hotreload_timer <= 0.f) {
             reloadGameLib(tempStorage);
-            hotreload_timer = 2.f;
+            hotreload_timer = 4.f;
         }
         tempStorage->freeMemory();
     }
@@ -141,13 +141,11 @@ void reloadGameLib(BumpAllocator *tempStorage) {
     if (currentTimestamp <= lastModTimestamp) return;
 
     if (gameSO) {
-        engine_log("Freeing old gameSO: %p", gameSO);
-        engine_log("Freeing old updateGame_ptr: %p", updateGame_ptr);
         updateGame_ptr = nullptr;
         if (!plat_freeDynamicLib(gameSO)) crash("Failed to free game.so");
 
         gameSO = nullptr;
-        engine_log("Freed gameSO");
+        engine_log("Freed old gameSO");
     }
 
     if (!plat_deleteFile(loadedgameSharedObject)) {

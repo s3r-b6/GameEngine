@@ -50,16 +50,16 @@ struct Glyph {
 
 struct RenderData {
     Transform transforms[MAX_TRANSFORMS] = {};
-    Transform uiTransforms[MAX_TRANSFORMS] = {};
+    Transform uiTransforms[MAX_UI_TRANSFORMS] = {};
 
     Glyph glyphs[127];
 
-    u16 fontHeight = 0;
+    glm::vec3 clearColor;
+
     u32 transformCount = 0;
     u32 uiTransformCount = 0;
 
-    glm::vec3 clearColor;
-
+    u16 fontHeight = 0;
     OrthographicCamera gameCamera;
     OrthographicCamera uiCamera;
 };

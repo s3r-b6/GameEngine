@@ -22,7 +22,7 @@ void placeRoom(Direction dirToParent, int x, int y) {
 
     ++count;
 
-    engine_log("%d Placing room on %d %d", count, x, y);
+    // engine_log("%d Placing room on %d %d", count, x, y);
     tileManager->world[count].x = x, tileManager->world[count].y = y;
     tileManager->world[count].chunkTiles = room1Mem;
     tileManager->world[count].collisions = room1ColMem;
@@ -56,30 +56,31 @@ void placeRoom(Direction dirToParent, int x, int y) {
 }
 
 void initRooms() {
-    room1Mem = loadRoom(permStorage);
+    room1Mem = &room1[0];
     room1ColMem = loadCollisions(permStorage, &collCount);
     room1FrontMem = loadFront(permStorage, &frontCount);
     engine_log("Colls: %hu", collCount);
+    engine_log("Front: %hu", frontCount);
 
     placeRoom(Direction::No, 0, 0);
 
     std::vector<double> rooms;
 
-    for (int i = 0; i < TileManager::MAX_ROOMS; i++) {
-        rooms.push_back((double)tileManager->world[i].x);
-        rooms.push_back((double)tileManager->world[i].y);
-    }
+    // for (int i = 0; i < TileManager::MAX_ROOMS; i++) {
+    //     rooms.push_back((double)tileManager->world[i].x);
+    //     rooms.push_back((double)tileManager->world[i].y);
+    // }
 
-    delaunator::Delaunator d(rooms);
+    // delaunator::Delaunator d(rooms);
 
-    for (std::size_t i = 0; i < d.triangles.size(); i += 3) {
-        printf("Triangle points: [[%f, %f], [%f, %f], [%f, %f]]\n",
-               d.coords[2 * d.triangles[i]],         // tx0,
-               d.coords[2 * d.triangles[i] + 1],     // ty0
-               d.coords[2 * d.triangles[i + 1]],     // tx1
-               d.coords[2 * d.triangles[i + 1] + 1], // ty1
-               d.coords[2 * d.triangles[i + 2]],     // tx2
-               d.coords[2 * d.triangles[i + 2] + 1]  // ty2
-        );
-    }
+    // for (std::size_t i = 0; i < d.triangles.size(); i += 3) {
+    //     printf("Triangle points: [[%f, %f], [%f, %f], [%f, %f]]\n",
+    //            d.coords[2 * d.triangles[i]],         // tx0,
+    //            d.coords[2 * d.triangles[i] + 1],     // ty0
+    //            d.coords[2 * d.triangles[i + 1]],     // tx1
+    //            d.coords[2 * d.triangles[i + 1] + 1], // ty1
+    //            d.coords[2 * d.triangles[i + 2]],     // tx2
+    //            d.coords[2 * d.triangles[i + 2] + 1]  // ty2
+    //     );
+    // }
 }
