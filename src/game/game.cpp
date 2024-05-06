@@ -10,7 +10,6 @@
 #include "./entities.h"
 #include "./game_input.h"
 #include "./input.h"
-#include "./rooms.h"
 #include "./tiles.h"
 
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,

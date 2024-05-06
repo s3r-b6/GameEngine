@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,8 +14,10 @@ type Map struct {
 }
 
 type Layer struct {
-	Name string   `xml:"name,attr"`
-	Data []string `xml:"data"`
+	Name   string `xml:"name,attr"`
+	Width  int    `xml:"width,attr"`
+	Height int    `xml:"height,attr"`
+	Data   string `xml:"data"`
 }
 
 func main() {
@@ -73,7 +76,7 @@ func processFile(fname string) {
 	}
 
 	fname = fname[:strings.Index(fname, ".tmx")]
-	output := "../" + fname + ".cpp"
+	output := "../" + fname + ".h"
 
 	file, err := os.Create(output)
 	if err != nil {
@@ -88,22 +91,45 @@ func processFile(fname string) {
 		return
 	}
 
+	file.Write([]byte("#include \"tiles.h\"\n\n"))
 	// TODO:
 	// Layer 1 should be a cpp int whatever[]
 	// All other layers should be cpp FrontTile whatever[]
-	for _, l := range data.Layers {
-		joined := strings.Join(l.Data, ",")
-		byteData := []byte(joined)
+	for i, l := range data.Layers {
+		byteData := []byte(l.Data)
 
-		file.Write([]byte("int " + fname + l.Name + "[] = {"))
+		if i == 0 {
+			file.Write([]byte("u16 " + fname + l.Name + "[] = {"))
 
-		n, err := file.Write(byteData)
-		if err != nil {
-			log.Println("Error writing to", output, err)
-			return
+			n, err := file.Write(byteData)
+			if err != nil {
+				log.Println("Error writing to", output, err)
+				return
+			}
+			file.Write([]byte("};\n\n"))
+			log.Printf("Written %v bytes to %s", n, output)
+			continue
 		}
-		file.Write([]byte("};\n"))
 
-		log.Printf("Written %v bytes to %s", n, output)
+		file.Write([]byte("PosTile " + fname + l.Name + "[] = {\n"))
+		j := 0
+		for k := 0; k < l.Width*l.Height; k++ {
+			x := k % l.Width
+			y := k / l.Width
+
+			commaIdx := strings.IndexByte(l.Data[j:], ',')
+			if commaIdx == -1 {
+				commaIdx = len(l.Data) - j
+			}
+			id := strings.TrimSpace(l.Data[j : j+commaIdx])
+			if id != "0" {
+				file.Write([]byte(fmt.Sprintf("{.id = %s, .posX = %d, .posY = %d},\n", id, x*16, y*16)))
+				log.Println("Non-empty tile", id, x, y)
+			}
+			j += commaIdx + 1
+		}
+		file.Write([]byte("{.id = MAX_U16, .posX = (u16)0, .posY = (u16)0}\n"))
+		file.Write([]byte("};\n\n"))
+
 	}
 }

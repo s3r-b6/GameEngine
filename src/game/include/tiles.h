@@ -24,11 +24,9 @@ struct TileBase {
 struct PosTile {
     TileID id;
     u16 posX, posY;
-    u8 pad[2];
-
-    void render(glm::vec2 offset) {}
 };
 
+// TODO: Export animated tiles from the .tsx
 struct AnimatedTile : PosTile {
     TileID *nextTiles;
     u8 tileCount;
@@ -61,11 +59,8 @@ struct TileChunk {
     TileID *chunkTiles;
     //  The front layers
     PosTile *collisions;
-    u8 pad1;
+    u8 pad;
     PosTile *frontTiles;
-    u8 pad2;
-    //  Count of items in front layers
-    u16 collisionCount, frontCount;
 };
 
 struct TileManager {
@@ -75,12 +70,12 @@ struct TileManager {
     TileID currentTiles = 0;
     std::map<TileID, TileBase> tilemap;
 
-    void registerTile(TileBase t) { tilemap[currentTiles++] = t; }
+    void registerTile(TileBase t) { tilemap[++currentTiles] = t; }
 
     void renderWorldGrid(const TileChunk &chunk, float offset_x, float offset_y) {
         for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
             TileID tile = chunk.chunkTiles[i];
-            // The worldGrid may contain invalid tiles
+            // The worldGrid could (?) contain invalid tiles
             if (tile == MAX_U16) continue;
 
             // Calculate the position of the tile in world space
@@ -93,17 +88,23 @@ struct TileManager {
     }
 
     void renderFrontTiles(const TileChunk &chunk, float offset_x, float offset_y) {
-        for (int i = 0; i < chunk.collisionCount; i++) {
+        for (int i = 0;; i++) {
             PosTile ftile = chunk.collisions[i];
-            float tile_x = offset_x + ftile.posX * TILESIZE;
-            float tile_y = offset_y + ftile.posY * TILESIZE;
+
+            if (ftile.id == MAX_U16) break;
+
+            float tile_x = offset_x + ftile.posX;
+            float tile_y = offset_y + ftile.posY;
             drawTileID(ftile.id, {tile_x, tile_y});
         }
 
-        for (int i = 0; i < chunk.frontCount; i++) {
+        for (int i = 0;; i++) {
             PosTile ftile = chunk.frontTiles[i];
-            float tile_x = offset_x + ftile.posX * TILESIZE;
-            float tile_y = offset_y + ftile.posY * TILESIZE;
+
+            if (ftile.id == MAX_U16) break;
+
+            float tile_x = offset_x + ftile.posX;
+            float tile_y = offset_y + ftile.posY;
             drawTileID(ftile.id, {tile_x, tile_y});
         }
     }

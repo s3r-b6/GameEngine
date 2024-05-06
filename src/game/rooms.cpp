@@ -1,14 +1,8 @@
-
-#include "./rooms.h"
 #include "./tiles.h"
 
-#include <delaunator.hpp>
+#include "../../assets/levels/room1.h"
 
-_global u16 collCount;
-_global u16 frontCount;
-_global u16 *room1Mem;
-_global PosTile *room1ColMem;
-_global PosTile *room1FrontMem;
+#include <delaunator.hpp>
 
 void placeRoom(Direction dirToParent, int x, int y) {
     local_persist int count = -1;
@@ -24,11 +18,9 @@ void placeRoom(Direction dirToParent, int x, int y) {
 
     // engine_log("%d Placing room on %d %d", count, x, y);
     tileManager->world[count].x = x, tileManager->world[count].y = y;
-    tileManager->world[count].chunkTiles = room1Mem;
-    tileManager->world[count].collisions = room1ColMem;
-    tileManager->world[count].collisionCount = collCount;
-    tileManager->world[count].frontTiles = room1FrontMem;
-    tileManager->world[count].frontCount = frontCount;
+    tileManager->world[count].chunkTiles = &room1Ground[0];
+    tileManager->world[count].collisions = &room1Collisions[0];
+    tileManager->world[count].frontTiles = &room1Front[0];
 
     Direction directions[] = {Direction::U, Direction::L, Direction::D, Direction::R};
 
@@ -56,12 +48,6 @@ void placeRoom(Direction dirToParent, int x, int y) {
 }
 
 void initRooms() {
-    room1Mem = &room1[0];
-    room1ColMem = loadCollisions(permStorage, &collCount);
-    room1FrontMem = loadFront(permStorage, &frontCount);
-    engine_log("Colls: %hu", collCount);
-    engine_log("Front: %hu", frontCount);
-
     placeRoom(Direction::No, 0, 0);
 
     std::vector<double> rooms;
