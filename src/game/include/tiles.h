@@ -27,27 +27,28 @@ struct PosTile {
 };
 
 // TODO: Export animated tiles from the .tsx
-struct AnimatedTile : PosTile {
+struct AnimatedTile {
+    u8 tileCount, duration;
+    u8 pad[1];
     TileID *nextTiles;
-    u8 tileCount;
-    u8 currTile;
-    u8 tilesPerSecond;
-    double *dt;
-    float timer;
 
-    void render(glm::vec2 offset) {
-        timer -= *dt;
-        if (timer <= 0) {
-            currTile = (currTile + 1) % tileCount;
-            if (currTile >= tileCount) { currTile = 0; }
-            timer = tilesPerSecond / TARGET_FPS;
+    void render(double dt, glm::vec2 offset) {
+        local_persist u8 currTile = 0;
+        local_persist float timer = duration / TARGET_FPS;
+        local_persist u64 prevFrame = 0;
+
+        if (prevFrame != frame) {
+            timer -= dt;
+            if (timer <= 0) {
+                if (++currTile >= tileCount) currTile = 0;
+                timer = duration / TARGET_FPS;
+            }
         }
 
-        // Draw the current tile at the specified position
-        drawTileID((currTile == 0) ? id : nextTiles[currTile], {offset.x + posX, offset.y + posY});
+        prevFrame = frame;
 
-        // engine_log("Timer: %f, Delta Time: %f, Current Tile: %u", timer, *dt, currTile);
-        // engine_log("Total Tiles: %i", tileCount);
+        // engine_log("%f %u %u %lu %lu", timer, currTile, tileCount, prevFrame, frame);
+        drawTileID(nextTiles[currTile], {offset.x, offset.y});
     }
 };
 
@@ -69,6 +70,8 @@ struct TileManager {
 
     TileID currentTiles = 0;
     std::map<TileID, TileBase> tilemap;
+    std::map<TileID, AnimatedTile> animatedTiles;
+    double *dt;
 
     void registerTile(TileBase t) { tilemap[++currentTiles] = t; }
 
@@ -83,6 +86,12 @@ struct TileManager {
             float tile_x = offset_x + x * TILESIZE;
             float tile_y = offset_y + y * TILESIZE;
 
+            if (animatedTiles.count(tile) == 1) {
+                AnimatedTile &t = animatedTiles[tile];
+                t.render(*dt, {tile_x, tile_y});
+                continue;
+            }
+
             drawTileID(tile, {tile_x, tile_y});
         }
     }
@@ -95,6 +104,13 @@ struct TileManager {
 
             float tile_x = offset_x + ftile.posX;
             float tile_y = offset_y + ftile.posY;
+
+            if (animatedTiles.count(ftile.id) == 1) {
+                AnimatedTile &t = animatedTiles[ftile.id];
+                t.render(*dt, {tile_x, tile_y});
+                continue;
+            }
+
             drawTileID(ftile.id, {tile_x, tile_y});
         }
 
@@ -105,6 +121,13 @@ struct TileManager {
 
             float tile_x = offset_x + ftile.posX;
             float tile_y = offset_y + ftile.posY;
+
+            if (animatedTiles.count(ftile.id) == 1) {
+                AnimatedTile &t = animatedTiles[ftile.id];
+                t.render(*dt, {tile_x, tile_y});
+                continue;
+            }
+
             drawTileID(ftile.id, {tile_x, tile_y});
         }
     }

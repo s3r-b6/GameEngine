@@ -76,7 +76,7 @@ func processFile(fname string) {
 	}
 
 	fname = fname[:strings.Index(fname, ".tmx")]
-	output := "../" + fname + ".h"
+	output := "../" + fname + ".cpp"
 
 	file, err := os.Create(output)
 	if err != nil {
@@ -92,9 +92,7 @@ func processFile(fname string) {
 	}
 
 	file.Write([]byte("#include \"tiles.h\"\n\n"))
-	// TODO:
-	// Layer 1 should be a cpp int whatever[]
-	// All other layers should be cpp FrontTile whatever[]
+
 	for i, l := range data.Layers {
 		byteData := []byte(l.Data)
 

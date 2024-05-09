@@ -12,6 +12,8 @@
 #include "./input.h"
 #include "./tiles.h"
 
+#include "../assets/Overworld.cpp"
+
 EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStorageIn,
                           RenderData *renderDataIn, ProgramState *appStateIn,
                           GameState *gameStateIn, GLContext *glContextIn, Input *inputIn,
@@ -27,6 +29,7 @@ EXPORT_FN void updateGame(BumpAllocator *permStorageIn, BumpAllocator *tempStora
         glContext = glContextIn, input = inputIn;
         gameState = gameStateIn;
         entityManager = gameState->entityManager, tileManager = gameState->tileManager;
+        tileManager->dt = &deltaTime;
     }
 
     if (!gameState->initialized) {
@@ -90,6 +93,8 @@ inline void initializeGameState() {
 
     engine_log("Initializing world state");
     initRooms();
+
+    loadAnimatedTiles(permStorage);
 
     gameState->initialized = true;
 }

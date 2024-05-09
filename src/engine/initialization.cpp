@@ -39,6 +39,7 @@ bool initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
     entityManager = gameState->entityManager;
 
     gameState->tileManager->tilemap = std::map<TileID, TileBase>();
+    gameState->tileManager->animatedTiles = std::map<TileID, AnimatedTile>();
     gameState->tileManager->currentTiles = 0;
     gameState->initialized = false;
 

@@ -1,6 +1,6 @@
 #include "./tiles.h"
 
-#include "../../assets/levels/room1.h"
+#include "../../assets/levels/room1.cpp"
 
 #include <delaunator.hpp>
 
