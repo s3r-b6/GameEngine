@@ -19,8 +19,8 @@
 #define CHUNK_SIZE_x TILES_CHUNK_x *TILESIZE
 #define CHUNK_SIZE_y TILES_CHUNK_y *TILESIZE
 
-#define CAMERA_SIZE_x 480
-#define CAMERA_SIZE_y 270
+#define CAMERA_SIZE_x 480 * 0.75
+#define CAMERA_SIZE_y 270 * 0.75
 
 #define TILESIZE 16
 #define TileID u16
