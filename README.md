@@ -18,10 +18,7 @@ This aims to be a small game engine that could be used as a foundation for some 
 - **Input Manager**: Management of input (keyboard and controller)
 - **Entity-System**: While the engine has no concept of Systems, and is in no way an ECS, it has entities and components. This should be useful to bundle some common patterns: for example, Entities with a position in the world can use a Transform, and Entities that should render a sprite can use a SpriteRenderer.
 
-<div align="center">
-  <img src="/preview/dynamic_rendering.gif" style="max-width: 100%;"/>
-  <img src="/preview/animated_tiles.gif" style="max-width: 100%;"/>
-</div>
+<div align="center">  <img src="/preview/dynamic_rendering.gif" style="max-width: 100%;"/> </div>
 
 # Intent:
 I keep this public just in case anyone can learn anything from it, in the same way I have benefitted of similar efforts by other developers.
