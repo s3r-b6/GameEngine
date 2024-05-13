@@ -1,7 +1,8 @@
-![Game](/preview/game_crt.png)
-![Animated tiles](/preview/animated_tiles.gif)
-![Animated tiles 2](/preview/animated_tiles_2.gif)
-![Culling of tiles](/preview/dynamic_rendering.gif)
+<div align="center">
+  <img src="/preview/game_crt.png" style="max-width: 100%;"/>
+  <img src="/preview/dynamic_rendering.gif" style="max-width: 100%;"/>
+  <img src="/preview/animated_tiles.gif" style="max-width: 100%;"/>
+</div>
 
 # What this is:
 This is a game engine pet project implemented in C++. 
