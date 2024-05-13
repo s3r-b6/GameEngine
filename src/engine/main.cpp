@@ -143,9 +143,8 @@ void reloadShaderCode(BumpAllocator *tempStorage) {
         fragTimestamp > glContext->shadersTimestamp) {
         engine_log("Newer shader code found");
 
-        GLuint vertexShaderID, fragmentShaderID;
         if (!loadShaders(SHADER_SRC("vert.glsl"), SHADER_SRC("frag.glsl"), tempStorage)) {
-            crash("Failed to reload shaders");
+            engine_log("Failed to reload shaders!");
         }
     }
 }
