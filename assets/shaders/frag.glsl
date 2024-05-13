@@ -15,26 +15,25 @@ layout(binding=4) uniform sampler2D colorPalette;
 uniform vec2 screenSize;
 uniform bool palletize;
 
+float random(vec2 st){
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
 void main() {
     vec4 textureColor;
-    
-    if(textureAtlasIdx == 0) {
-        float red = texelFetch(fontAtlas, ivec2(textureCoordsIn), 0).r;
-        if(red == 0.f) discard;
-        textureColor = red * vec4(1.f, 1.f, 1.f, 1.f);
-        fragColor = textureColor;
-    } else if (textureAtlasIdx == 1) {
-        textureColor = texelFetch(textureAtlas1, ivec2(textureCoordsIn), 0);
-    } else if (textureAtlasIdx == 2) {
-        textureColor = texelFetch(textureAtlas2, ivec2(textureCoordsIn), 0);
-    } else if (textureAtlasIdx == 3) {
-        textureColor = texelFetch(textureAtlas3, ivec2(textureCoordsIn), 0);
-    } else {
-        discard;
+    switch (textureAtlasIdx) {
+        case 0: {
+            float red = texelFetch(fontAtlas, ivec2(textureCoordsIn), 0).r;
+            if(red == 0.f) discard;
+            textureColor = vec4(red);
+        } break;
+        case 1: textureColor = texelFetch(textureAtlas1, ivec2(textureCoordsIn), 0); break;
+        case 2: textureColor = texelFetch(textureAtlas2, ivec2(textureCoordsIn), 0); break;
+        case 3: textureColor = texelFetch(textureAtlas3, ivec2(textureCoordsIn), 0); break;
+        default: discard;
     }
 
     if (textureColor.a == 0.0) discard;
-
 
     if (palletize) {
         float minDistance = 9999.0;
@@ -51,6 +50,10 @@ void main() {
     } else {
         fragColor = textureColor;
     }
+
+    vec2 uv = gl_FragCoord.xy / screenSize.xy;
+    float noise = random(uv) * 2.0 - 1.0;
+    fragColor.rgb += noise * 0.015;
 
     fragColor.g *= (sin(gl_FragCoord.y * 0.8) + 1.0) * 0.15 + 1.0;
     fragColor.rb *= (cos(gl_FragCoord.y  * 0.8) + 1.0) * 0.335 + 1.0;
