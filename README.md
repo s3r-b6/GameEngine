@@ -1,5 +1,3 @@
-![Preview of a level](/preview/game.png)
-
 ![Game with CRT shader](/preview/game_crt.png)
 
 # What this is:
