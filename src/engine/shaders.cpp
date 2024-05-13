@@ -22,16 +22,16 @@ void printShaderLog(uint shader, BumpAllocator *tempStorage) {
     if (infoLogLength > 0) { engine_log("%s", infoLog); }
 }
 
-bool loadShaders(char *vertShaderPath, char *fragShaderPath, GLuint &vertexShaderID,
-                 GLuint &fragmentShaderID, BumpAllocator *tempStorage) {
+bool loadShaders(char *vertShaderPath, char *fragShaderPath, BumpAllocator *tempStorage) {
     size_t vertSourceSize = 0, fragSourceSize = 0;
-    char *vertSource = plat_readFile(vertShaderPath, &vertSourceSize, tempStorage);
-    char *fragSource = plat_readFile(fragShaderPath, &fragSourceSize, tempStorage);
 
     u64 vertTime = plat_getFileTimestamp(vertShaderPath);
     u64 fragTime = plat_getFileTimestamp(fragShaderPath);
 
-    if (vertTime < fragTime) {
+    char *vertSource = plat_readFile(vertShaderPath, &vertSourceSize, tempStorage);
+    char *fragSource = plat_readFile(fragShaderPath, &fragSourceSize, tempStorage);
+
+    if (vertTime > fragTime) {
         glContext->shadersTimestamp = vertTime;
     } else {
         glContext->shadersTimestamp = fragTime;
@@ -41,8 +41,8 @@ bool loadShaders(char *vertShaderPath, char *fragShaderPath, GLuint &vertexShade
     if (!fragSource) { engine_log("Failed to read fragment shader sources"); }
     if (!vertSource || !fragSource) return false;
 
-    vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-    fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+    GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
     glShaderSource(vertexShaderID, 1, &vertSource, NULL);
     glShaderSource(fragmentShaderID, 1, &fragSource, NULL);
@@ -69,5 +69,42 @@ bool loadShaders(char *vertShaderPath, char *fragShaderPath, GLuint &vertexShade
 
     if (fShaderCompiled != GL_TRUE || vShaderCompiled != GL_TRUE) return false;
 
+    glAttachShader(glContext->programID, vertexShaderID);
+    glAttachShader(glContext->programID, fragmentShaderID);
+
+    glLinkProgram(glContext->programID);
+
+    GLint programSuccess = GL_TRUE;
+    glGetProgramiv(glContext->programID, GL_LINK_STATUS, &programSuccess);
+    if (programSuccess != GL_TRUE) {
+        engine_log("Error linking program %d!\n", glContext->programID);
+        printProgramLog(glContext->programID, tempStorage);
+        return false;
+    }
+
+    glDetachShader(glContext->programID, vertexShaderID);
+    glDetachShader(glContext->programID, fragmentShaderID);
+    glDeleteShader(vertexShaderID);
+    glDeleteShader(fragmentShaderID);
+
     return true;
+}
+
+void printProgramLog(uint program, BumpAllocator *tempStorage) {
+    // Make sure name is shader
+    if (!glIsProgram(program)) {
+        engine_log("Name %d is not a program", program);
+        return;
+    }
+
+    int infoLogLength = 0;
+    int maxLength = 0;
+
+    // Get info string length
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+    char *infoLog = reinterpret_cast<char *>(tempStorage->alloc(maxLength));
+
+    glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
+    if (infoLogLength > 0) engine_log("%s", infoLog);
 }

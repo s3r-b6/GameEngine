@@ -11,6 +11,7 @@
 #include "./input.h"
 #include "./renderer.h"
 #include "engine_memory.h"
+#include "shaders.h"
 
 _global void *gameSO;
 
@@ -32,7 +33,7 @@ int plat_main() {
     loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
 
     SDL_Event event;
-    local_persist float hotreload_timer = 1.5f;
+    local_persist float hotreload_timer = 0.5f;
     while (appState->running) {
         // SDL_ShowCursor(input->showCursor);
         input->mouseState = input->mouseState | input->mouseState << 4;
@@ -134,7 +135,20 @@ inline void handleSDLevents(SDL_Event *event) {
     }
 }
 
-void reloadShaderCode(BumpAllocator *tempStorage) {}
+void reloadShaderCode(BumpAllocator *tempStorage) {
+    u64 vertTimestamp = plat_getFileTimestamp(SHADER_SRC("vert.glsl"));
+    u64 fragTimestamp = plat_getFileTimestamp(SHADER_SRC("frag.glsl"));
+
+    if (vertTimestamp > glContext->shadersTimestamp ||
+        fragTimestamp > glContext->shadersTimestamp) {
+        engine_log("Newer shader code found");
+
+        GLuint vertexShaderID, fragmentShaderID;
+        if (!loadShaders(SHADER_SRC("vert.glsl"), SHADER_SRC("frag.glsl"), tempStorage)) {
+            crash("Failed to reload shaders");
+        }
+    }
+}
 
 void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist u64 lastModTimestamp;

@@ -12,9 +12,6 @@
 
 #include "./shaders.h"
 
-// Append to the shaders location the file
-#define SHADER_SRC(termination) "../assets/shaders/" termination
-
 bool initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
     appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
     gameState = (GameState *)permStorage->alloc(sizeof(GameState));
@@ -156,28 +153,7 @@ inline bool initSDLandGL(BumpAllocator *tempStorage) {
 inline bool initGL(BumpAllocator *tempStorage) {
     glContext->programID = glCreateProgram();
 
-    GLuint vertexShaderID, fragmentShaderID;
-    if (!loadShaders(SHADER_SRC("vert.glsl"), SHADER_SRC("frag.glsl"), vertexShaderID,
-                     fragmentShaderID, tempStorage))
-        return false;
-
-    glAttachShader(glContext->programID, vertexShaderID);
-    glAttachShader(glContext->programID, fragmentShaderID);
-
-    glLinkProgram(glContext->programID);
-
-    GLint programSuccess = GL_TRUE;
-    glGetProgramiv(glContext->programID, GL_LINK_STATUS, &programSuccess);
-    if (programSuccess != GL_TRUE) {
-        engine_log("Error linking program %d!\n", glContext->programID);
-        printProgramLog(glContext->programID, tempStorage);
-        return false;
-    }
-
-    glDetachShader(glContext->programID, vertexShaderID);
-    glDetachShader(glContext->programID, fragmentShaderID);
-    glDeleteShader(vertexShaderID);
-    glDeleteShader(fragmentShaderID);
+    if (!loadShaders(SHADER_SRC("vert.glsl"), SHADER_SRC("frag.glsl"), tempStorage)) return false;
 
     glContext->screenSizeID = glGetUniformLocation(glContext->programID, "screenSize");
     glContext->orthoProjectionID = glGetUniformLocation(glContext->programID, "orthoProjection");
@@ -219,25 +195,6 @@ void close() {
 
     engine_log("Quitting");
     SDL_Quit();
-}
-
-void printProgramLog(uint program, BumpAllocator *tempStorage) {
-    // Make sure name is shader
-    if (!glIsProgram(program)) {
-        engine_log("Name %d is not a program", program);
-        return;
-    }
-
-    int infoLogLength = 0;
-    int maxLength = 0;
-
-    // Get info string length
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
-    char *infoLog = reinterpret_cast<char *>(tempStorage->alloc(maxLength));
-
-    glGetProgramInfoLog(program, maxLength, &infoLogLength, infoLog);
-    if (infoLogLength > 0) engine_log("%s", infoLog);
 }
 
 // TODO: Fix this
