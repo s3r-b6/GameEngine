@@ -1,4 +1,7 @@
-![Game with CRT shader](/preview/game_crt.png)
+![Game](/preview/game_crt.png)
+![Animated tiles](/preview/animated_tiles.gif)
+![Animated tiles 2](/preview/animated_tiles_2.gif)
+![Culling of tiles](/preview/dynamic_rendering.gif)
 
 # What this is:
 This is a game engine pet project implemented in C++. 
