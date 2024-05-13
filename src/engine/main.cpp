@@ -66,12 +66,13 @@ int plat_main() {
             reloadShaderCode(tempStorage);
             hotreload_timer = 4.f;
         }
-        tempStorage->freeMemory();
     }
 
     close();
     plat_freeDynamicLib(gameSO);
     plat_deleteFile(loadedgameSharedObject);
+    tempStorage->destroy();
+    permStorage->destroy();
     return 0;
 }
 

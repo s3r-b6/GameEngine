@@ -45,7 +45,10 @@ struct BumpAllocator {
 
     // The trick is that the used attrib is used to calculate the offset.
     // An offset of 0 means just rewriting everything.
-    void freeMemory() { used = 0; }
+    void freeMemory() {
+        memset(memory, 0, size);
+        used = 0;
+    }
 
     void destroy() {
         free(memory);
