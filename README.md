@@ -33,7 +33,7 @@ I welcome any comments and suggestions. This is my first time working in a game 
 - [glad](https://glad.dav1d.de/)
 - [glm](https://github.com/g-truc/glm)
 - [stb_image](https://github.com/nothings/stb)
-- [freetype](https://freetype.org/)
+- [freetype2](https://freetype.org/)
 
 # Credits:
 - [Cakez](https://www.youtube.com/@Cakez77)

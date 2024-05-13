@@ -18,7 +18,7 @@ _global void *gameSO;
 int plat_main() {
     permStorage = new BumpAllocator(MB(10)), tempStorage = new BumpAllocator(MB(5));
 
-    if (!initialize(permStorage, tempStorage)) { crash("Failed to initialize the engine."); }
+    initialize(permStorage, tempStorage);
 
     u64 now = SDL_GetPerformanceCounter(), last = 0;
     double dt = 0;
@@ -33,7 +33,7 @@ int plat_main() {
     loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
 
     SDL_Event event;
-    local_persist float hotreload_timer = 0.5f;
+    local_persist float hotreload_timer = 1.5f;
     while (appState->running) {
         // SDL_ShowCursor(input->showCursor);
         input->mouseState = input->mouseState | input->mouseState << 4;
@@ -64,7 +64,10 @@ int plat_main() {
         if (hotreload_timer <= 0.f) {
             reloadGameLib(tempStorage);
             reloadShaderCode(tempStorage);
-            hotreload_timer = 4.f;
+            hotreload_timer = 1.5f;
+            // TODO: This should be invalidated somewhere else, but right now
+            // is not invalidated anywhere else
+            tempStorage->freeMemory();
         }
     }
 

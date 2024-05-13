@@ -24,12 +24,9 @@ void main() {
     
     if(textureAtlasIdx == 0) {
         float red = texelFetch(fontAtlas, ivec2(textureCoordsIn), 0).r;
-        
         if(red == 0.f) discard;
-        
         textureColor = red * vec4(1.f, 1.f, 1.f, 1.f);
         fragColor = textureColor;
-        return;
     } else if (textureAtlasIdx == 1) {
         textureColor = texelFetch(textureAtlas1, ivec2(textureCoordsIn), 0);
     } else if (textureAtlasIdx == 2) {

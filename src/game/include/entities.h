@@ -6,9 +6,7 @@
 #include <vector>
 
 #include "./engine_global.h"
-#include "./engine_lib.h"
 
-#include "./assets.h"
 #include "./game.h"
 #include "./game_render.h"
 

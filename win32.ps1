@@ -3,15 +3,13 @@ $include = ( "-I..\deps\",
     "-I..\deps\freetype2\",
     "-I..\deps\win32\",
     "-I..\deps\win32\SDL2\",
-    "-I..\deps\openal-soft\include\",
-    "-I..\deps\freealut\include\",
     "-I..\src\engine\include",
     "-I..\src\game\include"
 )
 
 $libs = (
     "-luser32", "-lgdi32", "-lopengl32", "-L..\lib\", "-lSDL2",
-    "-lfreetype", "-lopenal32", "-lalut"
+    "-lfreetype"
 )
 
 $flags = (
@@ -49,7 +47,7 @@ Write-Host "Trying to recompile game.cpp"
 
 Remove-Item .\game_* -ErrorAction SilentlyContinue 
 Remove-Item .\game.dll -ErrorAction SilentlyContinue 
-g++ -O1 -fsanitize=address -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\build_game.cpp
+g++ -fno-gnu-unique -fPIC $include $libs $flags -shared -o "game_$timestamp.dll" ..\src\build_game.cpp
 Write-Host "Renaming game_$timestamp.dll to game.dll"
 Rename-Item -Path ".\game_$timestamp.dll" -NewName ".\game.dll"
 
@@ -57,7 +55,7 @@ if (-not (Get-Process -Name "game" -ErrorAction SilentlyContinue)) {
     Write-Host "Game is not running"
     Write-Host "Compiling main.cpp..."
     Remove-Item .\game.exe -ErrorAction SilentlyContinue 
-    g++ -O1 -fsanitize=address $include $libs $flags -o game.exe ../src/build_engine.cpp
+    g++ -fno-gnu-unique $include $libs $flags -o game.exe ../src/build_engine.cpp
 }
 else {
     Write-Host "Game is running, skipping main.cpp..."

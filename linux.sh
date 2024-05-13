@@ -21,8 +21,6 @@ include+=(-I../deps/freetype2/)
 include+=(-I../deps/glad/) 
 include+=(-I../deps/linux/) 
 include+=(-I../deps/linux/SDL2)
-include+=(-I../deps/openal-soft/include/)
-include+=(-I../deps/freealut/include/)
 include+=(-I../src/engine/include)
 include+=(-I../src/game/include)
 
@@ -30,8 +28,6 @@ include+=(-L../lib)
 include+=(-lfreetype)
 include+=(-lSDL2)
 include+=(-lGL)
-include+=(-lopenal)
-include+=(-lalut)
 
 flags=(-pipe -Wno-write-strings -D_REENTRANT -Wno-deprecated-declarations)
 
