@@ -125,10 +125,11 @@ inline bool initSDLandGL(BumpAllocator *tempStorage) {
 inline bool initGL(BumpAllocator *tempStorage) {
     glContext->programID = glCreateProgram();
 
-    if (!loadShaders(SHADER_SRC("vert.glsl"), SHADER_SRC("frag.glsl"), tempStorage))
+    loadShaders(SHADER_SRC("vert.glsl"), SHADER_SRC("frag.glsl"), tempStorage);
 
-        glContext->screenSizeID = glGetUniformLocation(glContext->programID, "screenSize");
+    glContext->screenSizeID = glGetUniformLocation(glContext->programID, "screenSize");
     glContext->orthoProjectionID = glGetUniformLocation(glContext->programID, "orthoProjection");
+    glContext->palletizeID = glGetUniformLocation(glContext->programID, "palletize");
 
     // This seems necessary
     GLuint VAO;

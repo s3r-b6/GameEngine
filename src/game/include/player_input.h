@@ -29,6 +29,8 @@ void playerActions() {
         return;
     }
 
+    if (input->keyJustPressed('n')) { renderData->palletize = !renderData->palletize; }
+
     if (input->keyJustPressed('=')) {
         renderData->gameCamera.dimensions /= 2;
     } else if (input->keyJustPressed('-')) {

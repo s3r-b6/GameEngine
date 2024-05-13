@@ -10,14 +10,10 @@ layout(binding=0) uniform sampler2D fontAtlas;
 layout(binding=1) uniform sampler2D textureAtlas1;
 layout(binding=2) uniform sampler2D textureAtlas2;
 layout(binding=3) uniform sampler2D textureAtlas3;
+layout(binding=4) uniform sampler2D colorPalette;
 
 uniform vec2 screenSize;
-
-void saturate(inout vec4 vec) {
-    float avg = (vec.r + vec.g + vec.b) / 3.0;
-    vec.rgb += (vec.rgb - avg) * 0.03;
-    vec = clamp(vec, 0.0, 1.0);
-}
+uniform bool palletize;
 
 void main() {
     vec4 textureColor;
@@ -39,9 +35,23 @@ void main() {
 
     if (textureColor.a == 0.0) discard;
 
-    fragColor = textureColor;
+
+    if (palletize) {
+        float minDistance = 9999.0;
+        int selectedIndex = 0;
+        for (int i = 0; i < 64; i++) {
+            vec4 paletteColor = texelFetch(colorPalette, ivec2(i % 8, i / 8), 0).rgba;
+            float distance = distance(textureColor.rgb, paletteColor.rgb);
+            if (distance < minDistance) {
+                minDistance = distance;
+                selectedIndex = i;
+            }
+        }
+        fragColor = texelFetch(colorPalette, ivec2(selectedIndex % 8, selectedIndex / 8), 0).rgba;
+    } else {
+        fragColor = textureColor;
+    }
+
     fragColor.g *= (sin(gl_FragCoord.y * 0.8) + 1.0) * 0.15 + 1.0;
     fragColor.rb *= (cos(gl_FragCoord.y  * 0.8) + 1.0) * 0.335 + 1.0;
-    saturate(fragColor);
 }
-

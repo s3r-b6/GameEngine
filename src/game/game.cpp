@@ -68,7 +68,7 @@ inline void setupPlayer() {
     gameState->player_id = entityManager->getUninitializedID();
     auto player = entityManager->entities[gameState->player_id];
     auto transform = new (permStorage->alloc(sizeof(TransformComponent))) TransformComponent(
-        glm::vec2(CHUNK_SIZE_x / 2 - 8, CHUNK_SIZE_y / 2 - 16), glm::vec2(16, 32));
+        glm::vec2(CHUNK_SIZE_x / 2 - 16, CHUNK_SIZE_y / 2 + 32), glm::vec2(16, 32));
     player->components.push_back(transform);
     auto spriteRenderer = new (permStorage->alloc(sizeof(AnimatedSpriteRenderer)))
         AnimatedSpriteRenderer(gameState->player_id, renderData, PlayerD_Walk, 8, &deltaTime, 4,

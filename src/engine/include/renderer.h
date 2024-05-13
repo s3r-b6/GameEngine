@@ -56,10 +56,12 @@ struct RenderData {
 
     glm::vec3 clearColor;
 
-    u32 transformCount = 0;
-    u32 uiTransformCount = 0;
-
+    u16 transformCount = 0;
+    u16 uiTransformCount = 0;
     u16 fontHeight = 0;
+
+    bool palletize = false;
+
     OrthographicCamera gameCamera;
     OrthographicCamera uiCamera;
 };
@@ -72,6 +74,7 @@ struct GLContext {
     GLuint transformSBOID;
     GLuint screenSizeID;
     GLuint orthoProjectionID;
+    GLuint palletizeID;
 
     u64 shadersTimestamp;
 

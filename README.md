@@ -27,6 +27,7 @@ I welcome any comments and suggestions. This is my first time working in a game 
 # Assets:
 - [Zelda-like tilesets and sprites](https://opengameart.org/content/zelda-like-tilesets-and-sprites)
 - [Joystix font](https://www.1001fonts.com/joystix-font.html)
+- [Resurrect 64 palette](https://lospec.com/palette-list/resurrect-64)
 
 # Dependencies:
 - [SDL2](https://www.libsdl.org/)
@@ -34,6 +35,7 @@ I welcome any comments and suggestions. This is my first time working in a game 
 - [glm](https://github.com/g-truc/glm)
 - [stb_image](https://github.com/nothings/stb)
 - [freetype2](https://freetype.org/)
+
 
 # Credits:
 - [Cakez](https://www.youtube.com/@Cakez77)

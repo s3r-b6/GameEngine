@@ -73,6 +73,7 @@ void render() {
     glm::vec2 floatScreenSize = {static_cast<float>(screenSize.x),
                                  static_cast<float>(screenSize.y)};
     glUniform2fv(glContext->screenSizeID, 1, &floatScreenSize.x);
+    glUniform1i(glContext->palletizeID, renderData->palletize);
 
     glm::mat4x4 mat = renderData->gameCamera.getProjectionMatrix(screenSize.x, screenSize.y);
     glUniformMatrix4fv(glContext->orthoProjectionID, 1, GL_FALSE, &mat[0].x);

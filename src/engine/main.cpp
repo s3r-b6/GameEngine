@@ -31,6 +31,7 @@ int plat_main() {
     loadTextureAtlas("../assets/textures/zelda-like/Overworld.png", GL_TEXTURE1, true);
     loadTextureAtlas("../assets/textures/zelda-like/objects.png", GL_TEXTURE2, true);
     loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
+    loadTextureAtlas("../assets/palettes/resurrect-64.png", GL_TEXTURE4, false);
 
     SDL_Event event;
     local_persist float hotreload_timer = 1.5f;
