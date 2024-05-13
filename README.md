@@ -1,6 +1,6 @@
 ![Preview of a level](/preview/game.png)
 
-![Preview of a the tile picker](/preview/tile_picker.png)
+![Game with CRT shader](/preview/game_crt.png)
 
 # What this is:
 This is a game engine pet project implemented in C++. 
