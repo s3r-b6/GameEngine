@@ -11,3 +11,4 @@ _global update_game_type *updateGame_ptr;
 
 void handleSDLevents(SDL_Event *event);
 void reloadGameLib(BumpAllocator *transientStorage);
+void reloadShaderCode(BumpAllocator *transientStorage);

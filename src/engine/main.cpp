@@ -10,6 +10,7 @@
 #include "./initialization.h"
 #include "./input.h"
 #include "./renderer.h"
+#include "engine_memory.h"
 
 _global void *gameSO;
 
@@ -61,6 +62,7 @@ int plat_main() {
         // Try to load a new shared object every x seconds
         if (hotreload_timer <= 0.f) {
             reloadGameLib(tempStorage);
+            reloadShaderCode(tempStorage);
             hotreload_timer = 4.f;
         }
         tempStorage->freeMemory();
@@ -131,6 +133,8 @@ inline void handleSDLevents(SDL_Event *event) {
     break;
     }
 }
+
+void reloadShaderCode(BumpAllocator *tempStorage) {}
 
 void reloadGameLib(BumpAllocator *tempStorage) {
     local_persist u64 lastModTimestamp;

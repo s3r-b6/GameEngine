@@ -4,6 +4,7 @@
 #include "./assets.h"
 #include "./engine_lib.h"
 
+
 // This values are hardcoded by hand looking at the atlas
 Sprite get_animated_sprite(AnimatedSpriteID animatedSprite, int frame) {
     Sprite sprite = {};
@@ -108,9 +109,7 @@ Sprite get_sprite(SpriteID spriteID) {
         break;
     };
     case INVALID:
-    case SPRITE_COUNT:
-        crash("BAD SPRITE");
-        break;
+    case SPRITE_COUNT: crash("BAD SPRITE"); break;
     }
 
     return sprite;

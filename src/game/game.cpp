@@ -61,7 +61,7 @@ inline void renderWorld(int fps, double dt) {
     tileManager->renderFront();
     entityManager->render();
     tileManager->renderBack();
-    UIdrawTextFormatted({CAMERA_SIZE_x - 80, 70}, 0.2, "FPS:%d DT:%f", fps, dt);
+    UIdrawTextFormatted({CAMERA_SIZE_x - 23, 100}, 0.2, "FPS:%d DT:%f", fps, dt);
 }
 
 inline void setupPlayer() {

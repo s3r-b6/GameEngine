@@ -73,6 +73,8 @@ struct GLContext {
     GLuint screenSizeID;
     GLuint orthoProjectionID;
 
+    u64 shadersTimestamp;
+
     u16 usedTextures = 0;
 };
 

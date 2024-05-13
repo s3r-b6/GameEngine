@@ -6,6 +6,7 @@
 
 #include "glad.c"
 
+#include "./engine/shaders.cpp"
 #include "./engine/assets.cpp"
 #include "./engine/fonts.cpp"
 #include "./engine/initialization.cpp"
