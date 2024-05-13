@@ -1,23 +1,22 @@
+# This is nasty, but it is just to make the LSP happy
 CompileFlags:
   Add:
     # Include Paths
-    - "-I../../engine/include/"
-    - "-I../../game/include/"
-    - "-I../engine/include/"
-    - "-I../game/include/"
-    - "-I./include"
+    - "-I../../../deps/glad/"
     - "-I../../../deps/"
     - "-I../../deps/"
+    - "-I../../deps/glad/"
+    - "-I../../engine/include/"
+    - "-I../../game/include/"
+    - "-I../../deps/freetype2/"
+    - "-I../engine/include/"
+    - "-I../game/include/"
     - "-I../deps/"
     - "-I../deps/glad/"
-    - "-I../../deps/glad/"
-    - "-I../../../deps/glad/"
     - "-I../deps/freetype2/"
-    - "-I../../deps/freetype2/"
-    - "-I../deps/openal-soft/include/AL"
-    - "-I../deps/freealut/include/AL"
     - "-I../deps/win32/"
     - "-I../deps/linux/"
+    - "-I./include"
 
     # Library Paths
     - "-L../lib/"
