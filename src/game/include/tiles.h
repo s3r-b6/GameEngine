@@ -61,8 +61,10 @@ struct TileChunk {
     //  The worldgrid
     TileID *chunkTiles;
     //  The front layers
-    PosTile *collisions;
+    PosTile *ground2;
     u8 pad;
+    PosTile *collisions;
+    u8 pad2;
     PosTile *frontTiles;
 };
 
@@ -77,6 +79,23 @@ struct TileManager {
     void registerTile(TileBase t) { tilemap[++currentTiles] = t; }
 
     void renderWorldGrid(const TileChunk &chunk, float offset_x, float offset_y) {
+        for (int i = 0;; i++) {
+            PosTile ftile = chunk.ground2[i];
+
+            if (ftile.id == MAX_U16) break;
+
+            float tile_x = offset_x + ftile.posX;
+            float tile_y = offset_y + ftile.posY;
+
+            if (animatedTiles.count(ftile.id) == 1) {
+                AnimatedTile &t = animatedTiles[ftile.id];
+                t.render(*dt, {tile_x, tile_y});
+                continue;
+            }
+
+            drawTileID(ftile.id, {tile_x, tile_y});
+        }
+
         for (int i = 0; i < TILES_CHUNK_x * TILES_CHUNK_y; i++) {
             TileID tile = chunk.chunkTiles[i];
             // The worldGrid could (?) contain invalid tiles

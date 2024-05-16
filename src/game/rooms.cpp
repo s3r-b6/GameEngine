@@ -19,6 +19,7 @@ void placeRoom(Direction dirToParent, int x, int y) {
     // engine_log("%d Placing room on %d %d", count, x, y);
     tileManager->world[count].x = x, tileManager->world[count].y = y;
     tileManager->world[count].chunkTiles = &room1Ground[0];
+    tileManager->world[count].ground2 = &room1Ground2[0];
     tileManager->world[count].collisions = &room1Collisions[0];
     tileManager->world[count].frontTiles = &room1Front[0];
 
