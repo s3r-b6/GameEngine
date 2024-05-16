@@ -2,7 +2,6 @@
 
 layout(location=0) flat in uint textureAtlasIdx;
 layout(location=1) in vec2 textureCoordsIn;
-layout(location=2) in float distanceToCenter;
 
 layout(location=0) out vec4 fragColor;
 
@@ -14,10 +13,6 @@ layout(binding=4) uniform sampler2D colorPalette;
 
 uniform vec2 screenSize;
 uniform bool palletize;
-
-float random(vec2 st){
-    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-}
 
 void main() {
     vec4 textureColor;
@@ -35,7 +30,7 @@ void main() {
 
     if (textureColor.a == 0.0) discard;
 
-    if (palletize) {
+    if (textureAtlasIdx != 0 && palletize) {
         float minDistance = 9999.0;
         int selectedIndex = 0;
         for (int i = 0; i < 64; i++) {
@@ -50,10 +45,6 @@ void main() {
     } else {
         fragColor = textureColor;
     }
-
-    vec2 uv = gl_FragCoord.xy / screenSize.xy;
-    float noise = random(uv) * 2.0 - 1.0;
-    fragColor.rgb += noise * 0.015;
 
     fragColor.g *= (sin(gl_FragCoord.y * 0.8) + 1.0) * 0.15 + 1.0;
     fragColor.rb *= (cos(gl_FragCoord.y  * 0.8) + 1.0) * 0.335 + 1.0;

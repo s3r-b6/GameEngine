@@ -17,7 +17,6 @@ layout(std430, binding = 0) buffer TransformSBO {
 
 layout(location = 0) flat out uint textureAtlasIdxOut;
 layout(location = 1) out vec2 textureCoordsOut;
-layout(location = 2) out float distanceToCenter;
 
 uniform vec2 screenSize;
 uniform mat4 orthoProjection;
@@ -49,14 +48,8 @@ void main() {
         vec2(right, bottom),
         };
 
-    { 
-        vec2 vertexPos = vertices[gl_VertexID];
-        gl_Position = orthoProjection * vec4(vertexPos, 0.0, 1.0);
-        vec2 center = screenSize / 2.0;
-        center = (center / screenSize) * 2.0 - 1.0;
-        distanceToCenter = length(center - vertexPos);
-    }
-
+    vec2 vertexPos = vertices[gl_VertexID];
+    gl_Position = orthoProjection * vec4(vertexPos, 0.0, 1.0);
     textureAtlasIdxOut = t.atlasIdx;
     textureCoordsOut = textureCoords[gl_VertexID];
 };

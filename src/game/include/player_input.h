@@ -29,6 +29,7 @@ void playerActions() {
         return;
     }
 
+    if (input->keyJustPressed('v')) { renderData->vsync = !renderData->vsync; }
     if (input->keyJustPressed('n')) { renderData->palletize = !renderData->palletize; }
 
     if (input->keyJustPressed('=')) {

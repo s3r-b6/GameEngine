@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./types.h"
+#include "engine_lib.h"
 
 #include <glad.h>
 
@@ -61,6 +62,7 @@ struct RenderData {
     u16 fontHeight = 0;
 
     bool palletize = false;
+    bool vsync = true;
 
     OrthographicCamera gameCamera;
     OrthographicCamera uiCamera;
@@ -81,6 +83,7 @@ struct GLContext {
     u16 usedTextures = 0;
 };
 
+bool tryUseVsync();
 bool loadTextureAtlas(char const *texturePath, GLenum glTextureIdx, bool createTiles);
 void render();
 void UIrender();

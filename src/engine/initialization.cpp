@@ -6,6 +6,7 @@
 #include "./input.h"
 #include "./shaders.h"
 #include "./tiles.h"
+#include <SDL2/SDL_video.h>
 
 void initialize(BumpAllocator *permStorage, BumpAllocator *tempStorage) {
     appState = (ProgramState *)permStorage->alloc(sizeof(ProgramState));
@@ -103,15 +104,11 @@ inline bool initSDLandGL(BumpAllocator *tempStorage) {
         crash("ERROR: unable to initialize glad!\n");
     }
 
-    // Use AdaptiveVsync (-1) Vsync (1) or do not (0)
-    if (SDL_GL_SetSwapInterval(-1) < 0) {
-        engine_log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
-                   "SDL Error: %s\n",
-                   SDL_GetError());
-
-        if (SDL_GL_SetSwapInterval(1) < 0) {
-            engine_log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
-        }
+    if (tryUseVsync()) {
+        renderData->vsync = true;
+    } else {
+        engine_log("Could not set vsync up");
+        renderData->vsync = false;
     }
 
     // Initialize OpenGL

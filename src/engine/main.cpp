@@ -33,14 +33,16 @@ int plat_main() {
     loadTextureAtlas("../assets/textures/zelda-like/character.png", GL_TEXTURE3, false);
     loadTextureAtlas("../assets/palettes/resurrect-64.png", GL_TEXTURE4, false);
 
+    u64 perfFrequency = static_cast<double>(SDL_GetPerformanceFrequency());
     SDL_Event event;
     local_persist float hotreload_timer = 1.5f;
+    local_persist bool vsync = true;
     while (appState->running) {
         // SDL_ShowCursor(input->showCursor);
         input->mouseState = input->mouseState | input->mouseState << 4;
 
         last = now, now = SDL_GetPerformanceCounter();
-        dt = static_cast<double>(now - last) / static_cast<double>(SDL_GetPerformanceFrequency());
+        dt = static_cast<double>(now - last) / perfFrequency;
 
         while (SDL_PollEvent(&event) != 0) { handleSDLevents(&event); }
 
@@ -56,18 +58,33 @@ int plat_main() {
         render();
         glFinish();
         UIrender();
-        SDL_GL_SwapWindow(appState->window);
 
         input->mouseState &= ~(input->mouseState & 0xF0);
 
-        hotreload_timer -= dt;
+        SDL_GL_SwapWindow(appState->window);
+
+        if (vsync != renderData->vsync) {
+            vsync = renderData->vsync;
+
+            if (!vsync) {
+                SDL_GL_SetSwapInterval(0);
+            } else {
+                if (tryUseVsync()) {
+                    engine_log("Activated VSync");
+                } else {
+                    engine_log("Failed to activate VSync");
+                    renderData->vsync = false;
+                    vsync = false;
+                }
+            }
+        }
+
         // Try to load a new shared object every x seconds
+        hotreload_timer -= dt;
         if (hotreload_timer <= 0.f) {
             reloadGameLib(tempStorage);
             reloadShaderCode(tempStorage);
             hotreload_timer = 1.5f;
-            // TODO: This should be invalidated somewhere else, but right now
-            // is not invalidated anywhere else
             tempStorage->freeMemory();
         }
     }

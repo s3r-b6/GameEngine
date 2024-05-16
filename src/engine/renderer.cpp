@@ -6,7 +6,6 @@
 #include "./engine_lib.h"
 #include "SDL2/SDL_log.h"
 #include "tiles.h"
-#include <vector>
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -106,4 +105,19 @@ void UIrender() {
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+}
+
+bool tryUseVsync() {
+    if (SDL_GL_SetSwapInterval(-1) < 0) {
+        engine_log("Warning: Unable to set AdaptiveVsync! Trying to set VSync "
+                   "SDL Error: %s\n",
+                   SDL_GetError());
+
+        if (SDL_GL_SetSwapInterval(1) < 0) {
+            engine_log("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
+            return false;
+        }
+    }
+
+    return true;
 }
