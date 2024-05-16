@@ -155,17 +155,18 @@ struct TileManager {
     void renderBack() {
         for (auto &chunk : world) {
             if (chunk.x == MAX_I16 && chunk.y == MAX_I16) { continue; }
-            float offsetX = chunk.x * TILES_CHUNK_x * TILESIZE,
-                  offsetY = chunk.y * TILES_CHUNK_y * TILESIZE;
 
-            // Chunks have their origin top left, but distance should be calculated from center
-            glm::vec2 distVector = glm::vec2((offsetX * 1.5) - renderData->gameCamera.pos.x,
-                                             (offsetY * 1.5) - renderData->gameCamera.pos.y);
+            float offsetX = chunk.x * CHUNK_SIZE_x;
+            float offsetY = chunk.y * CHUNK_SIZE_y;
+            float centerX = offsetX + (CHUNK_SIZE_x / 2.0f);
+            float centerY = offsetY + (CHUNK_SIZE_y / 2.0f);
 
-            if (offsetX == 0) { distVector.x += CHUNK_SIZE_x / 2.f; }
-            if (offsetY == 0) { distVector.y += CHUNK_SIZE_y / 2.f; }
+            glm::vec2 distVector = {std::abs(centerX - renderData->gameCamera.pos.x),
+                                    std::abs(centerY - renderData->gameCamera.pos.y)};
 
-            if (distVector.x > CHUNK_SIZE_x || distVector.y > CHUNK_SIZE_y) { continue; }
+            if (distVector.x > CAMERA_SIZE_x * 1.5 || distVector.y > CAMERA_SIZE_y * 1.5) {
+                continue;
+            }
 
             renderWorldGrid(chunk, offsetX, offsetY);
         }
@@ -174,17 +175,18 @@ struct TileManager {
     void renderFront() {
         for (auto &chunk : world) {
             if (chunk.x == MAX_I16 && chunk.y == MAX_I16) { continue; }
-            float offsetX = chunk.x * TILES_CHUNK_x * TILESIZE,
-                  offsetY = chunk.y * TILES_CHUNK_y * TILESIZE;
 
-            // Chunks have their origin top left, but distance should be calculated from center
-            glm::vec2 distVector = glm::vec2((offsetX * 1.5) - renderData->gameCamera.pos.x,
-                                             (offsetY * 1.5) - renderData->gameCamera.pos.y);
+            float offsetX = chunk.x * CHUNK_SIZE_x;
+            float offsetY = chunk.y * CHUNK_SIZE_y;
+            float centerX = offsetX + (CHUNK_SIZE_x / 2.0f);
+            float centerY = offsetY + (CHUNK_SIZE_y / 2.0f);
 
-            if (offsetX == 0) { distVector.x += CHUNK_SIZE_x / 2.f; }
-            if (offsetY == 0) { distVector.y += CHUNK_SIZE_y / 2.f; }
+            glm::vec2 distVector = {std::abs(centerX - renderData->gameCamera.pos.x),
+                                    std::abs(centerY - renderData->gameCamera.pos.y)};
 
-            if (distVector.x > CHUNK_SIZE_x || distVector.y > CHUNK_SIZE_y) { continue; }
+            if (distVector.x > CAMERA_SIZE_x * 1.5 || distVector.y > CAMERA_SIZE_y * 1.5) {
+                continue;
+            }
 
             renderFrontTiles(chunk, offsetX, offsetY);
         }
