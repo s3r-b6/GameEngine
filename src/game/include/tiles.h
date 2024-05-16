@@ -6,6 +6,8 @@
 #include "./entities.h"
 #include "./renderer.h"
 #include "./types.h"
+#include "engine_global.h"
+#include "engine_lib.h"
 #include "game_render.h"
 
 // The simplest tile. Its position is determined by its pos in
@@ -65,7 +67,6 @@ struct TileChunk {
 };
 
 struct TileManager {
-    static constexpr u8 MAX_ROOMS = 16;
     TileChunk world[MAX_ROOMS];
 
     TileID currentTiles = 0;
@@ -171,5 +172,30 @@ struct TileManager {
     }
 };
 
-// TODO:
-bool checkTileCollisions(ColliderComponent *collider) { return false; }
+inline bool checkTileCollisions(ColliderComponent *collider) {
+    float x = collider->transform->pos.x, y = collider->transform->pos.y;
+
+    for (int i = 0; i < MAX_ROOMS; i++) {
+        TileChunk chunk = tileManager->world[i];
+
+        float offsetX = chunk.x * TILES_CHUNK_x * TILESIZE,
+              offsetY = chunk.y * TILES_CHUNK_y * TILESIZE;
+
+        bool isInside = (x >= offsetX && x <= offsetX + CHUNK_SIZE_x && y >= offsetY &&
+                         y <= offsetY + CHUNK_SIZE_y);
+
+        if (!isInside) { continue; }
+
+        for (int j = 0;; j++) {
+            PosTile ftile = chunk.collisions[j];
+
+            if (ftile.id == MAX_U16) break;
+
+            float tile_x = offsetX + ftile.posX;
+            float tile_y = offsetY + ftile.posY;
+            if (collider->checkCollisions({tile_x, tile_y}, {16.f, 16.f})) return true;
+        }
+    }
+
+    return false;
+}

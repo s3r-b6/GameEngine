@@ -4,6 +4,8 @@
 
 enum Direction { No, U, L, D, R };
 
+#define MAX_ROOMS 16
+
 struct EntityManager;
 struct TileManager;
 

@@ -76,7 +76,7 @@ inline void setupPlayer() {
     player->components.push_back(spriteRenderer);
 
     auto collider = new (permStorage->alloc(sizeof(ColliderComponent)))
-        ColliderComponent(gameState->player_id, {16, 20});
+        ColliderComponent(gameState->player_id, {15, 15});
     player->components.push_back(collider);
 }
 

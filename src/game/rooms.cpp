@@ -6,7 +6,7 @@
 
 void placeRoom(Direction dirToParent, int x, int y) {
     local_persist int count = -1;
-    if (count >= TileManager::MAX_ROOMS) { return; }
+    if (count >= MAX_ROOMS) { return; }
 
     if (count > 0) {
         for (auto &chunk : tileManager->world) {

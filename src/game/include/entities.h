@@ -161,10 +161,8 @@ struct ColliderComponent : EntityComponentBase {
         float minDistanceX = halfSize.x + otherHalfSize.x;
         float minDistanceY = halfSize.y + otherHalfSize.y;
 
-        bool collX = std::abs(deltaX) < minDistanceX;
-        bool collY = std::abs(deltaY) < minDistanceY;
-
-        return collX && collY;
+        if (std::abs(deltaX) >= minDistanceX || std::abs(deltaY) >= minDistanceY) { return false; }
+        return true;
     }
 };
 

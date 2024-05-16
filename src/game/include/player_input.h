@@ -85,19 +85,19 @@ void playerActions() {
     // TODO: Would be cool to have a renderOnce() or something like that, instead of looping
     if (input->lMouseDown()) {
         switch (direction) {
-        case U: spriteRenderer->animatedSprite = PlayerU_Attack; break;
-        case L: spriteRenderer->animatedSprite = PlayerL_Attack; break;
-        case D: spriteRenderer->animatedSprite = PlayerD_Attack; break;
-        case R: spriteRenderer->animatedSprite = PlayerR_Attack; break;
+        case U:  spriteRenderer->animatedSprite = PlayerU_Attack; break;
+        case L:  spriteRenderer->animatedSprite = PlayerL_Attack; break;
+        case R:  spriteRenderer->animatedSprite = PlayerR_Attack; break;
+        default: spriteRenderer->animatedSprite = PlayerD_Attack; break;
         }
 
         spriteRenderer->animating = true;
     } else {
         switch (direction) {
-        case U: spriteRenderer->idleSprite = PlayerU; break;
-        case L: spriteRenderer->idleSprite = PlayerL; break;
-        case D: spriteRenderer->idleSprite = PlayerD; break;
-        case R: spriteRenderer->idleSprite = PlayerR; break;
+        case U:  spriteRenderer->idleSprite = PlayerU; break;
+        case L:  spriteRenderer->idleSprite = PlayerL; break;
+        case R:  spriteRenderer->idleSprite = PlayerR; break;
+        default: spriteRenderer->idleSprite = PlayerD; break;
         }
     }
 }
